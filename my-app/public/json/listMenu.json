@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "category_name": "Rekomendasi",
+      "menus": [
+        {
+          "id": 2,
+          "name": "memew 20",
+          "price": 20000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        },
+        {
+          "id": 3,
+          "name": "memew 21",
+          "price": 21000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "category_name": "Coffe",
+      "menus": [
+        {
+          "id": 4,
+          "name": "memew 22",
+          "price": 22000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        },
+        {
+          "id": 5,
+          "name": "memew 23",
+          "price": 23000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        }
+      ]
+    },
+     {
+      "id": 3,
+      "category_name": "Coffe",
+      "menus": [
+        {
+          "id": 6,
+          "name": "memew 24",
+          "price": 22000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        },
+        {
+          "id": 7,
+          "name": "memew 25",
+          "price": 23000,
+          "image": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s"
+        }
+      ]
+    }
+  ]
+}

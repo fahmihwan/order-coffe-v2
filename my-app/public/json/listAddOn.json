@@ -1,0 +1,36 @@
+{
+    "data" : [
+  {
+    "id": 1,
+    "title": "Hot or Ice *",
+    "description": "Pilih jenis",
+    "isRequired": true,
+    "options": [
+      { "id": 6, "name": "Hot", "price": 0, "add_on_id": 1, "type": "radio" },
+      { "id": 7, "name": "Ice", "price": 100, "add_on_id": 1, "type": "radio" }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Additional syrup *",
+    "description": "pilih hingga 3 opsi",
+    "isRequired": false,
+    "options": [
+      { "id": 1, "name": "Vanilla", "price": 8000, "add_on_id": 2, "type": "checkbox" },
+      { "id": 2, "name": "Huzzlent", "price": 8000, "add_on_id": 2, "type": "checkbox" },
+      { "id": 3, "name": "Caramel", "price": 8000, "add_on_id": 2, "type": "checkbox" },
+      { "id": 4, "name": "Sugar", "price": 0, "add_on_id": 2, "type": "checkbox" }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Hot or Ice *",
+    "description": "Pilih jenis",
+    "isRequired": true,
+    "options": [
+      { "id": 8, "name": "Ho2323t", "price": 200, "add_on_id": 3, "type": "radio" },
+      { "id": 9, "name": "Ice", "price": 0, "add_on_id": 3, "type": "radio" }
+    ]
+  }
+]
+}
