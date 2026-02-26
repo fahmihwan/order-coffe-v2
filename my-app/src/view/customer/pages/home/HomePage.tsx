@@ -47,8 +47,8 @@ export default function HomePage() {
                     )}
 
                     <DrawerListAddOnMenu
-                        isOpenModal={home.isOpenModal}
-                        handleCloseDrawer={home.handleCloseDrawer}
+                        isOpenDrawerAddOnMenu={home.isOpenDrawerAddOnMenu}
+                        handleCloseDrawerAddOnMenu={home.handleCloseDrawerAddOnMenu}
                         previewMenu={home.previewMenu}
                         listAddOns={home.listAddOns}
                         countOptions={home.countOptions}

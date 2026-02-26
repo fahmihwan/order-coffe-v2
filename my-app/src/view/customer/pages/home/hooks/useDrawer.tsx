@@ -6,7 +6,7 @@ export function useDrawer(params: {
     fetchAddonsByMenuId: (menuId: number) => Promise<AddOn[]>;
     listAddOns: AddOn[];
 }) {
-    const [isOpenModal, setIsOpenModal] = useState(false);
+    const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
     const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
 
     const [qtyDrawer, setQtyDrawer] = useState<number>(1);
@@ -19,15 +19,15 @@ export function useDrawer(params: {
         return unitTotal * qtyDrawer;
     }, [countOptions, previewMenu, qtyDrawer]);
 
-    const handleCloseDrawer = () => {
+    const handleCloseDrawerAddOnMenu = () => {
         setCountOptions([]);
-        setIsOpenModal(false);
+        setIsOpenDrawerAddOnMenu(false);
         setQtyDrawer(1);
         setPreviewMenu(null);
     };
 
     const onPreviewMenu = (data: Menu) => {
-        setIsOpenModal(true);
+        setIsOpenDrawerAddOnMenu(true);
         setPreviewMenu(data);
         params.fetchAddonsByMenuId(data.id);
     };
@@ -42,7 +42,7 @@ export function useDrawer(params: {
             setQtyDrawer((prev) => {
                 if (prev > 1) return prev - 1;
                 // kalau qty sudah 1, close drawer
-                handleCloseDrawer();
+                handleCloseDrawerAddOnMenu();
                 return 1;
             });
         }
@@ -68,15 +68,15 @@ export function useDrawer(params: {
     };
 
     return {
-        isOpenModal,
+        isOpenDrawerAddOnMenu,
         previewMenu,
         qtyDrawer,
         countOptions,
         totalAddCartDrawer,
         onPreviewMenu,
-        handleCloseDrawer,
+        handleCloseDrawerAddOnMenu,
         handleQtyDrawer,
         onAddOptions,
-        setIsOpenModal,
+        setIsOpenDrawerAddOnMenu,
     };
 }

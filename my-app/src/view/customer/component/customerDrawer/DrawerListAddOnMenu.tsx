@@ -4,8 +4,8 @@ import type { Menu } from '../../../../types/menu';
 import type { AddOn, AddOnOption } from '../../../../types/addOn';
 
 type DrawerListAddOnMenuProps = {
-    isOpenModal: boolean;
-    handleCloseDrawer: () => void;
+    isOpenDrawerAddOnMenu: boolean;
+    handleCloseDrawerAddOnMenu: () => void;
 
     previewMenu: Menu | null;          // kalau bisa null saat belum pilih menu
     listAddOns: AddOn[];
@@ -22,8 +22,8 @@ type DrawerListAddOnMenuProps = {
 
 
 const DrawerListAddOnMenu = ({
-    isOpenModal,
-    handleCloseDrawer,
+    isOpenDrawerAddOnMenu,
+    handleCloseDrawerAddOnMenu,
     previewMenu,
     listAddOns,
     countOptions,
@@ -35,7 +35,7 @@ const DrawerListAddOnMenu = ({
     formatRupiah
 }: DrawerListAddOnMenuProps) => {
     return (
-        <Drawer open={isOpenModal} onClose={handleCloseDrawer} position="bottom" className="
+        <Drawer open={isOpenDrawerAddOnMenu} onClose={handleCloseDrawerAddOnMenu} position="bottom" className="
                     w-[450px]
                     !left-1/2
                     !-translate-x-1/2

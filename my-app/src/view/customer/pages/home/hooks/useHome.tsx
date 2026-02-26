@@ -30,7 +30,7 @@ export function useHome() {
             selectedAddons: drawer.countOptions,
             qtyDrawer: drawer.qtyDrawer,
         });
-        drawer.handleCloseDrawer();
+        drawer.handleCloseDrawerAddOnMenu();
     };
 
     // handler add option (checkbox/radio)
@@ -56,7 +56,7 @@ export function useHome() {
         hasCart,
 
         // drawer data
-        isOpenModal: drawer.isOpenModal,
+        isOpenDrawerAddOnMenu: drawer.isOpenDrawerAddOnMenu,
         previewMenu: drawer.previewMenu,
         listAddOns: menuData.listAddOns,
         countOptions: drawer.countOptions,
@@ -65,7 +65,7 @@ export function useHome() {
 
         // actions
         onPreviewMenu,
-        handleCloseDrawer: drawer.handleCloseDrawer,
+        handleCloseDrawerAddOnMenu: drawer.handleCloseDrawerAddOnMenu,
         onAddOptions,
         handleAddCartDrawer,
         handleQtyDrawer: drawer.handleQtyDrawer,
