@@ -4,33 +4,27 @@ import type { Category } from "../../../../../types/category";
 import { getAddOnOptionsByMenuId, getMenu } from "../../../../../api/menu";
 
 export function useMenuData() {
-    const [menu, setMenu] = useState<Category[]>([])
-    const [listAddOns, setListAddOns] = useState<AddOn[]>([])
+    const [menu, setMenu] = useState<Category[]>([]);
+    const [listAddOns, setListAddOns] = useState<AddOn[]>([]);
 
     useEffect(() => {
         getMenu()
-            .then((data) => data)
-            .then((data) => {
-                setMenu(data)
-            })
+            .then(setMenu)
             .catch((err) => console.error("Gagal ambil menu:", err));
     }, []);
 
-
-    function fetchAddOnOptionByMenuId(menuId: number) {
-        getAddOnOptionsByMenuId(menuId)
-            .then((data) => data)
+    function fetchAddonsByMenuId(menuId: number) {
+        return getAddOnOptionsByMenuId(menuId)
             .then((data) => {
-                setListAddOns(data)
+                setListAddOns(data);
+                return data;
             })
             .catch((err) => {
-                console.error("Gagal ambil menu:", err);
-            })
-            .finally(() => {
+                console.error("Gagal ambil addon:", err);
+                setListAddOns([]);
+                return [];
             });
     }
 
-
-    return { menu, listAddOns, fetchAddOnOptionByMenuId };
+    return { menu, listAddOns, fetchAddonsByMenuId };
 }
-
