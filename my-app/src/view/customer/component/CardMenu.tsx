@@ -3,7 +3,7 @@ import type { Menu } from "../../../types/menu"
 interface CardMenuProps {
     menu: Menu,
     menuQty: number,
-    onChange: React.MouseEventHandler<HTMLButtonElement>,
+    onPreviewMenu: React.MouseEventHandler<HTMLButtonElement>,
     handleDecMenu: (menuId: number) => void,
     handleIncMenu: (menu: Menu) => void
 }
@@ -11,7 +11,7 @@ interface CardMenuProps {
 const CardMenu = ({
     handleDecMenu,
     handleIncMenu,
-    menu, menuQty, onChange
+    menu, menuQty, onPreviewMenu
 }: CardMenuProps) => {
     return (
 
@@ -33,7 +33,7 @@ const CardMenu = ({
                 <div className=" flex  justify-between items-center ">
                     <p>Rp. {menu?.price}</p>
                     {menuQty == 0 ? (<button
-                        onClick={onChange}
+                        onClick={onPreviewMenu}
                         type="button"
                         className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 "
                     >

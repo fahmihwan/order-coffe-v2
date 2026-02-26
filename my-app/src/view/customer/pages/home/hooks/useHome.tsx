@@ -19,7 +19,11 @@ export function useHome() {
     });
 
     // tambah ke cart dari drawer
-    const handleAddCartDrawer = () => {
+    const handleAddCartDrawer = (e: React.MouseEvent<HTMLButtonElement>) => {
+        console.log('dsds');
+        e.preventDefault();
+        e.stopPropagation();
+
         if (!drawer.previewMenu) return;
         cart.addFromDrawer({
             menu: drawer.previewMenu,
@@ -35,7 +39,11 @@ export function useHome() {
     };
 
     // open drawer by menu
-    const onPreviewMenu = (data: Menu) => {
+    const onPreviewMenu = (e: React.MouseEvent<HTMLButtonElement>, data: Menu) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log('sdsd');
         drawer.onPreviewMenu(data);
     };
 

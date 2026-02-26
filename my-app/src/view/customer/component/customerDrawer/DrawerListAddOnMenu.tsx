@@ -13,7 +13,7 @@ type DrawerListAddOnMenuProps = {
     countOptions: AddOnOption[];
     totalAddCartDrawer: number;
 
-    handleAddCartDrawer: () => void;         // atau (menu: Menu) => void kalau butuh
+    handleAddCartDrawer: (e: React.MouseEvent<HTMLButtonElement>) => void;         // atau (menu: Menu) => void kalau butuh
     onAddOptions: (option: AddOnOption, type: string, add_on_id: number,) => void; // sesuaikan signature sebenarnya
     qtyDrawer: number;
     handleQtyDrawer: (option: string) => void;
@@ -164,7 +164,7 @@ const DrawerListAddOnMenu = ({
 
                     <div className="w-full ">
                         <button
-                            onClick={() => handleAddCartDrawer()}
+                            onClick={(e) => handleAddCartDrawer(e)}
                             type="button"
                             className="
                                         w-full

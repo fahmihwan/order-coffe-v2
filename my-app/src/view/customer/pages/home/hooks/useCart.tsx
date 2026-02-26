@@ -20,11 +20,13 @@ export function useCart() {
         saveCartToStorage(cartItems);
     }, [cartItems]);
 
-    function addFromDrawer(params: {
-        menu: Menu;
-        selectedAddons: AddOnOption[];
-        qtyDrawer: number;
-    }) {
+    function addFromDrawer(
+        params: {
+            menu: Menu;
+            selectedAddons: AddOnOption[];
+            qtyDrawer: number;
+        }) {
+
         const { menu, selectedAddons, qtyDrawer } = params;
 
         const key = buildCartKey(menu.id, selectedAddons);

@@ -29,7 +29,7 @@ export default function HomePage() {
                                             handleIncMenu={home.handleIncMenu}
                                             menu={d}
                                             menuQty={menuQty}
-                                            onChange={() => home.onPreviewMenu(d)}
+                                            onPreviewMenu={(e) => home.onPreviewMenu(e, d)}
                                         />
                                     </li>
                                 );
