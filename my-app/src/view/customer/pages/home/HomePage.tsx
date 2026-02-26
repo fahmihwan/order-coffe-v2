@@ -1,7 +1,7 @@
-import Header from "../../component/Header";
-import SearchFilter from "../../component/SearchFilter";
-import CardMenu from "../../component/CardMenu";
-import DrawerListAddOnMenu from "../../component/customerDrawer/DrawerListAddOnMenu";
+import Header from "./component/Header";
+import SearchFilter from "./component/SearchFilter";
+import CardMenu from "./component/CardMenu";
+import DrawerListAddOnMenu from "./component/customerDrawer/DrawerListAddOnMenu";
 
 import { useHome } from "./hooks/useHome";
 import { formatRupiah, getMenuQty } from "./utils/cartUtils";

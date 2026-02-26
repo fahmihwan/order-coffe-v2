@@ -1,4 +1,4 @@
-import type { Menu } from "../../../types/menu"
+import type { Menu } from "../../../../../types/menu"
 
 interface CardMenuProps {
     menu: Menu,

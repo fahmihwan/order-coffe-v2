@@ -1,3 +1,20 @@
+
+// src/view/customer/customerDrawer/AddOnCompt.tsx
+// src/view/customer/customerDrawer/DrawerListAddOnMenu.tsx
+// src/view/customer/CardMenu.tsx
+// src/view/customer/Header.tsx
+// src/view/customer/SearchFilter.tsx
+// src/view/customer/pages/HomePage.tsx
+// src/view/customer/pages/utils/cartUtils.tsx
+// src/view/customer/pages/home/hooks/useCart.tsx
+// src/view/customer/pages/home/hooks/useDrawer.tsx
+// src/view/customer/pages/home/hooks/useMenuData.tsx
+// src/view/customer/pages/home/utils/cartUtils.tsx
+
+
+
+
+
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../component/Header";
 import SearchFilter from "../../component/SearchFilter";

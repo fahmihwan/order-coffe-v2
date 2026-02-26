@@ -1,7 +1,7 @@
 import { Drawer, DrawerHeader, DrawerItems } from 'flowbite-react';
 import AddOnCompt from './AddOnCompt';
-import type { Menu } from '../../../../types/menu';
-import type { AddOn, AddOnOption } from '../../../../types/addOn';
+import type { Menu } from '../../../../../../types/menu';
+import type { AddOn, AddOnOption } from '../../../../../../types/addOn';
 
 type DrawerListAddOnMenuProps = {
     isOpenDrawerAddOnMenu: boolean;
