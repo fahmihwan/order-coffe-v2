@@ -1,6 +1,6 @@
-import type { AddOnOption } from "../../../../../types/addOn";
-import type { CartItems } from "../../../../../types/cartItem";
-import type { Menu } from "../../../../../types/menu";
+import type { AddOnOption } from "../types/addOn";
+import type { CartItems } from "../types/cartItem";
+import type { Menu } from "../types/menu";
 
 export function buildCartKey(menuId: number, addons: AddOnOption[]) {
     const addonIds = [...addons]
@@ -32,16 +32,3 @@ export function formatRupiah(value: number): string {
     }).format(value);
 }
 
-export function loadCartFromStorage(): CartItems {
-    try {
-        const raw = localStorage.getItem("cart");
-        if (!raw) return {};
-        return JSON.parse(raw) as CartItems;
-    } catch {
-        return {};
-    }
-}
-
-export function saveCartToStorage(cart: CartItems) {
-    localStorage.setItem("cart", JSON.stringify(cart));
-}

@@ -8,6 +8,8 @@ export interface CartItem {
     menu: { id: number };
     addons: AddOnOption[];  // kamu pakai ini juga
     addonsPrice: number;    // dan ini
+    basePrice: number;
+
 };
 
 export interface CartItems {

@@ -9,6 +9,7 @@
 // src/view/customer/pages/home/hooks/useCart.tsx
 // src/view/customer/pages/home/hooks/useDrawer.tsx
 // src/view/customer/pages/home/hooks/useMenuData.tsx
+// src/view/customer/pages/home/hooks/useHome.tsx
 // src/view/customer/pages/home/utils/cartUtils.tsx
 
 

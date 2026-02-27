@@ -1,39 +1,81 @@
 import { Drawer, DrawerHeader, DrawerItems } from 'flowbite-react';
 import AddOnCompt from './AddOnCompt';
 import type { Menu } from '../../../../../../types/menu';
-import type { AddOn, AddOnOption } from '../../../../../../types/addOn';
+import type { AddOn } from '../../../../../../types/addOn';
+import { useAppDispatch, useAppSelector } from '../../../../../../redux/hooks';
+import { addFromDrawer, onAddOptions, resetDrawerOptions } from '../../../../../../redux/features/cartSlice';
+import { useMemo, useState } from 'react';
+import { formatRupiah } from '../../../../../../utils/cartUtils';
 
 type DrawerListAddOnMenuProps = {
     isOpenDrawerAddOnMenu: boolean;
-    handleCloseDrawerAddOnMenu: () => void;
-
     previewMenu: Menu | null;          // kalau bisa null saat belum pilih menu
     listAddOns: AddOn[];
-
-    countOptions: AddOnOption[];
-    totalAddCartDrawer: number;
-
-    handleAddCartDrawer: (e: React.MouseEvent<HTMLButtonElement>) => void;         // atau (menu: Menu) => void kalau butuh
-    onAddOptions: (option: AddOnOption, type: string, add_on_id: number,) => void; // sesuaikan signature sebenarnya
-    qtyDrawer: number;
-    handleQtyDrawer: (option: string) => void;
-    formatRupiah: (value: number) => string
+    setIsOpenDrawerAddOnMenu: React.Dispatch<React.SetStateAction<boolean>>;
+    setPreviewMenu: React.Dispatch<React.SetStateAction<Menu | null>>;
 };
 
 
 const DrawerListAddOnMenu = ({
     isOpenDrawerAddOnMenu,
-    handleCloseDrawerAddOnMenu,
     previewMenu,
     listAddOns,
-    countOptions,
-    handleAddCartDrawer,
-    totalAddCartDrawer,
-    onAddOptions,
-    qtyDrawer,
-    handleQtyDrawer,
-    formatRupiah
+    setIsOpenDrawerAddOnMenu,
+    setPreviewMenu
 }: DrawerListAddOnMenuProps) => {
+    const [qtyDrawer, setQtyDrawer] = useState<number>(1);
+    const drawerSelectedOptions = useAppSelector((state) => state.cart.drawerSelectedOptions)
+    const dispatch = useAppDispatch();
+
+
+    const totalAddCartDrawer = useMemo(() => {
+        const menuPrice = previewMenu?.price ?? 0;
+        const addOnsPrice = drawerSelectedOptions.reduce((total, item) => total + (item?.price ?? 0), 0);
+        const unitTotal = menuPrice + addOnsPrice;
+        return unitTotal * qtyDrawer;
+    }, [drawerSelectedOptions, previewMenu, qtyDrawer]);
+
+
+    const handleCloseDrawerAddOnMenu = () => {
+        dispatch(resetDrawerOptions());
+        setIsOpenDrawerAddOnMenu(false);
+        setQtyDrawer(1);
+        setPreviewMenu(null);
+    };
+
+
+    const handleQtyDrawer = (option: string) => {
+        if (option === "+") {
+            setQtyDrawer((prev) => prev + 1);
+            return;
+        }
+
+        if (option === "-") {
+            setQtyDrawer((prev) => {
+                if (prev > 1) return prev - 1;
+                // kalau qty sudah 1, close drawer
+                handleCloseDrawerAddOnMenu();
+                return 1;
+            });
+        }
+    };
+
+    const handleAddCartDrawer = (e: React.MouseEvent<HTMLButtonElement>) => {
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!previewMenu) return;
+        dispatch(addFromDrawer({
+            menu: previewMenu,
+            selectedAddons: drawerSelectedOptions,
+            qtyDrawer: qtyDrawer,
+        }))
+
+        handleCloseDrawerAddOnMenu();
+    };
+
+
     return (
         <Drawer open={isOpenDrawerAddOnMenu} onClose={handleCloseDrawerAddOnMenu} position="bottom" className="
                     w-[450px]
@@ -74,16 +116,13 @@ const DrawerListAddOnMenu = ({
 
                                             <ul className="list-none p-0 m-0 ">
                                                 {d.options.map((opt, index) => {
+                                                    const checked = drawerSelectedOptions.some((x) => x.id === opt.id);
+
                                                     if (opt.type == 'radio') {
                                                         const inputId = `radio-${d.id}-${opt.id}`;
                                                         const name = `radio-addon-${d.id}`; // penting: unik per addon
 
-                                                        let checked = false;
-                                                        if (countOptions.filter((d) => d.id == opt.id).length > 0) {
-                                                            checked = true;
-                                                        } else {
-                                                            checked = false;
-                                                        }
+
                                                         return (
                                                             <AddOnCompt
                                                                 formatRupiah={formatRupiah}
@@ -93,19 +132,13 @@ const DrawerListAddOnMenu = ({
                                                                 type={'radio'}
                                                                 inputId={inputId}
                                                                 checked={checked}
-                                                                onChange={() => onAddOptions(opt, opt.type, opt.add_on_id)}
+                                                                onChange={() => dispatch(onAddOptions({ opt: opt, type: opt.type, add_on_id: opt.add_on_id }))}
                                                             />
                                                         )
                                                     } else if (opt.type == 'checkbox') {
                                                         const inputId = `chk-${d.id}-${opt.id}`;
                                                         const name = `chk-addon-${d.id}`; // penting: unik per addon
 
-                                                        let checked = false;
-                                                        if (countOptions.filter((d) => d.id == opt.id).length > 0) {
-                                                            checked = true;
-                                                        } else {
-                                                            checked = false;
-                                                        }
                                                         return (
                                                             <AddOnCompt
                                                                 formatRupiah={formatRupiah}
@@ -115,7 +148,7 @@ const DrawerListAddOnMenu = ({
                                                                 type={'checkbox'}
                                                                 inputId={inputId}
                                                                 checked={checked}
-                                                                onChange={() => onAddOptions(opt, opt.type, opt.add_on_id)}
+                                                                onChange={() => dispatch(onAddOptions({ opt: opt, type: opt.type, add_on_id: opt.add_on_id }))}
                                                             />
                                                         )
                                                     }

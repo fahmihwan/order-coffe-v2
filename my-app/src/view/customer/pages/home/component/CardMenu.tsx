@@ -1,18 +1,21 @@
+import { decrementMenu, incrementMenu } from "../../../../../redux/features/cartSlice";
+import { useAppDispatch } from "../../../../../redux/hooks";
 import type { Menu } from "../../../../../types/menu"
+import { formatRupiah } from "../../../../../utils/cartUtils";
 
 interface CardMenuProps {
     menu: Menu,
     menuQty: number,
     onPreviewMenu: React.MouseEventHandler<HTMLButtonElement>,
-    handleDecMenu: (menuId: number) => void,
-    handleIncMenu: (menu: Menu) => void
 }
 
 const CardMenu = ({
-    handleDecMenu,
-    handleIncMenu,
     menu, menuQty, onPreviewMenu
 }: CardMenuProps) => {
+
+    const dispatch = useAppDispatch();
+
+
     return (
 
         <a href="#" className="flex flex-row items-center bg-white border   rounded-lg shadow-sm max-w-xl hover:bg-gray-100 p-2">
@@ -31,7 +34,7 @@ const CardMenu = ({
 
                 </div>
                 <div className=" flex  justify-between items-center ">
-                    <p>Rp. {menu?.price}</p>
+                    <p>{formatRupiah(menu?.price)} </p>
                     {menuQty == 0 ? (<button
                         onClick={onPreviewMenu}
                         type="button"
@@ -46,7 +49,7 @@ const CardMenu = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleDecMenu(menu.id)
+                                    dispatch(decrementMenu({ menuId: menu.id }))
                                 }}>-</button>
                             <div className="text-xl w-5 text-center">{menuQty}</div>
                             <button
@@ -55,7 +58,7 @@ const CardMenu = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleIncMenu(menu)
+                                    dispatch(incrementMenu({ menu: menu }))
                                 }}>+</button>
                         </div>
                     )}
