@@ -1,16 +1,18 @@
-import { decrementMenu, incrementMenu } from "../../../../../redux/features/cartSlice";
+import { decrementMenu } from "../../../../../redux/features/cartSlice";
 import { useAppDispatch } from "../../../../../redux/hooks";
 import type { Menu } from "../../../../../types/menu"
 import { formatRupiah } from "../../../../../utils/cartUtils";
 
 interface CardMenuProps {
+
     menu: Menu,
     menuQty: number,
     onPreviewMenu: React.MouseEventHandler<HTMLButtonElement>,
+    viewRepeatMenuDrawer: (menuId: number) => void,
 }
 
 const CardMenu = ({
-    menu, menuQty, onPreviewMenu
+    menu, menuQty, onPreviewMenu, viewRepeatMenuDrawer,
 }: CardMenuProps) => {
 
     const dispatch = useAppDispatch();
@@ -58,7 +60,7 @@ const CardMenu = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    dispatch(incrementMenu({ menu: menu }))
+                                    viewRepeatMenuDrawer(menu?.id)
                                 }}>+</button>
                         </div>
                     )}

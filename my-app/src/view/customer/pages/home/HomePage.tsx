@@ -5,14 +5,15 @@ import { getMenuQty } from "../../../../utils/cartUtils";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { useEffect, useState } from "react";
 import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
-import { resetDrawerOptions } from "../../../../redux/features/cartSlice";
+import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
 import type { Menu } from "../../../../types/menu";
-import DrawerListAddOnMenu from "./component/customerDrawer/DrawerListAddOnMenu";
+import DrawerListAddOnMenu from "./component/drawerAddCart/DrawerListAddOnMenu";
+import { DrawerRepeatMenu } from "./component/DrawerRepeatMenu";
+import type { CartItem } from "../../../../types/cartItem";
+
+
 
 export default function HomePage() {
-
-    // view/customer/pages/home/.....
-
     const dispatch = useAppDispatch();
     const cartItems = useAppSelector((state) => state.cart.items)
 
@@ -25,8 +26,27 @@ export default function HomePage() {
         dispatch(getListMenu());
     }, [dispatch]);
 
-
     const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
+    const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
+
+
+    const isRepeatMenuDrawer = (bool: boolean) => {
+        const menu = drawerRepeatMenu?.menu;
+        if (menu == null) return
+        if (bool) {
+            dispatch(incrementMenu({ menu }))
+        } else {
+            onPreviewMenu(menu)
+        }
+        setDrawerRepeatMenu(null)
+    }
+
+    const viewRepeatMenuDrawer = (menuId: number) => {
+        const cart = Object.values(cartItems)
+        const foundItem = cart?.find(item => item.menu?.id === menuId) ?? null;
+        setDrawerRepeatMenu(foundItem)
+    }
+
     const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
 
     const onPreviewMenu = (data: Menu) => {
@@ -36,11 +56,13 @@ export default function HomePage() {
         dispatch(getAddOnOptionsByMenuId({ menuId: data.id }))
     };
 
+    const viewCart = () => {
+        console.log(cartItems);
+    }
+
 
     if (status === "loading") return <div>Loading menu...</div>;
     if (status === "failed") return <div>Error: {error}</div>;
-
-
 
     return (
         <>
@@ -61,6 +83,7 @@ export default function HomePage() {
                                             menu={d}
                                             menuQty={menuQty}
                                             onPreviewMenu={() => onPreviewMenu(d)}
+                                            viewRepeatMenuDrawer={viewRepeatMenuDrawer}
                                         />
                                     </li>
                                 );
@@ -71,6 +94,7 @@ export default function HomePage() {
                     {/* has cart */}
                     {Object.keys(cartItems).length > 0 && (
                         <div
+                            onClick={viewCart}
                             className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
                             <button type="button" className="border-4 text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px]">
                                 Lihat keranjang
@@ -84,6 +108,11 @@ export default function HomePage() {
                         listAddOns={listAddOnOptions}
                         setIsOpenDrawerAddOnMenu={setIsOpenDrawerAddOnMenu}
                         setPreviewMenu={setPreviewMenu}
+                    />
+                    <DrawerRepeatMenu
+                        drawerRepeatMenu={drawerRepeatMenu}
+                        setDrawerRepeatMenu={setDrawerRepeatMenu}
+                        isRepeatMenuDrawer={isRepeatMenuDrawer}
                     />
                 </div>
             </div>
