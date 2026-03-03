@@ -1,403 +1,122 @@
-import { useEffect, useMemo, useState } from "react";
-import Header from "../../component/Header";
-import SearchFilter from "../../component/SearchFilter";
-import CardMenu from "../../component/CardMenu";
-
-import type { AddOnOption, AddOn } from "../../../../types/addOn";
-import type { Category } from "../../../../types/category";
+import Header from "./component/Header";
+import SearchFilter from "./component/SearchFilter";
+import CardMenu from "./component/CardMenu";
+import { getMenuQty } from "../../../../utils/cartUtils";
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { useEffect, useState } from "react";
+import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
+import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
 import type { Menu } from "../../../../types/menu";
-import { getAddOnOptionsByMenuId, getMenu } from "../../../../api/menu";
-import DrawerListAddOnMenu from "../../component/customerDrawer/DrawerListAddOnMenu";
-import type { CartItems } from "../../../../types/cartItem";
+import DrawerListAddOnMenu from "./component/drawerAddCart/DrawerListAddOnMenu";
+import { DrawerRepeatMenu } from "./component/DrawerRepeatMenu";
+import type { CartItem } from "../../../../types/cartItem";
+
 
 
 export default function HomePage() {
+    const dispatch = useAppDispatch();
+    const cartItems = useAppSelector((state) => state.cart.items)
 
-
-    // pindah ke useMenuData
-    const [menu, setMenu] = useState<Category[]>([])
-    const [listAddOns, setListAddOns] = useState<AddOn[]>([])
-
-
-    const [isOpenModal, setIsOpenModal] = useState(false);
-
-    const [countOptions, setCountOptions] = useState<AddOnOption[]>([])
-
-    // pindah ke useMenu Data
-    const [cartItems, setCartItems] = useState<CartItems>({}); // source of truth qty
-
-
-
-    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null)
-
-
-    // drawer
-    const [qtyDrawer, setQtyDrawer] = useState<number>(1)
-    const handleQtyDrawer = (option: string) => {
-
-        if (option == '+') {
-            setQtyDrawer((prev) => prev + 1)
-        } else if (option == '-') {
-            if (qtyDrawer > 1) {
-                setQtyDrawer((prev => prev - 1))
-            } else if (qtyDrawer == 1) {
-                handleCloseDrawer()
-            }
-
-
-        }
-    }
-
-
-    const totalAddCartDrawer = useMemo<number>(() => {
-        const menuPrice = previewMenu?.price ?? 0;
-
-        const addOnsPrice = countOptions.reduce((total, item) => {
-            return total + (item?.price ?? 0);
-        }, 0);
-
-        const unitTotal = menuPrice + addOnsPrice;
-        return unitTotal * qtyDrawer;
-    }, [countOptions, previewMenu, qtyDrawer]);
-
-
-
-    // pindah ke useMenuData
-    function fetchMenu() {
-        getMenu()
-            .then((data) => data)
-            .then((data) => {
-                setMenu(data)
-            })
-            .catch((err) => {
-                console.error("Gagal ambil menu:", err);
-            })
-            .finally(() => {
-            });
-    }
-
-    // pindah ke useMenuData
-    function fetchAddOnOptionByMenuId(menuId: number) {
-        getAddOnOptionsByMenuId(menuId)
-            .then((data) => data)
-            .then((data) => {
-                setListAddOns(data)
-            })
-            .catch((err) => {
-                console.error("Gagal ambil menu:", err);
-            })
-            .finally(() => {
-            });
-    }
-
-    // pindah ke cartUtils
-    function getMenuQty(cart: CartItems | null | undefined, menuId: number): number {
-        return Object.values(cart ?? {})
-            .filter((it) => it.menu.id === menuId)
-            .reduce((sum, it) => sum + it.qty, 0);
-    }
-
-    const handleCloseDrawer = () => {
-        setListAddOns([])
-        setCountOptions([])
-        setIsOpenModal(false);
-        setQtyDrawer(1)
-    }
-
-    const onPreviewMenu = (
-        data: Menu
-    ) => {
-
-        setIsOpenModal(true)
-        setPreviewMenu(data)
-        fetchAddOnOptionByMenuId(data.id)
-    }
-
-
+    const menus = useAppSelector((state) => state.menu.menus);
+    const listAddOnOptions = useAppSelector((state) => state.menu.addOnOptions)
+    const status = useAppSelector((state) => state.menu.status);
+    const error = useAppSelector((state) => state.menu.error);
 
     useEffect(() => {
-        fetchMenu()
-        const saved = JSON.parse(localStorage.getItem('cart') || "{}");
-        if (!saved) return;
+        dispatch(getListMenu());
+    }, [dispatch]);
 
-        queueMicrotask(() => {
-            try {
-                setCartItems(JSON.parse(saved) as CartItems);
-            } catch {
-                setCartItems({});
-            }
-        });
-    }, []);
+    const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
+    const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
 
 
-    useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cartItems));
-    }, [cartItems]);
-
-
-
-    // onchange checkbox or radio
-    const onAddOptions = (
-        opt: AddOnOption,
-        type: string,
-        add_on_id: number,
-    ) => {
-        const exists = countOptions.filter((c) => c?.id == opt?.id)
-
-
-        if (type == 'checkbox') {
-            if (exists.length == 0) {
-                setCountOptions([...countOptions, opt])
-            } else {
-                const remove = countOptions.filter((c) => c.id != opt.id)
-                setCountOptions(remove)
-            }
-        } else if (type == 'radio') {
-            const radioOptExist = countOptions.filter((d) => add_on_id == d.add_on_id)
-
-            if (radioOptExist.length == 0) {
-                setCountOptions([...countOptions, opt])
-            } else {
-
-                const changeRadio = countOptions.filter((d) => d.id != radioOptExist[0].id)
-                setCountOptions([...changeRadio, opt])
-            }
+    const isRepeatMenuDrawer = (bool: boolean) => {
+        const menu = drawerRepeatMenu?.menu;
+        if (menu == null) return
+        if (bool) {
+            dispatch(incrementMenu({ menu }))
+        } else {
+            onPreviewMenu(menu)
         }
+        setDrawerRepeatMenu(null)
     }
 
-
-
-    // pindah ke cartUtils.
-    // bikin signature addons biar stabil (urut + hanya id)
-    function buildCartKey(menuId: number, addons: AddOnOption[]) {
-        const addonIds = [...addons]
-            .map(a => a.id)
-            .sort((a, b) => a - b)
-            .join("-");
-
-        return `${menuId}::${addonIds || "noaddon"}`;
+    const viewRepeatMenuDrawer = (menuId: number) => {
+        const cart = Object.values(cartItems)
+        const foundItem = cart?.find(item => item.menu?.id === menuId) ?? null;
+        setDrawerRepeatMenu(foundItem)
     }
 
-    // pindah ke cartUtils.
-    // kalkulasi AddOn aja
-    function calcAddonsPrice(addons: AddOnOption[]) {
-        return addons.reduce((sum, a) => sum + (a.price || 0), 0);
-    }
+    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
 
-
-    const handleAddCartDrawer = () => {
-        const menu = previewMenu
-        const selectedAddons = countOptions
-
-
-        // 1) ambil cart existing
-        const cartRaw = localStorage.getItem('cart');
-        const cart = cartRaw ? JSON.parse(cartRaw) : {}
-
-
-        if (!menu) return
-        // 2) bikin key unik untuk menu+addons
-        const key = buildCartKey(menu?.id, selectedAddons);
-
-
-        // 3) hitung harga
-        const basePrice = menu?.price;
-        const addonsPrice = calcAddonsPrice(selectedAddons);
-        const unitPrice = basePrice + addonsPrice;
-
-        // 4) upsert item
-        const existing = cart[key];
-
-        const nextQty = existing ? existing.qty + qtyDrawer : qtyDrawer;
-
-        cart[key] = {
-            key,
-            menu,
-            addons: selectedAddons,
-            qty: nextQty,
-            basePrice,
-            addonsPrice,
-            totalPrice: unitPrice * nextQty,
-        };
-
-        // 5) simpan ke localStorage
-        localStorage.setItem('cart', JSON.stringify(cart));
-        setCartItems(cart);
-        handleCloseDrawer()
-    }
-
-    // pindah ke cartUtils.
-    function formatRupiah(value: number): string {
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            maximumFractionDigits: 0,
-        }).format(value);
-    }
-
-
-    const handleIncMenu = (menu: Menu) => {
-        setCartItems((prev) => {
-            const noAddonKey = `${menu.id}::noaddon`;
-
-            // ambil semua cart item untuk menu yang sama
-            const sameMenuEntries = Object.entries(prev).filter(
-                ([, item]) => item.menu.id === menu.id
-            );
-
-            // tentuin target:
-            // 1) kalau ada noaddon, add ke noaddon
-            // 2) kalau gak ada noaddon tapi ada existing (mis. "2::1"), add ke existing terakhir
-            // 3) kalau belum ada, create noaddon
-            let targetKey: string | null = null;
-
-            if (prev[noAddonKey]) {
-                targetKey = noAddonKey;
-            } else if (sameMenuEntries.length > 0) {
-                targetKey = sameMenuEntries[sameMenuEntries.length - 1][0]; // key terakhir, contoh "2::1"
-            } else {
-                targetKey = noAddonKey;
-            }
-
-            const existing = prev[targetKey];
-
-            // kalau targetKey itu existing (contoh "2::1"), berarti addons-nya ikut existing itu
-            const addons = existing ? existing.addons : ([] as AddOnOption[]);
-            const addonsPrice = existing
-                ? existing.addonsPrice
-                : 0;
-
-            const basePrice = menu.price;
-            const unitPrice = basePrice + addonsPrice;
-            const nextQty = existing ? existing.qty + 1 : 1;
-
-            return {
-                ...prev,
-                [targetKey]: {
-                    key: targetKey,
-                    menu,                 // update menu info kalau ada perubahan dari API
-                    addons,               // ini yang bikin "addons sama"
-                    qty: nextQty,
-                    basePrice,
-                    addonsPrice,
-                    totalPrice: unitPrice * nextQty,
-                },
-            };
-        });
+    const onPreviewMenu = (data: Menu) => {
+        setIsOpenDrawerAddOnMenu(true);
+        setPreviewMenu(data);
+        dispatch(resetDrawerOptions());
+        dispatch(getAddOnOptionsByMenuId({ menuId: data.id }))
     };
 
-
-    // dec: kalau ada banyak variasi addon, dec yang paling “baru” itu ambigu.
-    // paling aman: tombol "-" buka cart/modal.
-    // tapi kalau mau simple: kurangi dari item noaddon dulu, kalau gak ada kurangi dari item pertama yang ketemu.
-    const handleDecMenu = (menuId: number) => {
-        setCartItems((prev) => {
-            const items = Object.values(prev).filter((it) => it.menu.id === menuId);
-            if (items.length === 0) return prev;
-
-            const noAddonKey = `${menuId}::noaddon`;
-            const target = items.find((it) => it.key === noAddonKey) ?? items[0];
-
-            const nextQty = target.qty - 1;
-
-            if (nextQty <= 0) {
-                const next = { ...prev };
-                delete next[target.key];
-                return next;
-            }
-
-            const unitPrice = target.unitPrice ?? target.totalPrice / target.qty;
-
-            return {
-                ...prev,
-                [target.key]: {
-                    ...target,
-                    qty: nextQty,
-                    totalPrice: unitPrice * nextQty,
-                },
-            };
-        });
-    };
+    const viewCart = () => {
+        console.log(cartItems);
+    }
 
 
+    if (status === "loading") return <div>Loading menu...</div>;
+    if (status === "failed") return <div>Error: {error}</div>;
 
-
-
-
-    return (<>
-        <Header />
-        <div className="p-5">
-            <SearchFilter />
-
-            <div className="w-full ">
-
-                {
-                    menu.map((item, i) => (
-                        <ul key={i} className="list-none p-0 m-0 mt-5 ">
+    return (
+        <>
+            <Header />
+            <div className="p-5">
+                <SearchFilter />
+                <div className="w-full">
+                    {menus?.map((item, i) => (
+                        <ul key={i} className="list-none p-0 m-0 mt-5">
                             <li className="mb-2">{item.category_name}</li>
 
                             {item.menus.map((d, idx) => {
                                 const menuQty = getMenuQty(cartItems, d.id);
-                                return (
 
-                                    <li
-                                        className="mb-2"
-                                        key={idx + '-child'}
-                                    >
+                                return (
+                                    <li className="mb-2" key={idx + "-child"}>
                                         <CardMenu
-                                            handleDecMenu={handleDecMenu}
-                                            handleIncMenu={handleIncMenu}
                                             menu={d}
                                             menuQty={menuQty}
-                                            onChange={() => onPreviewMenu(d)}
+                                            onPreviewMenu={() => onPreviewMenu(d)}
+                                            viewRepeatMenuDrawer={viewRepeatMenuDrawer}
                                         />
                                     </li>
-                                )
+                                );
                             })}
-
                         </ul>
-                    ))
-                }
+                    ))}
 
-                {localStorage.getItem('cart') != null && (
-                    <div className="bg-white
-                fixed bottom-0 left-1/2 -translate-x-1/2
-                flex justify-center w-[450px] ">
-                        <button
-                            type="button"
-                            className="border-4   text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px]"
-                        >
-                            Lihat keranjang
-                        </button>
-                    </div>
+                    {/* has cart */}
+                    {Object.keys(cartItems).length > 0 && (
+                        <div
+                            onClick={viewCart}
+                            className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
+                            <button type="button" className="border-4 text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px]">
+                                Lihat keranjang
+                            </button>
+                        </div>
+                    )}
 
-                )}
+                    <DrawerListAddOnMenu
+                        isOpenDrawerAddOnMenu={isOpenDrawerAddOnMenu}
+                        previewMenu={previewMenu}
+                        listAddOns={listAddOnOptions}
+                        setIsOpenDrawerAddOnMenu={setIsOpenDrawerAddOnMenu}
+                        setPreviewMenu={setPreviewMenu}
+                    />
+                    <DrawerRepeatMenu
+                        drawerRepeatMenu={drawerRepeatMenu}
+                        setDrawerRepeatMenu={setDrawerRepeatMenu}
+                        isRepeatMenuDrawer={isRepeatMenuDrawer}
+                    />
+                </div>
+            </div>
 
-                <DrawerListAddOnMenu
-                    isOpenModal={isOpenModal}
-                    handleCloseDrawer={handleCloseDrawer}
-                    previewMenu={previewMenu}
-                    listAddOns={listAddOns}
-                    countOptions={countOptions}
-                    handleAddCartDrawer={handleAddCartDrawer}
-                    totalAddCartDrawer={totalAddCartDrawer}
-                    onAddOptions={onAddOptions}
-                    qtyDrawer={qtyDrawer}
-                    handleQtyDrawer={handleQtyDrawer}
-                    formatRupiah={formatRupiah}
-                />
-
-
-            </div >
-
-
-        </div >
-
-
-
-
-
-
-
-    </>)
-}   
+        </>
+    );
+}

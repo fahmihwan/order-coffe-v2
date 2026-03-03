@@ -1,5 +1,5 @@
 
-import type { AddOnOption, } from "../../../../types/addOn";
+import type { AddOnOption, } from "../../../../../../types/addOn";
 
 
 interface AddOnComptProps {

@@ -1,18 +1,23 @@
-import type { Menu } from "../../../types/menu"
+import { decrementMenu } from "../../../../../redux/features/cartSlice";
+import { useAppDispatch } from "../../../../../redux/hooks";
+import type { Menu } from "../../../../../types/menu"
+import { formatRupiah } from "../../../../../utils/cartUtils";
 
 interface CardMenuProps {
+
     menu: Menu,
     menuQty: number,
-    onChange: React.MouseEventHandler<HTMLButtonElement>,
-    handleDecMenu: (menuId: number) => void,
-    handleIncMenu: (menu: Menu) => void
+    onPreviewMenu: React.MouseEventHandler<HTMLButtonElement>,
+    viewRepeatMenuDrawer: (menuId: number) => void,
 }
 
 const CardMenu = ({
-    handleDecMenu,
-    handleIncMenu,
-    menu, menuQty, onChange
+    menu, menuQty, onPreviewMenu, viewRepeatMenuDrawer,
 }: CardMenuProps) => {
+
+    const dispatch = useAppDispatch();
+
+
     return (
 
         <a href="#" className="flex flex-row items-center bg-white border   rounded-lg shadow-sm max-w-xl hover:bg-gray-100 p-2">
@@ -31,9 +36,9 @@ const CardMenu = ({
 
                 </div>
                 <div className=" flex  justify-between items-center ">
-                    <p>Rp. {menu?.price}</p>
+                    <p>{formatRupiah(menu?.price)} </p>
                     {menuQty == 0 ? (<button
-                        onClick={onChange}
+                        onClick={onPreviewMenu}
                         type="button"
                         className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2 "
                     >
@@ -46,7 +51,7 @@ const CardMenu = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleDecMenu(menu.id)
+                                    dispatch(decrementMenu({ menuId: menu.id }))
                                 }}>-</button>
                             <div className="text-xl w-5 text-center">{menuQty}</div>
                             <button
@@ -55,7 +60,7 @@ const CardMenu = ({
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    handleIncMenu(menu)
+                                    viewRepeatMenuDrawer(menu?.id)
                                 }}>+</button>
                         </div>
                     )}

@@ -1,12 +1,12 @@
-import type { AddOnOption } from "../../../../../types/addOn";
-import type { CartItems } from "../../../../../types/cartItem";
+import type { AddOnOption } from "../types/addOn";
+import type { CartItems } from "../types/cartItem";
+import type { Menu } from "../types/menu";
 
 export function buildCartKey(menuId: number, addons: AddOnOption[]) {
     const addonIds = [...addons]
-        .map(a => a.id)
+        .map((a) => a.id)
         .sort((a, b) => a - b)
         .join("-");
-
     return `${menuId}::${addonIds || "noaddon"}`;
 }
 
@@ -14,6 +14,9 @@ export function calcAddonsPrice(addons: AddOnOption[]) {
     return addons.reduce((sum, a) => sum + (a.price || 0), 0);
 }
 
+export function calcUnitPrice(menu: Menu, addonsPrice: number) {
+    return (menu.price ?? 0) + (addonsPrice ?? 0);
+}
 
 export function getMenuQty(cart: CartItems | null | undefined, menuId: number): number {
     return Object.values(cart ?? {})
@@ -28,3 +31,4 @@ export function formatRupiah(value: number): string {
         maximumFractionDigits: 0,
     }).format(value);
 }
+
