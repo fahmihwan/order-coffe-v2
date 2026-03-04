@@ -2,6 +2,7 @@ import { decrementMenu } from "../../../../../redux/features/cartSlice";
 import { useAppDispatch } from "../../../../../redux/hooks";
 import type { Menu } from "../../../../../types/menu"
 import { formatRupiah } from "../../../../../utils/cartUtils";
+import QuantityStepper from "../../../../shared/component/QuantityStepper";
 
 interface CardMenuProps {
 
@@ -44,32 +45,24 @@ const CardMenu = ({
                     >
                         Tambah
                     </button>) : (
-                        <div className="flex justify-center border-2 rounded-2xl bg-blue-100 border-blue-700  w-20">
-                            <button
-                                type="button"
-                                className=" w-8 text-xl"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    dispatch(decrementMenu({ menuId: menu.id }))
-                                }}>-</button>
-                            <div className="text-xl w-5 text-center">{menuQty}</div>
-                            <button
-                                type="button"
-                                className=" w-8 text-xl"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    viewRepeatMenuDrawer(menu?.id)
-                                }}>+</button>
-                        </div>
+                        <QuantityStepper
+                            onPlus={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                viewRepeatMenuDrawer(menu?.id)
+                            }}
+                            menuQty={menuQty}
+                            onMinus={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                dispatch(decrementMenu({ menuId: menu.id }))
+                            }}
+                        />
                     )}
+                </div >
 
-
-                </div>
-
-            </div>
-        </a>
+            </div >
+        </a >
 
     )
 }

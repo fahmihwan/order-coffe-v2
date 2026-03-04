@@ -2,7 +2,7 @@
 "use client";
 
 import { Drawer, DrawerHeader, DrawerItems } from "flowbite-react";
-import type { CartItem } from "../../../../../types/cartItem";
+import type { CartItem } from "../../../types/cartItem";
 
 type DrawerRepeatMenuProps = {
     drawerRepeatMenu: CartItem | null
