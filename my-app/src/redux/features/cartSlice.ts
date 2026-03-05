@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { AddOnOption } from "../../types/addOn";
-import type { CartItems } from "../../types/cartItem";
+import type { CartItem, CartItems } from "../../types/cartItem";
 import type { Menu } from "../../types/menu";
 import { buildCartKey, calcAddonsPrice, calcUnitPrice } from "../../utils/cartUtils";
 
@@ -12,10 +12,12 @@ type AddFromDrawerPayload = {
 
 type IncrementMenuPayload = {
     menu: Menu;
+    cartKey: string | null
 };
 
 type DecrementMenuPayload = {
     menuId: number;
+    cartKey: string | null
 };
 
 
@@ -71,14 +73,22 @@ export const cartSlice = createSlice({
             };
         },
         incrementMenu(state, action: PayloadAction<IncrementMenuPayload>) {
-            const { menu } = action.payload;
+            const { menu, cartKey } = action.payload;
             const noAddonKey = `${menu.id}::noaddon`;
-
             const prev = state.items;
 
-            const sameMenuEntries = Object.entries(prev).filter(
-                ([, item]) => item.menu.id === menu.id
-            );
+            let sameMenuEntries: [string, CartItem][] = [];
+
+
+            if (cartKey != null) {
+                // find by cart Key
+                sameMenuEntries = Object.entries(prev).filter(([, item]) => item.key === cartKey);
+            } else {
+                // find by Menu Id
+                sameMenuEntries = Object.entries(prev).filter(([, item]) => item.menu.id === menu.id);
+            }
+
+
 
             let targetKey: string;
 
@@ -112,10 +122,18 @@ export const cartSlice = createSlice({
             };
         },
         decrementMenu(state, action: PayloadAction<DecrementMenuPayload>) {
-            const { menuId } = action.payload;
+            const { menuId, cartKey } = action.payload;
             const prev = state.items;
 
-            const items = Object.values(prev).filter((it) => it.menu.id === menuId);
+
+            let items: CartItem[] = [];
+
+            if (cartKey != null) {
+                items = Object.values(prev).filter((it) => it.key === cartKey);
+            } else {
+                items = Object.values(prev).filter((it) => it.menu.id === menuId);
+            }
+
             if (items.length === 0) return;
 
             const noAddonKey = `${menuId}::noaddon`;

@@ -55,7 +55,7 @@ const CardMenu = ({
                             onMinus={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                dispatch(decrementMenu({ menuId: menu.id }))
+                                dispatch(decrementMenu({ menuId: menu.id, cartKey: null }))
                             }}
                         />
                     )}

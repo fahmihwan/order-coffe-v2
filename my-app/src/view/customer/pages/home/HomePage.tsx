@@ -34,7 +34,7 @@ export default function HomePage() {
         const menu = drawerRepeatMenu?.menu;
         if (menu == null) return
         if (bool) {
-            dispatch(incrementMenu({ menu }))
+            dispatch(incrementMenu({ menu: menu, cartKey: null }))
         } else {
             onPreviewMenu(menu)
         }
