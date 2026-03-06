@@ -1,61 +1,73 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import Header from "./component/Header";
 import SearchFilter from "./component/SearchFilter";
 import CardMenu from "./component/CardMenu";
-import { getMenuQty } from "../../../../utils/cartUtils";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { useEffect, useState } from "react";
-import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
-import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
-import type { Menu } from "../../../../types/menu";
 import DrawerListAddOnMenu from "./component/drawerAddCart/DrawerListAddOnMenu";
 import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
+
+import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
+import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
+
+import { getMenuQty } from "../../../../utils/cartUtils";
+
+import type { Menu } from "../../../../types/menu";
 import type { CartItem } from "../../../../types/cartItem";
-import { Link } from "react-router-dom";
-
-
 
 export default function HomePage() {
     const dispatch = useAppDispatch();
-    const cartItems = useAppSelector((state) => state.cart.items)
 
-    const menus = useAppSelector((state) => state.menu.menus);
-    const listAddOnOptions = useAppSelector((state) => state.menu.addOnOptions)
+    const cartItems = useAppSelector((state) => state.cart.items);
+    const menuGroups = useAppSelector((state) => state.menu.menus);
+    const addOnOptions = useAppSelector((state) => state.menu.addOnOptions);
     const status = useAppSelector((state) => state.menu.status);
     const error = useAppSelector((state) => state.menu.error);
+
+    const [isAddOnDrawerOpen, setIsAddOnDrawerOpen] = useState(false);
+    const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
+    const [repeatMenuItem, setRepeatMenuItem] = useState<CartItem | null>(null);
 
     useEffect(() => {
         dispatch(getListMenu());
     }, [dispatch]);
 
-    const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
-    const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
-
-    const isRepeatMenuDrawer = (bool: boolean) => {
-        const menu = drawerRepeatMenu?.menu;
-        if (menu == null) return
-        if (bool) {
-            dispatch(incrementMenu({ menu: menu, cartKey: null }))
-        } else {
-            onPreviewMenu(menu)
-        }
-        setDrawerRepeatMenu(null)
-    }
-
-    const viewRepeatMenuDrawer = (menuId: number) => {
-        const cart = Object.values(cartItems)
-        const foundItem = cart?.find(item => item.menu?.id === menuId) ?? null;
-        setDrawerRepeatMenu(foundItem)
-    }
-
-    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
-
-    const onPreviewMenu = (data: Menu) => {
-        setIsOpenDrawerAddOnMenu(true);
-        setPreviewMenu(data);
+    const openAddOnDrawer = (menu: Menu) => {
+        setSelectedMenu(menu);
+        setIsAddOnDrawerOpen(true);
         dispatch(resetDrawerOptions());
-        dispatch(getAddOnOptionsByMenuId({ menuId: data.id }))
+        dispatch(getAddOnOptionsByMenuId({ menuId: menu.id }));
     };
 
+    const closeAddOnDrawer = () => {
+        setIsAddOnDrawerOpen(false);
+        setSelectedMenu(null);
+    };
+
+    const openRepeatMenuDrawer = (menuId: number) => {
+        const foundItem = Object.values(cartItems).find((item) => item.menu.id === menuId) ?? null;
+        setRepeatMenuItem(foundItem);
+    };
+
+    const handleRepeatMenuChoice = (useSameAddOns: boolean) => {
+        if (!repeatMenuItem?.menu) return;
+
+        if (useSameAddOns) {
+            dispatch(
+                incrementMenu({
+                    menu: repeatMenuItem.menu,
+                    cartKey: null,
+                })
+            );
+        } else {
+            openAddOnDrawer(repeatMenuItem.menu);
+        }
+
+        setRepeatMenuItem(null);
+    };
+
+    const hasCart = Object.keys(cartItems).length > 0;
 
     if (status === "loading") return <div>Loading menu...</div>;
     if (status === "failed") return <div>Error: {error}</div>;
@@ -63,23 +75,25 @@ export default function HomePage() {
     return (
         <>
             <Header />
+
             <div className="p-5">
                 <SearchFilter />
-                <div className="w-full">
-                    {menus?.map((item, i) => (
-                        <ul key={i} className="list-none p-0 m-0 mt-5">
-                            <li className="mb-2">{item.category_name}</li>
 
-                            {item.menus.map((d, idx) => {
-                                const menuQty = getMenuQty(cartItems, d.id);
+                <div className="w-full">
+                    {menuGroups?.map((group) => (
+                        <ul key={group.category_name} className="list-none p-0 m-0 mt-5">
+                            <li className="mb-2">{group.category_name}</li>
+
+                            {group.menus.map((menu) => {
+                                const menuQty = getMenuQty(cartItems, menu.id);
 
                                 return (
-                                    <li className="mb-2" key={idx + "-child"}>
+                                    <li className="mb-2" key={menu.id}>
                                         <CardMenu
-                                            menu={d}
+                                            menu={menu}
                                             menuQty={menuQty}
-                                            onPreviewMenu={() => onPreviewMenu(d)}
-                                            viewRepeatMenuDrawer={viewRepeatMenuDrawer}
+                                            onPreviewMenu={() => openAddOnDrawer(menu)}
+                                            viewRepeatMenuDrawer={openRepeatMenuDrawer}
                                         />
                                     </li>
                                 );
@@ -87,31 +101,32 @@ export default function HomePage() {
                         </ul>
                     ))}
 
-                    {/* has cart */}
-                    {Object.keys(cartItems).length > 0 && (
-                        <div
-                            className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
-                            <Link to="/cart" type="button" className="text-center text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px] border-0">Lihat keranjang</Link>
+                    {hasCart && (
+                        <div className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
+                            <Link
+                                to="/cart"
+                                type="button"
+                                className="text-center text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px] border-0"
+                            >
+                                Lihat keranjang
+                            </Link>
                         </div>
-
                     )}
 
-
                     <DrawerListAddOnMenu
-                        isOpenDrawerAddOnMenu={isOpenDrawerAddOnMenu}
-                        previewMenu={previewMenu}
-                        listAddOns={listAddOnOptions}
-                        setIsOpenDrawerAddOnMenu={setIsOpenDrawerAddOnMenu}
-                        setPreviewMenu={setPreviewMenu}
+                        open={isAddOnDrawerOpen}
+                        menu={selectedMenu}
+                        addOns={addOnOptions}
+                        onClose={closeAddOnDrawer}
                     />
+
                     <DrawerRepeatMenu
-                        drawerRepeatMenu={drawerRepeatMenu}
-                        setDrawerRepeatMenu={setDrawerRepeatMenu}
-                        isRepeatMenuDrawer={isRepeatMenuDrawer}
+                        drawerRepeatMenu={repeatMenuItem}
+                        setDrawerRepeatMenu={setRepeatMenuItem}
+                        isRepeatMenuDrawer={handleRepeatMenuChoice}
                     />
                 </div>
             </div>
-
         </>
     );
 }

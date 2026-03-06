@@ -1,176 +1,192 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { formatRupiah } from "../../../../utils/cartUtils";
-import QuantityStepper from "../../../shared/component/QuantityStepper";
-import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
-import type { CartItem } from "../../../../types/cartItem";
-import { useState } from "react";
-import { decrementMenu, incrementMenu, resetDrawerOptions, setDrawerSelectedOptions } from "../../../../redux/features/cartSlice";
-import DrawerListAddOnMenu from "../home/component/drawerAddCart/DrawerListAddOnMenu";
-import type { Menu } from "../../../../types/menu";
+import {
+    decrementMenu,
+    incrementMenu,
+    resetDrawerOptions,
+    setDrawerSelectedOptions,
+} from "../../../../redux/features/cartSlice";
 import { getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
 
+import { formatRupiah } from "../../../../utils/cartUtils";
+
+import QuantityStepper from "../../../shared/component/QuantityStepper";
+import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
+import DrawerListAddOnMenu from "../home/component/drawerAddCart/DrawerListAddOnMenu";
+
+import type { CartItem } from "../../../../types/cartItem";
+import type { Menu } from "../../../../types/menu";
 
 export default function CartPage() {
     const dispatch = useAppDispatch();
-    const cartItems = useAppSelector((state) => state.cart.items)
 
-    const menus = Object.values(cartItems).map((item) => item);
-
-
-    const listAddOnOptions = useAppSelector((state) => state.menu.addOnOptions)
+    const cartItems = useAppSelector((state) => state.cart.items);
+    const addOnOptions = useAppSelector((state) => state.menu.addOnOptions);
     const status = useAppSelector((state) => state.menu.status);
     const error = useAppSelector((state) => state.menu.error);
 
+    const [isAddOnDrawerOpen, setIsAddOnDrawerOpen] = useState(false);
+    const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
+    const [repeatMenuItem, setRepeatMenuItem] = useState<CartItem | null>(null);
 
-    const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
-    const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
-    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
+    const pb1Rate = 0.1;
 
-    const pb1Rate = 0.10; // nanti ganti dari DB, mis: Number(setting.pb1Rate) / 100
+    const cartList = useMemo(() => Object.values(cartItems), [cartItems]);
 
-    const isRepeatMenuDrawer = (bool: boolean, cartKey: string | null) => {
-        const menu = drawerRepeatMenu?.menu;
-        if (menu == null) return
-        if (bool) {
-            dispatch(incrementMenu({ menu: menu, cartKey: cartKey }))
-        } else {
-            onPreviewMenu(menu)
-        }
-        setDrawerRepeatMenu(null)
-    }
+    const subtotal = useMemo(() => {
+        return cartList.reduce((total, item) => total + (item.totalPrice ?? 0), 0);
+    }, [cartList]);
 
+    const tax = useMemo(() => Math.round(subtotal * pb1Rate), [subtotal, pb1Rate]);
+    const grandTotal = useMemo(() => subtotal + tax, [subtotal, tax]);
 
-    const onPreviewMenu = (data: Menu) => {
-        setIsOpenDrawerAddOnMenu(true);
-        setPreviewMenu(data);
+    const totalItem = useMemo(() => {
+        return cartList.reduce((total, item) => total + (item.qty ?? 0), 0);
+    }, [cartList]);
+
+    const openAddOnDrawer = (menu: Menu) => {
+        setSelectedMenu(menu);
+        setIsAddOnDrawerOpen(true);
         dispatch(resetDrawerOptions());
-        dispatch(getAddOnOptionsByMenuId({ menuId: data.id }))
+        dispatch(getAddOnOptionsByMenuId({ menuId: menu.id }));
     };
 
+    const closeAddOnDrawer = () => {
+        setIsAddOnDrawerOpen(false);
+        setSelectedMenu(null);
+        dispatch(resetDrawerOptions());
+    };
 
-    const onCustomizeCartItem = (item: CartItem) => {
-        setIsOpenDrawerAddOnMenu(true);
-        setPreviewMenu(item.menu);
+    const openCustomizeDrawer = (item: CartItem) => {
+        setSelectedMenu(item.menu);
+        setIsAddOnDrawerOpen(true);
         dispatch(getAddOnOptionsByMenuId({ menuId: item.menu.id }));
-
-        // preload addon dari cart item yang sedang diedit
         dispatch(setDrawerSelectedOptions(item.addons ?? []));
     };
 
-    const viewRepeatMenuDrawer = (cartKey: string) => {
-        const cart = Object.values(cartItems)
-        const foundItem = cart?.find(item => item.key === cartKey) ?? null;
-        setDrawerRepeatMenu(foundItem)
-    }
+    const openRepeatMenuDrawer = (cartKey: string) => {
+        const foundItem = cartList.find((item) => item.key === cartKey) ?? null;
+        setRepeatMenuItem(foundItem);
+    };
 
+    const handleRepeatMenuChoice = (useSameAddOns: boolean, cartKey: string | null) => {
+        if (!repeatMenuItem?.menu) return;
 
+        if (useSameAddOns) {
+            dispatch(
+                incrementMenu({
+                    menu: repeatMenuItem.menu,
+                    cartKey,
+                })
+            );
+        } else {
+            openAddOnDrawer(repeatMenuItem.menu);
+        }
+
+        setRepeatMenuItem(null);
+    };
 
     if (status === "loading") return <div>Loading menu...</div>;
     if (status === "failed") return <div>Error: {error}</div>;
 
     return (
         <>
-            <div className=" p-2  border h-14 shadow-lg flex items-center" >
-                <Link
-                    to="/menu"
-                    type="button"
-                >
+            <div className="p-2 border h-14 shadow-lg flex items-center">
+                <Link to="/menu" type="button">
                     Back
                 </Link>
-
-
             </div>
+
             <div className="p-5">
-                <p className=""><b>Ringkasan Pesan</b></p>
+                <p>
+                    <b>Ringkasan Pesan</b>
+                </p>
+
                 <div className="mb-5">
                     <ul>
-                        {
-                            menus?.map((item, i) => {
-                                // const menuQty = getMenuQty(cartItems, item.menu.id);
+                        {cartList.map((item) => (
+                            <li
+                                key={item.key}
+                                className="flex justify-between py-5 w-full border-b border-dotted border-gray-400"
+                            >
+                                <div className="w-1/4">
+                                    <b>{item.menu?.name}</b>
+                                    <p className="font-light text-sm mb-1">{formatRupiah(item.totalPrice)}</p>
+                                    <p className="line-clamp-2 font-light text-xs">
+                                        {item.addons?.map((addon) => addon.name).join(", ") || "-"}
+                                    </p>
 
-                                return (
-                                    <li key={i} className=" flex justify-between py-5 w-full border-b border-dotted border-gray-400">
-                                        <div className="w-1/4">
-                                            <b>{item.menu?.name}</b>
-                                            <p className="font-light text-sm mb-1">{formatRupiah(item.totalPrice)} </p>
-                                            <p className="line-clamp-2 font-light text-xs">{item?.addons?.map(a => a.name).join(", ") ?? "-"}</p>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    onCustomizeCartItem(item);
-                                                }}
-                                                className="mt-1 font-normal text-sm text-red-500"
-                                            >
-                                                Kustomisasi
-                                            </button>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            openCustomizeDrawer(item);
+                                        }}
+                                        className="mt-1 font-normal text-sm text-red-500"
+                                    >
+                                        Kustomisasi
+                                    </button>
+                                </div>
 
-                                        </div>
-                                        <div className="w-1/4">
-                                            <QuantityStepper
-                                                onPlus={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    viewRepeatMenuDrawer(item.key)
-                                                }}
-                                                menuQty={item.qty}
-                                                onMinus={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    dispatch(decrementMenu({ menuId: item.menu.id, cartKey: item.key }))
-                                                }} />
-                                        </div>
-                                        <div className="w-1/4">
-                                            <b>{formatRupiah(item.totalPrice)}</b>
-                                        </div>
-                                    </li>
-                                )
-                            })
-                        }
+                                <div className="w-1/4">
+                                    <QuantityStepper
+                                        menuQty={item.qty}
+                                        onPlus={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            openRepeatMenuDrawer(item.key);
+                                        }}
+                                        onMinus={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            dispatch(
+                                                decrementMenu({
+                                                    menuId: item.menu.id,
+                                                    cartKey: item.key,
+                                                })
+                                            );
+                                        }}
+                                    />
+                                </div>
 
+                                <div className="w-1/4">
+                                    <b>{formatRupiah(item.totalPrice)}</b>
+                                </div>
+                            </li>
+                        ))}
                     </ul>
                 </div>
 
-                <RincianTagihan menus={menus} pb1Rate={pb1Rate} />
-
+                <RincianTagihan cartItems={cartList} pb1Rate={pb1Rate} />
             </div>
 
             <DrawerListAddOnMenu
-                isOpenDrawerAddOnMenu={isOpenDrawerAddOnMenu}
-                previewMenu={previewMenu}
-                listAddOns={listAddOnOptions}
-                setIsOpenDrawerAddOnMenu={setIsOpenDrawerAddOnMenu}
-                setPreviewMenu={setPreviewMenu}
+                open={isAddOnDrawerOpen}
+                menu={selectedMenu}
+                addOns={addOnOptions}
+                onClose={closeAddOnDrawer}
             />
+
             <DrawerRepeatMenu
-                drawerRepeatMenu={drawerRepeatMenu}
-                setDrawerRepeatMenu={setDrawerRepeatMenu}
-                isRepeatMenuDrawer={isRepeatMenuDrawer}
+                drawerRepeatMenu={repeatMenuItem}
+                setDrawerRepeatMenu={setRepeatMenuItem}
+                isRepeatMenuDrawer={handleRepeatMenuChoice}
             />
+
             <div className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 w-[450px] p-5 shadow-lg border-t-2">
                 <div className="flex items-center gap-4">
                     <div className="w-1/2">
-                        <p>6 item</p>
-                        <p>
-                            {formatRupiah(
-                                (() => {
-                                    const sub = (menus ?? []).reduce(
-                                        (acc, item) => acc + (item?.totalPrice ?? 0),
-                                        0
-                                    );
-                                    const tax = Math.round(sub * pb1Rate);
-                                    return sub + tax;
-                                })()
-                            )}
-                        </p>
+                        <p>{totalItem} item</p>
+                        <p>{formatRupiah(grandTotal)}</p>
                     </div>
 
                     <div className="w-1/2">
                         <Link
                             to="/cart"
-                            className="block w-full text-center text-white rounded-lg p-3  z-50 bg-blue-700 border-0"
+                            className="block w-full text-center text-white rounded-lg p-3 z-50 bg-blue-700 border-0"
                         >
                             Lanjut
                         </Link>
@@ -178,18 +194,19 @@ export default function CartPage() {
                 </div>
             </div>
         </>
-
-    )
+    );
 }
 
 
+
+
 type RincianTagihanProps = {
-    menus: CartItem[],
+    cartItems: CartItem[],
     pb1Rate: number
 }
 
 export const RincianTagihan = ({
-    menus,
+    cartItems,
     pb1Rate,
 }: RincianTagihanProps) => {
 
@@ -203,7 +220,7 @@ export const RincianTagihan = ({
                         <td>Total Item</td>
                         <td className="text-right py-2">
                             {formatRupiah(
-                                (menus ?? []).reduce((acc, item) => acc + (item?.totalPrice ?? 0), 0)
+                                (cartItems ?? []).reduce((acc, item) => acc + (item?.totalPrice ?? 0), 0)
                             )}
 
                         </td>
@@ -213,7 +230,7 @@ export const RincianTagihan = ({
                         <td className="text-right py-2">
                             {formatRupiah(
                                 Math.round(
-                                    (menus ?? []).reduce((acc, item) => acc + (item?.totalPrice ?? 0), 0) * pb1Rate
+                                    (cartItems ?? []).reduce((acc, item) => acc + (item?.totalPrice ?? 0), 0) * pb1Rate
                                 )
                             )}
                         </td>
@@ -223,7 +240,7 @@ export const RincianTagihan = ({
                         <td className="text-right py-2"><b>
                             {formatRupiah(
                                 (() => {
-                                    const sub = (menus ?? []).reduce(
+                                    const sub = (cartItems ?? []).reduce(
                                         (acc, item) => acc + (item?.totalPrice ?? 0),
                                         0
                                     );
