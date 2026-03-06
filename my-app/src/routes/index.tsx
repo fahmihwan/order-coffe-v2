@@ -18,7 +18,7 @@ const HomeAdmin = lazy(() => import("../view/cmsAdmin/Home.tsx"));
 
 // // pages (lazy)
 const Home = lazy(() => import("../view/customer/pages/home/HomePage.tsx"));
-const AddMenu = lazy(() => import("../view/customer/pages/AddMenu.tsx"));
+// const AddMenu = lazy(() => import("../view/customer/pages/AddMenu.tsx"));
 // const DetailEvent = lazy(() => import("../view/home/DetailEvent"));
 // const CartTicket = lazy(() => import("../view/home/CartTicket"));
 // const Checkout = lazy(() => import("../view/transaction/Checkout"));
