@@ -189,7 +189,9 @@ export const cartSlice = createSlice({
 
             state.drawerSelectedOptions = prev;
         },
-
+        setDrawerSelectedOptions: (state, action) => {
+            state.drawerSelectedOptions = action.payload;
+        },
         // opsional tapi biasanya kepake pas close drawer
         resetDrawerOptions(state) {
             state.drawerSelectedOptions = [];
@@ -203,6 +205,7 @@ export const {
     incrementMenu,
     decrementMenu,
     onAddOptions,
+    setDrawerSelectedOptions,
     resetDrawerOptions
 } = cartSlice.actions;
 

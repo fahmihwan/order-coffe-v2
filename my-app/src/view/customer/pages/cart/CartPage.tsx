@@ -5,7 +5,7 @@ import QuantityStepper from "../../../shared/component/QuantityStepper";
 import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
 import type { CartItem } from "../../../../types/cartItem";
 import { useState } from "react";
-import { decrementMenu, incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
+import { decrementMenu, incrementMenu, resetDrawerOptions, setDrawerSelectedOptions } from "../../../../redux/features/cartSlice";
 import DrawerListAddOnMenu from "../home/component/drawerAddCart/DrawerListAddOnMenu";
 import type { Menu } from "../../../../types/menu";
 import { getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
@@ -25,7 +25,9 @@ export default function CartPage() {
 
     const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
     const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
+    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
 
+    const pb1Rate = 0.10; // nanti ganti dari DB, mis: Number(setting.pb1Rate) / 100
 
     const isRepeatMenuDrawer = (bool: boolean, cartKey: string | null) => {
         const menu = drawerRepeatMenu?.menu;
@@ -37,7 +39,7 @@ export default function CartPage() {
         }
         setDrawerRepeatMenu(null)
     }
-    const [previewMenu, setPreviewMenu] = useState<Menu | null>(null);
+
 
     const onPreviewMenu = (data: Menu) => {
         setIsOpenDrawerAddOnMenu(true);
@@ -47,13 +49,21 @@ export default function CartPage() {
     };
 
 
+    const onCustomizeCartItem = (item: CartItem) => {
+        setIsOpenDrawerAddOnMenu(true);
+        setPreviewMenu(item.menu);
+        dispatch(getAddOnOptionsByMenuId({ menuId: item.menu.id }));
+
+        // preload addon dari cart item yang sedang diedit
+        dispatch(setDrawerSelectedOptions(item.addons ?? []));
+    };
+
     const viewRepeatMenuDrawer = (cartKey: string) => {
         const cart = Object.values(cartItems)
         const foundItem = cart?.find(item => item.key === cartKey) ?? null;
         setDrawerRepeatMenu(foundItem)
     }
 
-    const pb1Rate = 0.10; // nanti ganti dari DB, mis: Number(setting.pb1Rate) / 100
 
 
     if (status === "loading") return <div>Loading menu...</div>;
@@ -85,8 +95,18 @@ export default function CartPage() {
                                             <b>{item.menu?.name}</b>
                                             <p className="font-light text-sm mb-1">{formatRupiah(item.totalPrice)} </p>
                                             <p className="line-clamp-2 font-light text-xs">{item?.addons?.map(a => a.name).join(", ") ?? "-"}</p>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    onCustomizeCartItem(item);
+                                                }}
+                                                className="mt-1 font-normal text-sm text-red-500"
+                                            >
+                                                Kustomisasi
+                                            </button>
 
-                                            <p className="mt-1 font-normal text-sm text-red-500">Kustomisasi</p>
                                         </div>
                                         <div className="w-1/4">
                                             <QuantityStepper
