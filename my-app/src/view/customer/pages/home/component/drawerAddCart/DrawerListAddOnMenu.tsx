@@ -124,7 +124,7 @@ const DrawerListAddOnMenu = ({
                 <div className="flex-1 min-h-0 overflow-y-auto  pb-16 px-4">
                     <img
                         className="object-cover w-full h-auto rounded-lg"
-                        src="https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s" />
+                        src={previewMenu?.image} />
                     <div className="flex justify-between py-2">
                         <p className="text-lg font-bold">{previewMenu?.name}</p>
                         <p className="mb-6  text-gray-500  text-lg">
