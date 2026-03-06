@@ -139,7 +139,7 @@ export default function CartPage() {
                                         }}
                                         className="mt-1 font-normal text-sm text-red-500"
                                     >
-                                        Kustomisasi
+                                        <b>Kustomisasi</b>
                                     </button>
                                 </div>
 
