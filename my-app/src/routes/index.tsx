@@ -11,6 +11,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
+import CartPage from "../view/customer/pages/cart/CartPage.tsx";
 
 
 const HomeAdmin = lazy(() => import("../view/cmsAdmin/Home.tsx"));
@@ -43,7 +44,7 @@ const routes = createBrowserRouter([
                 path: "/menu", element: <Home />,
             },
             {
-                path: "/add-menu", element: <AddMenu />
+                path: "/cart", element: <CartPage />
             }
         ]
     }

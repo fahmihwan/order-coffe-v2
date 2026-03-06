@@ -8,8 +8,9 @@ import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features
 import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
 import type { Menu } from "../../../../types/menu";
 import DrawerListAddOnMenu from "./component/drawerAddCart/DrawerListAddOnMenu";
-import { DrawerRepeatMenu } from "./component/DrawerRepeatMenu";
+import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
 import type { CartItem } from "../../../../types/cartItem";
+import { Link } from "react-router-dom";
 
 
 
@@ -29,12 +30,11 @@ export default function HomePage() {
     const [isOpenDrawerAddOnMenu, setIsOpenDrawerAddOnMenu] = useState(false);
     const [drawerRepeatMenu, setDrawerRepeatMenu] = useState<CartItem | null>(null);
 
-
     const isRepeatMenuDrawer = (bool: boolean) => {
         const menu = drawerRepeatMenu?.menu;
         if (menu == null) return
         if (bool) {
-            dispatch(incrementMenu({ menu }))
+            dispatch(incrementMenu({ menu: menu, cartKey: null }))
         } else {
             onPreviewMenu(menu)
         }
@@ -55,10 +55,6 @@ export default function HomePage() {
         dispatch(resetDrawerOptions());
         dispatch(getAddOnOptionsByMenuId({ menuId: data.id }))
     };
-
-    const viewCart = () => {
-        console.log(cartItems);
-    }
 
 
     if (status === "loading") return <div>Loading menu...</div>;
@@ -94,13 +90,12 @@ export default function HomePage() {
                     {/* has cart */}
                     {Object.keys(cartItems).length > 0 && (
                         <div
-                            onClick={viewCart}
                             className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
-                            <button type="button" className="border-4 text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px]">
-                                Lihat keranjang
-                            </button>
+                            <Link to="/cart" type="button" className="text-center text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px] border-0">Lihat keranjang</Link>
                         </div>
+
                     )}
+
 
                     <DrawerListAddOnMenu
                         isOpenDrawerAddOnMenu={isOpenDrawerAddOnMenu}
