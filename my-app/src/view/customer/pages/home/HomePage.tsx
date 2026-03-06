@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import Header from "./component/Header";
@@ -67,7 +67,10 @@ export default function HomePage() {
         setRepeatMenuItem(null);
     };
 
-    const hasCart = Object.keys(cartItems).length > 0;
+    const totalQtyCart = useMemo(() => {
+        return Object.values(cartItems).reduce((sum, item) => sum + item.qty, 0);
+    }, [cartItems])
+
 
     if (status === "loading") return <div>Loading menu...</div>;
     if (status === "failed") return <div>Error: {error}</div>;
@@ -81,7 +84,7 @@ export default function HomePage() {
 
                 <div className="w-full">
                     {menuGroups?.map((group) => (
-                        <ul key={group.category_name} className="list-none p-0 m-0 mt-5">
+                        <ul key={group.id} className="list-none p-0 m-0 mt-5">
                             <li className="mb-2">{group.category_name}</li>
 
                             {group.menus.map((menu) => {
@@ -101,14 +104,14 @@ export default function HomePage() {
                         </ul>
                     ))}
 
-                    {hasCart && (
+                    {totalQtyCart > 0 && (
                         <div className="bg-white fixed bottom-0 left-1/2 -translate-x-1/2 flex justify-center w-[450px]">
                             <Link
                                 to="/cart"
                                 type="button"
                                 className="text-center text-white rounded-lg m-2 p-3 shadow z-50 bg-blue-700 w-[400px] border-0"
                             >
-                                Lihat keranjang
+                                ({totalQtyCart}) Lihat keranjang
                             </Link>
                         </div>
                     )}

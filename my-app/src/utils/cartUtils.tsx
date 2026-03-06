@@ -2,12 +2,19 @@ import type { AddOnOption } from "../types/addOn";
 import type { CartItems } from "../types/cartItem";
 import type { Menu } from "../types/menu";
 
+
 export function buildCartKey(menuId: number, addons: AddOnOption[]) {
-    const addonIds = [...addons]
-        .map((a) => a.id)
+    const addonKey = [...addons]
+        .map((addon) => addon.id)
         .sort((a, b) => a - b)
         .join("-");
-    return `${menuId}::${addonIds || "noaddon"}`;
+
+    return addonKey ? `${menuId}-${addonKey}` : `${menuId}`;
+    // const addonIds = [...addons]
+    //     .map((a) => a.id)
+    //     .sort((a, b) => a - b)
+    //     .join("-");
+    // return `${menuId}::${addonIds || "noaddon"}`;
 }
 
 export function calcAddonsPrice(addons: AddOnOption[]) {

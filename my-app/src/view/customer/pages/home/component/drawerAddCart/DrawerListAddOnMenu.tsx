@@ -11,6 +11,7 @@ import {
     addFromDrawer,
     onAddOptions,
     resetDrawerOptions,
+    updateCartItemFromDrawer,
 } from "../../../../../../redux/features/cartSlice";
 
 import { formatRupiah } from "../../../../../../utils/cartUtils";
@@ -20,6 +21,8 @@ type DrawerListAddOnMenuProps = {
     menu: Menu | null;
     addOns: AddOn[];
     onClose: () => void;
+    editingCartKey?: string | null;
+    initialQty?: number;
 };
 
 const DrawerListAddOnMenu = ({
@@ -27,11 +30,17 @@ const DrawerListAddOnMenu = ({
     menu,
     addOns,
     onClose,
+    editingCartKey = null,
+    initialQty = 1,
 }: DrawerListAddOnMenuProps) => {
     const dispatch = useAppDispatch();
     const drawerSelectedOptions = useAppSelector((state) => state.cart.drawerSelectedOptions);
 
-    const [qty, setQty] = useState(1);
+    const [qty, setQty] = useState(initialQty ?? 1);
+
+
+    const isEditMode = Boolean(editingCartKey);
+
 
     const missingRequiredAddOns = useMemo(() => {
         return addOns.filter((addOn) => {
@@ -98,13 +107,24 @@ const DrawerListAddOnMenu = ({
             return;
         }
 
-        dispatch(
-            addFromDrawer({
-                menu,
-                selectedAddons: drawerSelectedOptions,
-                qtyDrawer: qty,
-            })
-        );
+        if (editingCartKey) {
+            dispatch(
+                updateCartItemFromDrawer({
+                    cartKey: editingCartKey,
+                    menu,
+                    selectedAddons: drawerSelectedOptions,
+                    qtyDrawer: qty,
+                })
+            );
+        } else {
+            dispatch(
+                addFromDrawer({
+                    menu,
+                    selectedAddons: drawerSelectedOptions,
+                    qtyDrawer: qty,
+                })
+            );
+        }
 
         handleClose();
     };
@@ -229,7 +249,7 @@ const DrawerListAddOnMenu = ({
                             className={`w-full text-white ${isFormValid ? "bg-blue-700 hover:bg-blue-800" : "bg-gray-400"
                                 } focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm py-2.5`}
                         >
-                            Tambah | {formatRupiah(totalPrice)}
+                            {isEditMode ? "Perbarui" : "Tambah"} | {formatRupiah(totalPrice)}
                         </button>
                     </div>
                 </div>

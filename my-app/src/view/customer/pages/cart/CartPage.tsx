@@ -31,6 +31,9 @@ export default function CartPage() {
     const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
     const [repeatMenuItem, setRepeatMenuItem] = useState<CartItem | null>(null);
 
+    const [editingCartKey, setEditingCartKey] = useState<string | null>(null);
+    const [initialDrawerQty, setInitialDrawerQty] = useState(1);
+
     const pb1Rate = 0.1;
 
     const cartList = useMemo(() => Object.values(cartItems), [cartItems]);
@@ -48,7 +51,10 @@ export default function CartPage() {
 
     const openAddOnDrawer = (menu: Menu) => {
         setSelectedMenu(menu);
+        setEditingCartKey(null);
+        setInitialDrawerQty(1);
         setIsAddOnDrawerOpen(true);
+
         dispatch(resetDrawerOptions());
         dispatch(getAddOnOptionsByMenuId({ menuId: menu.id }));
     };
@@ -56,12 +62,18 @@ export default function CartPage() {
     const closeAddOnDrawer = () => {
         setIsAddOnDrawerOpen(false);
         setSelectedMenu(null);
-        dispatch(resetDrawerOptions());
+        setEditingCartKey(null);
+        setInitialDrawerQty(1);
+        dispatch(resetDrawerOptions());;
     };
 
     const openCustomizeDrawer = (item: CartItem) => {
         setSelectedMenu(item.menu);
+        setEditingCartKey(item.key);
+        setInitialDrawerQty(item.qty);
         setIsAddOnDrawerOpen(true);
+
+        dispatch(resetDrawerOptions());
         dispatch(getAddOnOptionsByMenuId({ menuId: item.menu.id }));
         dispatch(setDrawerSelectedOptions(item.addons ?? []));
     };
@@ -168,6 +180,8 @@ export default function CartPage() {
                 menu={selectedMenu}
                 addOns={addOnOptions}
                 onClose={closeAddOnDrawer}
+                editingCartKey={editingCartKey}
+                initialQty={initialDrawerQty}
             />
 
             <DrawerRepeatMenu

@@ -161,7 +161,6 @@ export const cartSlice = createSlice({
         },
         onAddOptions(state, action: PayloadAction<ToggleDrawerOptionPayload>) {
             const { opt, type, add_on_id } = action.payload;
-            console.log(action.payload);
 
             const prev = state.drawerSelectedOptions;
 
@@ -189,6 +188,54 @@ export const cartSlice = createSlice({
 
             state.drawerSelectedOptions = prev;
         },
+        updateCartItemFromDrawer: (state, action) => {
+            const { cartKey, menu, selectedAddons, qtyDrawer } = action.payload;
+
+            const currentItem = state.items[cartKey];
+            if (!currentItem) return;
+
+            const normalizedAddons = [...selectedAddons].sort((a, b) => a.id - b.id);
+
+            const addOnTotal = normalizedAddons.reduce(
+                (total: number, addon: AddOnOption) => total + (addon.price ?? 0),
+                0
+            );
+
+            const unitPrice = (menu.price ?? 0) + addOnTotal;
+            const totalPrice = unitPrice * qtyDrawer;
+
+            const newKey = buildCartKey(menu.id, normalizedAddons);
+
+            const updatedItem = {
+                ...currentItem,
+                key: newKey,
+                menu,
+                addons: normalizedAddons,
+                qty: qtyDrawer,
+                totalPrice,
+            };
+
+            if (newKey === cartKey) {
+                state.items[cartKey] = updatedItem;
+                return;
+            }
+
+            const duplicateItem = state.items[newKey];
+
+            if (duplicateItem) {
+                state.items[newKey] = {
+                    ...duplicateItem,
+                    qty: duplicateItem.qty + qtyDrawer,
+                    totalPrice: duplicateItem.totalPrice + totalPrice,
+                };
+
+                delete state.items[cartKey];
+                return;
+            }
+
+            state.items[newKey] = updatedItem;
+            delete state.items[cartKey];
+        },
         setDrawerSelectedOptions: (state, action) => {
             state.drawerSelectedOptions = action.payload;
         },
@@ -205,6 +252,7 @@ export const {
     incrementMenu,
     decrementMenu,
     onAddOptions,
+    updateCartItemFromDrawer,
     setDrawerSelectedOptions,
     resetDrawerOptions
 } = cartSlice.actions;
