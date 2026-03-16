@@ -5,16 +5,16 @@ export const navMenus: MenuNavItem[] = [
     {
         type: "link",
         label: "Dashboard",
-        to: "/",
+        to: "/admin/dashboard",
     },
     {
         type: "group",
         key: "master",
         label: "Master",
         items: [
-            { label: "Menu", to: "/menu" },
-            { label: "Add on", to: "/add-on" },
-            { label: "Kategori", to: "/kategori" },
+            { label: "Menu", to: "/admin/master/menu" },
+            { label: "Add on", to: "/admin/master/add-on" },
+            { label: "Kategori", to: "/admin/master/category" },
         ],
     },
     {
@@ -22,13 +22,13 @@ export const navMenus: MenuNavItem[] = [
         key: "kelola",
         label: "Kelola",
         items: [
-            { label: "Kategori - Menu", to: "/kategori-menu" },
-            { label: "Menu - Add on", to: "/menu-add-on" },
+            { label: "Kategori - Menu", to: "/admin/kelola/kategori-menu" },
+            { label: "Menu - Add on", to: "/admin/kelola/menu-add-on" },
         ],
     },
     {
         type: "link",
         label: "Transaksi",
-        to: "/transaksi",
+        to: "/admin/transaksi",
     },
 ];

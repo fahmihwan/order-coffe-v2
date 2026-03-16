@@ -14,25 +14,25 @@ import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
 import CartPage from "../view/customer/pages/cart/CartPage.tsx"
 
 
-const DashboardPage = lazy(() => import("../view/cmsAdmin/DashboardPage.tsx"));
+
+const DashboardPage = lazy(() => import("../view/cmsAdmin/Dashboard/DashboardPage.tsx"));
+const MenuPage = lazy(() => import("../view/cmsAdmin/Master/Menu/MenuPage.tsx"));
+const AddOnPage = lazy(() => import("../view/cmsAdmin/Master/AddOn/AddOnPage.tsx"));
+const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoriPage.tsx"));
+
 
 // // pages (lazy)
 const Home = lazy(() => import("../view/customer/pages/home/HomePage.tsx"));
-// const AddMenu = lazy(() => import("../view/customer/pages/AddMenu.tsx"));
-// const DetailEvent = lazy(() => import("../view/home/DetailEvent"));
-// const CartTicket = lazy(() => import("../view/home/CartTicket"));
-// const Checkout = lazy(() => import("../view/transaction/Checkout"));
 
-// const LoginAdmin = lazy(() => import("../view/cmsAdmin/auth/LoginAdmin"));
-// const Dashboard = lazy(() => import("../view/cmsAdmin/Dashboard"));
 
 const routes = createBrowserRouter([
     {
         element: <LayoutAdmin />,
         children: [
-            {
-                path: "/admin", element: <DashboardPage />
-            }
+            { path: "/admin/dashboard", element: <DashboardPage /> },
+            { path: "/admin/master/menu", element: <MenuPage /> },
+            { path: "/admin/master/add-on", element: <AddOnPage /> },
+            { path: "/admin/master/category", element: <CategoryPage /> },
         ]
     },
     {

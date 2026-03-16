@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import type { Dispatch, SetStateAction, RefObject } from "react";
 import { Avatar, Dropdown, DropdownHeader, DropdownItem } from "flowbite-react";
 import { navMenus } from "../../config/menuDashboard";
@@ -97,25 +97,25 @@ const MobileMenuNav = ({
         kelola: kelolaRef,
     };
 
+    const { pathname } = useLocation()
+
     return (
         <div className="md:hidden shadow border-t bg-white">
             <div className="flex flex-col p-3 space-y-2">
                 {navMenus.map((menu) => {
                     if (menu.type === "link") {
-                        const isDashboard = menu.to === "/";
-                        const isTransaksi = menu.to === "/transaksi";
+
+                        const isActive = pathname === menu.to;
 
                         return (
                             <Link
                                 key={menu.to}
-                                to={menu?.to}
+                                to={menu.to}
                                 onClick={closeAllMenu}
                                 className={
-                                    isDashboard
+                                    isActive
                                         ? "py-2 px-3 border border-blue-700 text-blue-700 rounded"
-                                        : isTransaksi
-                                            ? "py-2 px-3 border rounded"
-                                            : "py-2 px-3"
+                                        : "py-2 px-3 border rounded"
                                 }
                             >
                                 {menu.label}
@@ -123,16 +123,26 @@ const MobileMenuNav = ({
                         );
                     }
 
+                    const isActiveGroup = menu.items.some((item) => pathname === item.to);
+
                     return (
                         <div
                             key={menu.key}
-                            className="border rounded"
+                            className={
+                                isActiveGroup
+                                    ? "border border-blue-700 rounded"
+                                    : "border rounded"
+                            }
                             ref={menuRefs[menu.key]}
                         >
                             <button
                                 type="button"
                                 onClick={() => toggleMenu(menu?.key)}
-                                className="w-full flex justify-between items-center py-2 px-3"
+                                className={
+                                    isActiveGroup
+                                        ? "w-full flex justify-between items-center py-2 px-3 text-blue-700"
+                                        : "w-full flex justify-between items-center py-2 px-3"
+                                }
                             >
                                 <span>{menu.label}</span>
                                 <span>{openMenu === menu.key ? "-" : "+"}</span>
@@ -140,16 +150,24 @@ const MobileMenuNav = ({
 
                             {openMenu === menu.key && (
                                 <div className="px-3 pb-3 flex flex-col space-y-2">
-                                    {menu.items.map((item) => (
-                                        <Link
-                                            key={item.to}
-                                            to={item.to}
-                                            className="pl-2 py-1"
-                                            onClick={closeAllMenu}
-                                        >
-                                            {item.label}
-                                        </Link>
-                                    ))}
+                                    {menu.items.map((item) => {
+                                        const isActiveChild = pathname === item.to;
+
+                                        return (
+                                            <Link
+                                                key={item.to}
+                                                to={item.to}
+                                                className={
+                                                    isActiveChild
+                                                        ? "pl-2 py-1 text-blue-700 font-medium"
+                                                        : "pl-2 py-1"
+                                                }
+                                                onClick={closeAllMenu}
+                                            >
+                                                {item.label}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -159,90 +177,7 @@ const MobileMenuNav = ({
         </div>
     );
 };
-// const MobileMenuNav = ({
-//     closeAllMenu,
-//     masterRef,
-//     toggleMenu,
-//     openMenu,
-//     kelolaRef,
-// }: MobileMenuNavProps) => {
-//     return (
-//         <div className="md:hidden shadow border-t bg-white">
-//             <div className="flex flex-col p-3 space-y-2">
-//                 <Link
-//                     to="/"
-//                     className="py-2 px-3 border border-blue-700 text-blue-700 rounded"
-//                     onClick={closeAllMenu}
-//                 >
-//                     Dashboard
-//                 </Link>
 
-//                 <div className="border rounded" ref={masterRef}>
-//                     <button
-//                         type="button"
-//                         onClick={() => toggleMenu("master")}
-//                         className="w-full flex justify-between items-center py-2 px-3"
-//                     >
-//                         <span>Master</span>
-//                         <span>{openMenu === "master" ? "-" : "+"}</span>
-//                     </button>
-
-//                     {openMenu === "master" && (
-//                         <div className="px-3 pb-3 flex flex-col space-y-2">
-//                             <Link to="/menu" className="pl-2 py-1" onClick={closeAllMenu}>
-//                                 Menu
-//                             </Link>
-//                             <Link to="/add-on" className="pl-2 py-1" onClick={closeAllMenu}>
-//                                 Add on
-//                             </Link>
-//                             <Link to="/kategori" className="pl-2 py-1" onClick={closeAllMenu}>
-//                                 Kategori
-//                             </Link>
-//                         </div>
-//                     )}
-//                 </div>
-
-//                 <div className="border rounded" ref={kelolaRef}>
-//                     <button
-//                         type="button"
-//                         onClick={() => toggleMenu("kelola")}
-//                         className="w-full flex justify-between items-center py-2 px-3"
-//                     >
-//                         <span>Kelola</span>
-//                         <span>{openMenu === "kelola" ? "-" : "+"}</span>
-//                     </button>
-
-//                     {openMenu === "kelola" && (
-//                         <div className="px-3 pb-3 flex flex-col space-y-2">
-//                             <Link
-//                                 to="/kategori-menu"
-//                                 className="pl-2 py-1"
-//                                 onClick={closeAllMenu}
-//                             >
-//                                 Kategori - Menu
-//                             </Link>
-//                             <Link
-//                                 to="/menu-add-on"
-//                                 className="pl-2 py-1"
-//                                 onClick={closeAllMenu}
-//                             >
-//                                 Menu - Add on
-//                             </Link>
-//                         </div>
-//                     )}
-//                 </div>
-
-//                 <Link
-//                     to="/transaksi"
-//                     className="py-2 px-3 border rounded"
-//                     onClick={closeAllMenu}
-//                 >
-//                     Transaksi
-//                 </Link>
-//             </div>
-//         </div>
-//     );
-// };
 
 interface DesktopMenuNavProps {
     masterRef: MenuRefs;
@@ -262,30 +197,31 @@ const DesktopMenuNav = ({
         master: masterRef,
         kelola: kelolaRef,
     };
+    const { pathname } = useLocation()
 
     return (
-        <div className="hidden md:flex shadow-lg py-2 justify-center">
+        <div className="hidden md:flex shadow-lg py-2 justify-center" >
             <div className="flex">
                 {navMenus.map((menu) => {
                     if (menu.type === "link") {
-                        const isDashboard = menu.to === "/";
-                        const isTransaksi = menu.to === "/transaksi";
+
+                        const isActive = pathname === menu.to;
 
                         return (
                             <div
                                 key={menu.to}
                                 className={
-                                    isDashboard
+                                    isActive
                                         ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-blue-700 text-blue-700"
-                                        : isTransaksi
-                                            ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"
-                                            : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center"
-                                }
+                                        : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"}
                             >
                                 <Link to={menu.to}>{menu.label}</Link>
                             </div>
                         );
                     }
+
+                    const isActiveGroup = menu.items.some((item) => pathname === item.to);
+
 
                     return (
                         <div
@@ -296,7 +232,11 @@ const DesktopMenuNav = ({
                             <button
                                 type="button"
                                 onClick={() => toggleMenu(menu.key)}
-                                className="w-full py-2 px-2 border flex items-center justify-between"
+                                className={
+                                    isActiveGroup
+                                        ? "w-full py-2 px-2 border border-blue-700 text-blue-700 flex items-center justify-between"
+                                        : "w-full py-2 px-2 border flex items-center justify-between"
+                                }
                             >
                                 <span>{menu.label}</span>
                                 <span>{openMenu === menu.key ? "▲" : "▼"}</span>
@@ -305,16 +245,24 @@ const DesktopMenuNav = ({
                             {openMenu === menu.key && (
                                 <div className="absolute left-0 top-full mt-1 w-[220px] bg-white border rounded shadow-lg z-50">
                                     <ul className="py-2">
-                                        {menu.items.map((item) => (
-                                            <li key={item.to}>
-                                                <Link
-                                                    to={item.to}
-                                                    className="block px-4 py-2 hover:bg-gray-100"
-                                                >
-                                                    {item.label}
-                                                </Link>
-                                            </li>
-                                        ))}
+                                        {menu.items.map((item) => {
+                                            const isActiveChild = pathname === item.to;
+
+                                            return (
+                                                <li key={item.to}>
+                                                    <Link
+                                                        to={item.to}
+                                                        className={
+                                                            isActiveChild
+                                                                ? "block px-4 py-2 bg-gray-100 text-blue-700 font-medium"
+                                                                : "block px-4 py-2 hover:bg-gray-100"
+                                                        }
+                                                    >
+                                                        {item.label}
+                                                    </Link>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 </div>
                             )}
@@ -322,7 +270,7 @@ const DesktopMenuNav = ({
                     );
                 })}
             </div>
-        </div>
+        </div >
     );
 };
 interface HeaderComptProps {
