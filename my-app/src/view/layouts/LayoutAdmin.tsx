@@ -63,7 +63,7 @@ export default function LayoutAdmin() {
                 />
             )}
 
-            <div className="m-5" >
+            <div className="p-5 bg-gray-50  " >
 
                 <Outlet />
 
@@ -75,6 +75,104 @@ export default function LayoutAdmin() {
 }
 
 type MenuRefs = RefObject<HTMLDivElement | null>;
+
+
+
+interface DesktopMenuNavProps {
+    masterRef: MenuRefs;
+    kelolaRef: MenuRefs;
+    toggleMenu: (menuName: Exclude<MenuName, null>) => void;
+    openMenu: MenuName;
+}
+
+const DesktopMenuNav = ({
+    masterRef,
+    toggleMenu,
+    openMenu,
+    kelolaRef,
+}: DesktopMenuNavProps) => {
+    const menuRefs: Record<Exclude<MenuName, null>, MenuRefs> = {
+        master: masterRef,
+        kelola: kelolaRef,
+    };
+    const { pathname } = useLocation()
+
+    return (
+        <div className="hidden md:flex  border-2  py-2 justify-center" >
+            <div className="flex">
+                {navMenus.map((menu) => {
+                    if (menu.type === "link") {
+
+                        const isActive = pathname === menu.to;
+
+                        return (
+                            <div
+                                key={menu.to}
+                                className={
+                                    isActive
+                                        ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-blue-700 text-blue-700"
+                                        : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"}
+                            >
+                                <Link to={menu.to}>{menu.label}</Link>
+                            </div>
+                        );
+                    }
+
+                    const isActiveGroup = menu.items.some((item) => pathname === item.to);
+
+
+                    return (
+                        <div
+                            key={menu.key}
+                            className="relative mr-3 w-[150px]"
+                            ref={menuRefs[menu.key]}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => toggleMenu(menu.key)}
+                                className={
+                                    isActiveGroup
+                                        ? "w-full py-2 px-2 border border-blue-700 text-blue-700 flex items-center justify-between"
+                                        : "w-full py-2 px-2 border flex items-center justify-between"
+                                }
+                            >
+                                <span>{menu.label}</span>
+                                <span>{openMenu === menu.key ? "▲" : "▼"}</span>
+                            </button>
+
+                            {openMenu === menu.key && (
+                                <div className="absolute left-0 top-full mt-1 w-[220px] bg-white border rounded shadow-lg z-50">
+                                    <ul className="py-2">
+                                        {menu.items.map((item) => {
+                                            const isActiveChild = pathname === item.to;
+
+                                            return (
+                                                <li key={item.to}>
+                                                    <Link
+                                                        to={item.to}
+                                                        className={
+                                                            isActiveChild
+                                                                ? "block px-4 py-2 bg-gray-100 text-blue-700 font-medium"
+                                                                : "block px-4 py-2 hover:bg-gray-100"
+                                                        }
+                                                    >
+                                                        {item.label}
+                                                    </Link>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div >
+    );
+};
+
+
 
 interface MobileMenuNavProps {
     closeAllMenu: () => void;
@@ -177,110 +275,14 @@ const MobileMenuNav = ({
         </div>
     );
 };
-
-
-interface DesktopMenuNavProps {
-    masterRef: MenuRefs;
-    kelolaRef: MenuRefs;
-    toggleMenu: (menuName: Exclude<MenuName, null>) => void;
-    openMenu: MenuName;
-}
-
-
-const DesktopMenuNav = ({
-    masterRef,
-    toggleMenu,
-    openMenu,
-    kelolaRef,
-}: DesktopMenuNavProps) => {
-    const menuRefs: Record<Exclude<MenuName, null>, MenuRefs> = {
-        master: masterRef,
-        kelola: kelolaRef,
-    };
-    const { pathname } = useLocation()
-
-    return (
-        <div className="hidden md:flex shadow-lg py-2 justify-center" >
-            <div className="flex">
-                {navMenus.map((menu) => {
-                    if (menu.type === "link") {
-
-                        const isActive = pathname === menu.to;
-
-                        return (
-                            <div
-                                key={menu.to}
-                                className={
-                                    isActive
-                                        ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-blue-700 text-blue-700"
-                                        : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"}
-                            >
-                                <Link to={menu.to}>{menu.label}</Link>
-                            </div>
-                        );
-                    }
-
-                    const isActiveGroup = menu.items.some((item) => pathname === item.to);
-
-
-                    return (
-                        <div
-                            key={menu.key}
-                            className="relative mr-3 w-[150px]"
-                            ref={menuRefs[menu.key]}
-                        >
-                            <button
-                                type="button"
-                                onClick={() => toggleMenu(menu.key)}
-                                className={
-                                    isActiveGroup
-                                        ? "w-full py-2 px-2 border border-blue-700 text-blue-700 flex items-center justify-between"
-                                        : "w-full py-2 px-2 border flex items-center justify-between"
-                                }
-                            >
-                                <span>{menu.label}</span>
-                                <span>{openMenu === menu.key ? "▲" : "▼"}</span>
-                            </button>
-
-                            {openMenu === menu.key && (
-                                <div className="absolute left-0 top-full mt-1 w-[220px] bg-white border rounded shadow-lg z-50">
-                                    <ul className="py-2">
-                                        {menu.items.map((item) => {
-                                            const isActiveChild = pathname === item.to;
-
-                                            return (
-                                                <li key={item.to}>
-                                                    <Link
-                                                        to={item.to}
-                                                        className={
-                                                            isActiveChild
-                                                                ? "block px-4 py-2 bg-gray-100 text-blue-700 font-medium"
-                                                                : "block px-4 py-2 hover:bg-gray-100"
-                                                        }
-                                                    >
-                                                        {item.label}
-                                                    </Link>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-        </div >
-    );
-};
 interface HeaderComptProps {
     setMobileMenuOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
     return (
-        <div className="flex justify-between items-center p-3 bg-gray-200 ">
-            <span className="font-semibold">Seacoff</span>
+        <div className="flex justify-between items-center p-3 bg-blue-700 ">
+            <span className="font-semibold text-white">Seacoff</span>
 
             <div className="flex">
                 <div className="mr-5">
@@ -314,10 +316,6 @@ const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
                 </button>
 
             </div>
-            {/* <div className="hidden md:block">menu</div> */}
-
-
-
         </div>
     );
 };

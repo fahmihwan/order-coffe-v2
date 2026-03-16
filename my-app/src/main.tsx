@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import { Provider } from 'react-redux';
 import { store } from './redux/store.ts';
 import routes from './routes/index.tsx';
+import { ThemeInit } from "../.flowbite-react/init.tsx";
 
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
@@ -15,6 +16,7 @@ createRoot(document.getElementById('root')!).render(
         </div>
       }
     >
+      <ThemeInit />
       <RouterProvider router={routes} />
     </Suspense>
   </Provider>
