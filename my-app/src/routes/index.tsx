@@ -11,10 +11,10 @@ import { createBrowserRouter } from "react-router-dom";
 
 import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
-import CartPage from "../view/customer/pages/cart/CartPage.tsx";
+import CartPage from "../view/customer/pages/cart/CartPage.tsx"
 
 
-const HomeAdmin = lazy(() => import("../view/cmsAdmin/Home.tsx"));
+const DashboardPage = lazy(() => import("../view/cmsAdmin/DashboardPage.tsx"));
 
 // // pages (lazy)
 const Home = lazy(() => import("../view/customer/pages/home/HomePage.tsx"));
@@ -31,7 +31,7 @@ const routes = createBrowserRouter([
         element: <LayoutAdmin />,
         children: [
             {
-                path: "/admin", element: <HomeAdmin />
+                path: "/admin", element: <DashboardPage />
             }
         ]
     },

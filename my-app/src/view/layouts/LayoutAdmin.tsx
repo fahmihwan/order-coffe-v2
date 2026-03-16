@@ -1,131 +1,375 @@
+import { useState, useRef, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
-import { useEffect } from "react";
+import type { Dispatch, SetStateAction, RefObject } from "react";
+import { Avatar, Dropdown, DropdownHeader, DropdownItem } from "flowbite-react";
+import { navMenus } from "../../config/menuDashboard";
 
-const ADMIN_STYLES: string[] = [
-    "/assets/vendors/mdi/css/materialdesignicons.min.css",
-    "/assets/vendors/flag-icon-css/css/flag-icon.min.css",
-    "/assets/vendors/css/vendor.bundle.base.css",
+type MenuName = "master" | "kelola" | null;
 
-    "/assets/vendors/jquery-bar-rating/css-stars.css",
-    "/assets/vendors/font-awesome/css/font-awesome.min.css",
+export default function LayoutAdmin() {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+    const [openMenu, setOpenMenu] = useState<MenuName>(null);
 
-    "/assets/css/demo_2/style.css",
-];
+    const masterRef = useRef<HTMLDivElement | null>(null);
+    const kelolaRef = useRef<HTMLDivElement | null>(null);
 
-const ADMIN_SCRIPTS: string[] = [
-    // vendors/base (biasanya include jQuery + bootstrap bundle, dll)
-    "/assets/vendors/js/vendor.bundle.base.js",
+    const toggleMenu = (menuName: Exclude<MenuName, null>) => {
+        setOpenMenu((prev) => (prev === menuName ? null : menuName));
+    };
 
-    // plugins
-    "/assets/vendors/jquery-bar-rating/jquery.barrating.min.js",
-    "/assets/vendors/chart.js/Chart.min.js",
-    "/assets/vendors/flot/jquery.flot.js",
-    "/assets/vendors/flot/jquery.flot.resize.js",
-    "/assets/vendors/flot/jquery.flot.categories.js",
-    "/assets/vendors/flot/jquery.flot.fillbetween.js",
-    "/assets/vendors/flot/jquery.flot.stack.js",
+    const closeAllMenu = () => {
+        setOpenMenu(null);
+        setMobileMenuOpen(false);
+    };
 
-    // template core
-    "/assets/js/off-canvas.js",
-    "/assets/js/hoverable-collapse.js",
-    "/assets/js/misc.js",
-    "/assets/js/settings.js",
-    "/assets/js/todolist.js",
-
-    // page-specific (dashboard)
-    "/assets/js/dashboard.js",
-];
-
-function ensureFavicon(href: string): void {
-    const existing = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-    if (existing) existing.href = href;
-    else {
-        const link = document.createElement("link");
-        link.rel = "icon";
-        link.href = href;
-        document.head.appendChild(link);
-    }
-}
-
-function loadStyle(href: string): void {
-    // Jangan dobel
-    const exists = document.querySelector<HTMLLinkElement>(
-        `link[data-admin-style="${href}"]`
-    );
-    if (exists) return;
-
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    link.dataset.adminStyle = href;
-    document.head.appendChild(link);
-}
-
-function loadScript(src: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        // Jangan dobel
-        const exists = document.querySelector<HTMLScriptElement>(
-            `script[data-admin-script="${src}"]`
-        );
-        if (exists) return resolve();
-
-        const s = document.createElement("script");
-        s.src = src;
-        s.defer = true; // aman untuk kebanyakan template
-        s.dataset.adminScript = src;
-
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error(`Gagal load script: ${src}`));
-
-        document.body.appendChild(s);
-    });
-}
-
-export default function LayoutAdmin(): JSX.Element {
     useEffect(() => {
-        let cancelled = false;
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as Node;
 
-        // 1) Apply title + favicon khusus admin (opsional, tapi enak)
-        document.title = "Plus Admin";
-        ensureFavicon("/assets/images/favicon.png");
+            const clickedOutsideMaster =
+                masterRef.current && !masterRef.current.contains(target);
+            const clickedOutsideKelola =
+                kelolaRef.current && !kelolaRef.current.contains(target);
 
-        // 2) Load CSS admin (sync)
-        ADMIN_STYLES.forEach(loadStyle);
-
-        // 3) Load JS admin (berurutan)
-        const run = async () => {
-            try {
-                for (const src of ADMIN_SCRIPTS) {
-                    if (cancelled) return;
-                    await loadScript(src);
-                }
-            } catch (err) {
-                console.error(err);
+            if (clickedOutsideMaster && clickedOutsideKelola) {
+                setOpenMenu(null);
             }
-        };
+        }
 
-        run();
-
-        // 4) Cleanup saat keluar dari admin:
-        //    - remove scripts & styles admin biar tidak mengganggu customer
+        document.addEventListener("mousedown", handleClickOutside);
         return () => {
-            cancelled = true;
-
-            ADMIN_SCRIPTS.forEach((src) => {
-                const el = document.querySelector<HTMLScriptElement>(
-                    `script[data-admin-script="${src}"]`
-                );
-                el?.remove();
-            });
-
-            ADMIN_STYLES.forEach((href) => {
-                const el = document.querySelector<HTMLLinkElement>(
-                    `link[data-admin-style="${href}"]`
-                );
-                el?.remove();
-            });
+            document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
 
-    return <Outlet />;
+    return (
+        <div className="bg-white">
+            <HeaderCompt setMobileMenuOpen={setMobileMenuOpen} />
+
+            <DesktopMenuNav
+                masterRef={masterRef}
+                toggleMenu={toggleMenu}
+                openMenu={openMenu}
+                kelolaRef={kelolaRef}
+            />
+
+            {mobileMenuOpen && (
+                <MobileMenuNav
+                    closeAllMenu={closeAllMenu}
+                    masterRef={masterRef}
+                    toggleMenu={toggleMenu}
+                    openMenu={openMenu}
+                    kelolaRef={kelolaRef}
+                />
+            )}
+
+            <div className="m-5" >
+
+                <Outlet />
+
+
+
+            </div>
+        </div>
+    );
 }
+
+type MenuRefs = RefObject<HTMLDivElement | null>;
+
+interface MobileMenuNavProps {
+    closeAllMenu: () => void;
+    masterRef: MenuRefs;
+    kelolaRef: MenuRefs;
+    toggleMenu: (menuName: Exclude<MenuName, null>) => void;
+    openMenu: MenuName;
+}
+
+
+const MobileMenuNav = ({
+    closeAllMenu,
+    masterRef,
+    toggleMenu,
+    openMenu,
+    kelolaRef,
+}: MobileMenuNavProps) => {
+    const menuRefs: Record<Exclude<MenuName, null>, MenuRefs> = {
+        master: masterRef,
+        kelola: kelolaRef,
+    };
+
+    return (
+        <div className="md:hidden shadow border-t bg-white">
+            <div className="flex flex-col p-3 space-y-2">
+                {navMenus.map((menu) => {
+                    if (menu.type === "link") {
+                        const isDashboard = menu.to === "/";
+                        const isTransaksi = menu.to === "/transaksi";
+
+                        return (
+                            <Link
+                                key={menu.to}
+                                to={menu?.to}
+                                onClick={closeAllMenu}
+                                className={
+                                    isDashboard
+                                        ? "py-2 px-3 border border-blue-700 text-blue-700 rounded"
+                                        : isTransaksi
+                                            ? "py-2 px-3 border rounded"
+                                            : "py-2 px-3"
+                                }
+                            >
+                                {menu.label}
+                            </Link>
+                        );
+                    }
+
+                    return (
+                        <div
+                            key={menu.key}
+                            className="border rounded"
+                            ref={menuRefs[menu.key]}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => toggleMenu(menu?.key)}
+                                className="w-full flex justify-between items-center py-2 px-3"
+                            >
+                                <span>{menu.label}</span>
+                                <span>{openMenu === menu.key ? "-" : "+"}</span>
+                            </button>
+
+                            {openMenu === menu.key && (
+                                <div className="px-3 pb-3 flex flex-col space-y-2">
+                                    {menu.items.map((item) => (
+                                        <Link
+                                            key={item.to}
+                                            to={item.to}
+                                            className="pl-2 py-1"
+                                            onClick={closeAllMenu}
+                                        >
+                                            {item.label}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+// const MobileMenuNav = ({
+//     closeAllMenu,
+//     masterRef,
+//     toggleMenu,
+//     openMenu,
+//     kelolaRef,
+// }: MobileMenuNavProps) => {
+//     return (
+//         <div className="md:hidden shadow border-t bg-white">
+//             <div className="flex flex-col p-3 space-y-2">
+//                 <Link
+//                     to="/"
+//                     className="py-2 px-3 border border-blue-700 text-blue-700 rounded"
+//                     onClick={closeAllMenu}
+//                 >
+//                     Dashboard
+//                 </Link>
+
+//                 <div className="border rounded" ref={masterRef}>
+//                     <button
+//                         type="button"
+//                         onClick={() => toggleMenu("master")}
+//                         className="w-full flex justify-between items-center py-2 px-3"
+//                     >
+//                         <span>Master</span>
+//                         <span>{openMenu === "master" ? "-" : "+"}</span>
+//                     </button>
+
+//                     {openMenu === "master" && (
+//                         <div className="px-3 pb-3 flex flex-col space-y-2">
+//                             <Link to="/menu" className="pl-2 py-1" onClick={closeAllMenu}>
+//                                 Menu
+//                             </Link>
+//                             <Link to="/add-on" className="pl-2 py-1" onClick={closeAllMenu}>
+//                                 Add on
+//                             </Link>
+//                             <Link to="/kategori" className="pl-2 py-1" onClick={closeAllMenu}>
+//                                 Kategori
+//                             </Link>
+//                         </div>
+//                     )}
+//                 </div>
+
+//                 <div className="border rounded" ref={kelolaRef}>
+//                     <button
+//                         type="button"
+//                         onClick={() => toggleMenu("kelola")}
+//                         className="w-full flex justify-between items-center py-2 px-3"
+//                     >
+//                         <span>Kelola</span>
+//                         <span>{openMenu === "kelola" ? "-" : "+"}</span>
+//                     </button>
+
+//                     {openMenu === "kelola" && (
+//                         <div className="px-3 pb-3 flex flex-col space-y-2">
+//                             <Link
+//                                 to="/kategori-menu"
+//                                 className="pl-2 py-1"
+//                                 onClick={closeAllMenu}
+//                             >
+//                                 Kategori - Menu
+//                             </Link>
+//                             <Link
+//                                 to="/menu-add-on"
+//                                 className="pl-2 py-1"
+//                                 onClick={closeAllMenu}
+//                             >
+//                                 Menu - Add on
+//                             </Link>
+//                         </div>
+//                     )}
+//                 </div>
+
+//                 <Link
+//                     to="/transaksi"
+//                     className="py-2 px-3 border rounded"
+//                     onClick={closeAllMenu}
+//                 >
+//                     Transaksi
+//                 </Link>
+//             </div>
+//         </div>
+//     );
+// };
+
+interface DesktopMenuNavProps {
+    masterRef: MenuRefs;
+    kelolaRef: MenuRefs;
+    toggleMenu: (menuName: Exclude<MenuName, null>) => void;
+    openMenu: MenuName;
+}
+
+
+const DesktopMenuNav = ({
+    masterRef,
+    toggleMenu,
+    openMenu,
+    kelolaRef,
+}: DesktopMenuNavProps) => {
+    const menuRefs: Record<Exclude<MenuName, null>, MenuRefs> = {
+        master: masterRef,
+        kelola: kelolaRef,
+    };
+
+    return (
+        <div className="hidden md:flex shadow-lg py-2 justify-center">
+            <div className="flex">
+                {navMenus.map((menu) => {
+                    if (menu.type === "link") {
+                        const isDashboard = menu.to === "/";
+                        const isTransaksi = menu.to === "/transaksi";
+
+                        return (
+                            <div
+                                key={menu.to}
+                                className={
+                                    isDashboard
+                                        ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-blue-700 text-blue-700"
+                                        : isTransaksi
+                                            ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"
+                                            : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center"
+                                }
+                            >
+                                <Link to={menu.to}>{menu.label}</Link>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div
+                            key={menu.key}
+                            className="relative mr-3 w-[150px]"
+                            ref={menuRefs[menu.key]}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => toggleMenu(menu.key)}
+                                className="w-full py-2 px-2 border flex items-center justify-between"
+                            >
+                                <span>{menu.label}</span>
+                                <span>{openMenu === menu.key ? "▲" : "▼"}</span>
+                            </button>
+
+                            {openMenu === menu.key && (
+                                <div className="absolute left-0 top-full mt-1 w-[220px] bg-white border rounded shadow-lg z-50">
+                                    <ul className="py-2">
+                                        {menu.items.map((item) => (
+                                            <li key={item.to}>
+                                                <Link
+                                                    to={item.to}
+                                                    className="block px-4 py-2 hover:bg-gray-100"
+                                                >
+                                                    {item.label}
+                                                </Link>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+interface HeaderComptProps {
+    setMobileMenuOpen: Dispatch<SetStateAction<boolean>>;
+}
+
+const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
+    return (
+        <div className="flex justify-between items-center p-3 bg-gray-200 ">
+            <span className="font-semibold">Seacoff</span>
+
+            <div className="flex">
+                <div className="mr-5">
+                    <Dropdown
+                        arrowIcon={false}
+                        inline
+                        label={
+                            <Avatar alt="User settings" img="https://flowbite.com/docs/images/people/profile-picture-5.jpg" rounded />
+                        }
+                    >
+                        <DropdownHeader>
+                            <span className="block text-sm">Bonnie Green</span>
+                            <span className="block truncate text-sm font-medium">name@flowbite.com</span>
+                        </DropdownHeader>
+                        <DropdownItem>Dashboard</DropdownItem>
+                        <DropdownItem>Settings</DropdownItem>
+                        <DropdownItem>Earnings</DropdownItem>
+
+                        <DropdownItem>Sign out</DropdownItem>
+                    </Dropdown>
+
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen((prev) => !prev)}
+                    className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded border bg-white"
+                >
+                    <span className="block w-5 h-0.5 bg-black mb-1"></span>
+                    <span className="block w-5 h-0.5 bg-black mb-1"></span>
+                    <span className="block w-5 h-0.5 bg-black"></span>
+                </button>
+
+            </div>
+            {/* <div className="hidden md:block">menu</div> */}
+
+
+
+        </div>
+    );
+};
