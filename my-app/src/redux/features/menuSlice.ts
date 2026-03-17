@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
+import type { Menu } from "../../types/menu";
 
 type ApiResponse<T> = {
     data: T;
@@ -12,6 +13,7 @@ type MenuStatus = "idle" | "loading" | "success" | "failed";
 
 type MenuState = {
     menus: Category[];
+    masterMenus: Menu[]
     addOnOptions: AddOn[];
     message: string;
     status: MenuStatus;
@@ -20,17 +22,32 @@ type MenuState = {
 
 const initialState: MenuState = {
     menus: [],
+    masterMenus: [],
     addOnOptions: [],
     message: "",
     status: "idle",
     error: undefined,
 };
+
+
+export const getMasterMenu = createAsyncThunk<Menu[], void, { rejectValue: string }>("menu/master/admin", async (_, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.get<ApiResponse<Menu[]>>("/json/masterMenu.json");
+        return response.data.data ?? [];
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
+        return rejectWithValue(message);
+    }
+});
+
+
 export const getListMenu = createAsyncThunk<Category[], void, { rejectValue: string }>("menu/fetchListMenu", async (_, { rejectWithValue }) => {
     try {
         const response = await apiClient.get<ApiResponse<Category[]>>("/json/listMenu.json");
         return response.data.data ?? [];
-    } catch (err: any) {
-        return rejectWithValue(err?.message ?? "Failed to fetch menu");
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
+        return rejectWithValue(message);
     }
 });
 
@@ -39,11 +56,11 @@ export const getAddOnOptionsByMenuId = createAsyncThunk<AddOn[], { menuId: numbe
     try {
         const response = await apiClient.get<ApiResponse<AddOn[]>>("/json/listAddOn.json");
         return response.data.data ?? [];
-
         // kalau JSON-nya semua addon, filter disini:
         // return all.filter((x) => x.menuId === menuId);
-    } catch (err: any) {
-        return rejectWithValue(err?.message ?? "Failed to fetch add-ons");
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
+        return rejectWithValue(message);
     }
 });
 
@@ -89,6 +106,20 @@ export const menuSlice = createSlice({
                 status: "success"
             })
         }).addCase(getAddOnOptionsByMenuId.rejected, (state, action) => {
+            return (state = {
+                ...state,
+                status: "failed",
+                error: action.error.message,
+            });
+        }).addCase(getMasterMenu.pending, (state) => {
+            return (state = { ...state, status: "loading" })
+        }).addCase(getMasterMenu.fulfilled, (state, action) => {
+            return (state = {
+                ...state,
+                masterMenus: action.payload,
+                status: "success"
+            })
+        }).addCase(getMasterMenu.rejected, (state, action) => {
             return (state = {
                 ...state,
                 status: "failed",
