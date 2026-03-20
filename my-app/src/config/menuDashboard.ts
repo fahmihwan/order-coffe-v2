@@ -10,20 +10,20 @@ export const navMenus: MenuNavItem[] = [
     {
         type: "group",
         key: "master",
-        label: "Master",
+        label: "Produk",
         items: [
             { label: "Menu", to: "/admin/master/menu" },
-            { label: "Add on", to: "/admin/master/add-on" },
+            { label: "Add on / Toping", to: "/admin/master/add-on" },
             { label: "Kategori", to: "/admin/master/category" },
         ],
     },
     {
         type: "group",
         key: "kelola",
-        label: "Kelola",
+        label: "Relasi / Pengaturan produk",
         items: [
-            { label: "Kategori - Menu", to: "/admin/kelola/kategori-menu" },
-            { label: "Menu - Add on", to: "/admin/kelola/menu-add-on" },
+            { label: "Kategori - Menu", to: "/admin/product-setting/category-menu" },
+            { label: "Menu - Add on", to: "/admin/product-setting/menu-addon" },
         ],
     },
     {

@@ -12,6 +12,7 @@ import { createBrowserRouter } from "react-router-dom";
 import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
 import CartPage from "../view/customer/pages/cart/CartPage.tsx"
+import MenuAddOnPage from "../view/cmsAdmin/SettingProduct/MenuAddOn/MenuAddOnPage.tsx";
 
 
 
@@ -19,6 +20,8 @@ const DashboardPage = lazy(() => import("../view/cmsAdmin/Dashboard/DashboardPag
 const MenuPage = lazy(() => import("../view/cmsAdmin/Master/Menu/MenuPage.tsx"));
 const AddOnPage = lazy(() => import("../view/cmsAdmin/Master/AddOn/AddOnPage.tsx"));
 const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoriPage.tsx"));
+
+const CategoryMenuPage = lazy(() => import("../view/cmsAdmin/SettingProduct/CategoryMenu/CategoryMenuPage.tsx"));
 
 
 // // pages (lazy)
@@ -33,6 +36,9 @@ const routes = createBrowserRouter([
             { path: "/admin/master/menu", element: <MenuPage /> },
             { path: "/admin/master/add-on", element: <AddOnPage /> },
             { path: "/admin/master/category", element: <CategoryPage /> },
+
+            { path: "/admin/product-setting/category-menu", element: <CategoryMenuPage /> },
+            { path: "/admin/product-setting/menu-addon", element: <MenuAddOnPage /> },
         ]
     },
     {

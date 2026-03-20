@@ -124,7 +124,7 @@ const DesktopMenuNav = ({
                     return (
                         <div
                             key={menu.key}
-                            className="relative mr-3 w-[150px]"
+                            className="relative mr-3 min-w-[150px]"
                             ref={menuRefs[menu.key]}
                         >
                             <button
@@ -136,7 +136,7 @@ const DesktopMenuNav = ({
                                         : "w-full py-2 px-2 border flex items-center justify-between"
                                 }
                             >
-                                <span>{menu.label}</span>
+                                <span className="px-2">{menu.label}</span>
                                 <span>{openMenu === menu.key ? "▲" : "▼"}</span>
                             </button>
 
