@@ -88,10 +88,6 @@ func provideRepositories(container *dig.Container) {
 		return *repository.NewMenuRepository(db)
 	})
 
-	// err = container.Provide(func(db *gorm.DB) repository.UserRepository {
-	// 	return *repository.NewUserRepository(db)
-	// })
-
 	if err != nil {
 		panic(fmt.Sprintf("Failed to provide MenuRepository: %v", err))
 	}
@@ -109,10 +105,6 @@ func provideServices(container *dig.Container) {
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.MenuService {
 		return service.NewMenuService(repo)
 	})
-
-	// err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.UserService {
-	// 	return service.NewUserService(repo)
-	// })
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to provide BookService: %v", err))
@@ -134,9 +126,6 @@ func provideHandler(container *dig.Container) {
 	if err := container.Provide(handler.NewMenuHandler); err != nil {
 		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
 	}
-	// if err := container.Provide(handler.NewBookHandler); err != nil {
-	// 	panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
-	// }
 
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(

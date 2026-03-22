@@ -50,6 +50,12 @@ func NewPostgresDB(cfg *config.Config) (*gorm.DB, error) {
 func autoMigrate(db *gorm.DB) error {
 	m := gormigrate.New(db, gormigrate.DefaultOptions, migrations.GetMigrations())
 
+	// rollback
+	// if err := m.RollbackLast(); err != nil {
+	// 	log.Fatalf("Could not apply migrations: %v", err)
+	// 	return err
+	// }
+
 	if err := m.Migrate(); err != nil {
 		log.Fatalf("Could not apply migrations: %v", err)
 		return err
