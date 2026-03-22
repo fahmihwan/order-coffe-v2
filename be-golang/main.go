@@ -1,16 +1,13 @@
 package main
 
 import (
-	// "best-pattern/internal/config"
-	// "best-pattern/internal/handler"
-	// "best-pattern/internal/repository"
-	// "best-pattern/internal/service"
-	// "best-pattern/internal/util"
-	// "best-pattern/pkg/database"
 	"fmt"
 	"log"
 	"net/http"
 	"pos-coffeshop/internal/config"
+	"pos-coffeshop/internal/handler"
+	"pos-coffeshop/internal/repository"
+	"pos-coffeshop/internal/service"
 	"pos-coffeshop/pkg/database"
 	"pos-coffeshop/util"
 	"time"
@@ -87,22 +84,21 @@ func main() {
 func provideRepositories(container *dig.Container) {
 	var err error
 
-	// err = container.Provide(func(db *gorm.DB) repository.BookRepository {
-	// 	return *repository.NewBookRepository(db)
-	// })
+	err = container.Provide(func(db *gorm.DB) repository.MenuRepository {
+		return *repository.NewMenuRepository(db)
+	})
 
 	// err = container.Provide(func(db *gorm.DB) repository.UserRepository {
 	// 	return *repository.NewUserRepository(db)
 	// })
 
 	if err != nil {
-		panic(fmt.Sprintf("Failed to provide BookRepository: %v", err))
+		panic(fmt.Sprintf("Failed to provide MenuRepository: %v", err))
 	}
 
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
-			// Book: repository.NewBookRepository(db),
-			// User: repository.NewUserRepository(db),
+			Menu: repository.NewMenuRepository(db),
 		}
 	})
 }
@@ -110,9 +106,9 @@ func provideRepositories(container *dig.Container) {
 func provideServices(container *dig.Container) {
 	var err error
 
-	// err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.BookService {
-	// 	return service.NewBookService(repo)
-	// })
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.MenuService {
+		return service.NewMenuService(repo)
+	})
 
 	// err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.UserService {
 	// 	return service.NewUserService(repo)
@@ -124,8 +120,7 @@ func provideServices(container *dig.Container) {
 
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) service.Service {
 		return service.Service{
-			// Book: service.NewBookService(repo),
-			// User: service.NewUserService(repo),
+			Menu:  service.NewMenuService(repo),
 		}
 	})
 
@@ -136,22 +131,20 @@ func provideServices(container *dig.Container) {
 
 func provideHandler(container *dig.Container) {
 	// 1) provide semua sub-handler (nanti tinggal tambah baris di sini)
-	// if err := container.Provide(handler.NewUserHandler); err != nil {
-	// 	panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
-	// }
+	if err := container.Provide(handler.NewMenuHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
+	}
 	// if err := container.Provide(handler.NewBookHandler); err != nil {
 	// 	panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
 	// }
 
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(
-		// BookService *service.BookService,
-		// UserService *service.UserService,
+		MenuService *service.MenuService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
-			// UserHandler: handler.NewUserHandler(UserService, jwtManager),
-			// BookHandler: handler.NewBookHandler(BookService, jwtManager),
+			MenuHandler: handler.NewMenuHandler(MenuService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))
