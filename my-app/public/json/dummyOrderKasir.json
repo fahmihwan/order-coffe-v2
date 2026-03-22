@@ -1,0 +1,141 @@
+{
+  "data": [
+    {
+      "id": 2,
+      "img_url": "https://encrypted-tbn0.gstatic.com/AC?q=tbn:ANd9GcQrA0EfnQYQ0PhaE6oQHDFWafTbFlwmIBaCZA&s",
+      "name": "memew 20",
+      "description": "Menu dummy",
+      "price": 20000,
+      "is_active": true,
+      "menu_add_on_groups": [
+        {
+          "id": 1,
+          "title": "Hot or Ice",
+          "description": "Pilih jenis",
+          "is_required": true,
+          "min_select": 1,
+          "max_select": 1,
+          "options": [
+            {
+              "id": 6,
+              "add_on_group_id": 1,
+              "name": "Hot",
+              "price": 0,
+              "is_active": true
+            },
+            {
+              "id": 7,
+              "add_on_group_id": 1,
+              "name": "Ice",
+              "price": 100,
+              "is_active": true
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Additional syrup",
+          "description": "Pilih hingga 3 opsi",
+          "is_required": false,
+          "min_select": 0,
+          "max_select": 3,
+          "options": [
+            {
+              "id": 1,
+              "add_on_group_id": 2,
+              "name": "Vanilla",
+              "price": 8000,
+              "is_active": true
+            },
+            {
+              "id": 2,
+              "add_on_group_id": 2,
+              "name": "Huzzlent",
+              "price": 8000,
+              "is_active": true
+            },
+            {
+              "id": 3,
+              "add_on_group_id": 2,
+              "name": "Caramel",
+              "price": 8000,
+              "is_active": true
+            },
+            {
+              "id": 4,
+              "add_on_group_id": 2,
+              "name": "Sugar",
+              "price": 0,
+              "is_active": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "img_url": "https://images.unsplash.com/photo-1517701604599-bb29b565090c",
+      "name": "Matcha Latte",
+      "description": "Minuman matcha creamy",
+      "price": 25000,
+      "is_active": true,
+      "menu_add_on_groups": [
+        {
+          "id": 3,
+          "title": "Size",
+          "description": "Pilih ukuran minuman",
+          "is_required": true,
+          "min_select": 1,
+          "max_select": 1,
+          "options": [
+            {
+              "id": 8,
+              "add_on_group_id": 3,
+              "name": "Regular",
+              "price": 0,
+              "is_active": true
+            },
+            {
+              "id": 9,
+              "add_on_group_id": 3,
+              "name": "Large",
+              "price": 5000,
+              "is_active": true
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Topping",
+          "description": "Pilih topping favorit",
+          "is_required": false,
+          "min_select": 0,
+          "max_select": 2,
+          "options": [
+            {
+              "id": 10,
+              "add_on_group_id": 4,
+              "name": "Boba",
+              "price": 6000,
+              "is_active": true
+            },
+            {
+              "id": 11,
+              "add_on_group_id": 4,
+              "name": "Grass Jelly",
+              "price": 5000,
+              "is_active": true
+            },
+            {
+              "id": 12,
+              "add_on_group_id": 4,
+              "name": "Cheese Foam",
+              "price": 7000,
+              "is_active": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

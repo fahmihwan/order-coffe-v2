@@ -28,7 +28,12 @@ export const navMenus: MenuNavItem[] = [
     },
     {
         type: "link",
-        label: "Transaksi",
+        label: "List Order",
         to: "/admin/transaksi",
+    },
+    {
+        type: "link",
+        label: "Order Kasir",
+        to: "/admin/order-cashier",
     },
 ];

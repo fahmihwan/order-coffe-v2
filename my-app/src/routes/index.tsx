@@ -13,6 +13,7 @@ import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
 import CartPage from "../view/customer/pages/cart/CartPage.tsx"
 import MenuAddOnPage from "../view/cmsAdmin/SettingProduct/MenuAddOn/MenuAddOnPage.tsx";
+import OrderKasirPage from "../view/cmsAdmin/OrderKasir/OrderKasirPage.tsx";
 
 
 
@@ -39,6 +40,8 @@ const routes = createBrowserRouter([
 
             { path: "/admin/product-setting/category-menu", element: <CategoryMenuPage /> },
             { path: "/admin/product-setting/menu-addon", element: <MenuAddOnPage /> },
+
+            { path: "/admin/order-cashier", element: <OrderKasirPage /> },
         ]
     },
     {
