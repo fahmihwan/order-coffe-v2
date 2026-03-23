@@ -43,9 +43,10 @@ func (h *MenuHandler) Routes() http.Handler {
 		return middleware.AuditMiddleware(action, resourceType, getResourceID)
 	}
 
-	r.Use(middleware.AuthJWT(h.jwt))
+	// r.Use(middleware.AuthJWT(h.jwt))
 
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
+	// r.Get("/", h.LisMenu)
 	// r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
 	// r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
 	// r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)

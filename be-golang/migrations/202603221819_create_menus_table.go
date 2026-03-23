@@ -11,7 +11,7 @@ func Migration_202603221854() *gormigrate.Migration {
 		Migrate: func(tx *gorm.DB) error {
 			return tx.Exec(`
 				CREATE TABLE IF NOT EXISTS menus (
-					id BIGSERIAL PRIMARY KEY,
+					id UUID NOT NULL PRIMARY KEY,
 					img_url TEXT NOT NULL,
 					name VARCHAR(255) NOT NULL,
 					description TEXT NULL,
