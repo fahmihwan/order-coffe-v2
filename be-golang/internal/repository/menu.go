@@ -17,11 +17,11 @@ type MenuRepository struct {
 }
 
 type MenuRepo interface {
-	Create(ctx context.Context, book *model.Menu) error
+	Create(ctx context.Context, menu *model.Menu) error
 	List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error)
 	setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB
-	// GetByID(ctx context.Context, id string) (*model.Menu, error)
-	// Update(ctx context.Context, book *model.Menu) error
+	GetByID(ctx context.Context, id string) (*model.Menu, error)
+	Update(ctx context.Context, menu *model.Menu) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -122,31 +122,31 @@ func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 }
 
 
-// func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
-// 	var menu model.Menu
+func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
+	var menu model.Menu
 
-// 	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&menu).Error
-// 	if err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			return nil, fmt.Errorf("menu not found")
-// 		}
-// 		return nil, fmt.Errorf("failed to get menu by id: %w", err)
-// 	}
+	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&menu).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("menu not found")
+		}
+		return nil, fmt.Errorf("failed to get menu by id: %w", err)
+	}
 
-// 	return &menu, nil
-// }
+	return &menu, nil
+}
 
 
-// func (r *MenuRepository) Update(ctx context.Context, menu *model.Menu) error {
-// 	menu.UpdatedAt = time.Now()
+func (r *MenuRepository) Update(ctx context.Context, menu *model.Menu) error {
+	menu.UpdatedAt = time.Now()
 
-// 	err := r.db.WithContext(ctx).Model(&model.Menu{}).Where("id = ? AND deleted_at IS NULL", menu.ID).Omit("created_at", clause.Associations).Updates(menu).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to update menu: %w", err)
-// 	}
+	err := r.db.WithContext(ctx).Model(&model.Menu{}).Where("id = ? AND deleted_at IS NULL", menu.ID).Omit("created_at", clause.Associations).Updates(menu).Error
+	if err != nil {
+		return fmt.Errorf("failed to update menu: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 
 

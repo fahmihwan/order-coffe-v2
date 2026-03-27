@@ -14,9 +14,9 @@ var _ MenuServiceInteface = &MenuService{}
 
 type MenuServiceInteface interface {
 	ListMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error)
-	CreateMenu(ctx context.Context, book *model.Menu) (*model.Menu, error)
-	// GetBookByID(ctx context.Context, id string) (*model.Book, error)
-	// UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error)
+	CreateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error)
+	GetMenuByID(ctx context.Context, id string) (*model.Menu, error)
+	UpdateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error)
 	DeleteMenu(ctx context.Context, id string) error
 }
 
@@ -68,23 +68,23 @@ func (s *MenuService) ListMenu(ctx context.Context, filters map[string]string, s
 
 }
 
-// func (s *MenuService) GetBookByID(ctx context.Context, id string) (*model.Book, error) {
+func (s *MenuService) GetMenuByID(ctx context.Context, id string) (*model.Menu, error) {
 
-// 	book, err := s.repo.Book.GetByID(ctx, id)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get book by ID: %w", err)
-// 	}
-// 	return book, nil
-// }
+	menu, err := s.repo.Menu.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get menu by ID: %w", err)
+	}
+	return menu, nil
+}
 
-// func (s *MenuService) UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error) {
-// 	book.UpdatedAt = time.Now()
-// 	err := s.repo.Book.Update(ctx, book)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to update form: %w", err)
-// 	}
-// 	return book, nil
-// }
+func (s *MenuService) UpdateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error) {
+	menu.UpdatedAt = time.Now()
+	err := s.repo.Menu.Update(ctx, menu)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update menu: %w", err)
+	}
+	return menu, nil
+}
 
 func (s *MenuService) DeleteMenu(ctx context.Context, id string) error {
 	err := s.repo.Menu.Delete(ctx, id)

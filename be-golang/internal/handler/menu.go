@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type MenuHandler struct {
@@ -46,8 +47,8 @@ func (h *MenuHandler) Routes() http.Handler {
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
 	// r.Get("/", h.LisMenu)
 	r.With(auditMiddleware("create-menu", "menu")).Post("/", h.CreateMenu)
-	// r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
-	// r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
+	r.With(auditMiddleware("get-menu", "menu")).Get("/{id}", h.GetMenu)
+	r.With(auditMiddleware("update-menu", "menu")).Put("/{id}", h.UpdateMenu)
 	r.With(auditMiddleware("delete-menu", "menu")).Delete("/{id}", h.DeleteMenu)
 	return r
 
@@ -122,53 +123,54 @@ func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(successResponse)
 }
 
-// func (h *MenuHandler) GetBook(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
+func (h *MenuHandler) GetMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-// 	id := chi.URLParam(r, "id")
+	id := chi.URLParam(r, "id")
 
-// 	book, err := h.menuService.GetBookByID(ctx, id)
-// 	if err != nil {
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	book, err := h.menuService.GetMenuByID(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-// 	successResponse := response.NewSuccessResponse(book)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)
-// }
+	successResponse := response.NewSuccessResponse(book)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
+}
 
-// func (h *MenuHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
-// 	// Implementation for updating a book
-// 	ctx := r.Context()
+func (h *MenuHandler) UpdateMenu(w http.ResponseWriter, r *http.Request) {
+	// Implementation for updating a book2
+	ctx := r.Context()
 
-// 	var req = new(request.BookRequest)
-// 	if err := request.ParseForm(r, req); err != nil {
-// 		middleware.HandleValidationErrors(err, w)
-// 		return
-// 	}
-// 	ids := chi.URLParam(r, "id")
-// 	book := req.ToBook()
-// 	id, err := strconv.ParseInt(ids, 10, 64)
-// 	if err != nil {
-// 		http.Error(w, "invalid id", http.StatusBadRequest)
-// 		return
-// 	}
+	var req = new(request.MenuRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+	ids := chi.URLParam(r, "id")
+	menu := req.ToMenu()
+	// id, err := strconv.ParseInt(ids, 10, 64)
+	id, err := uuid.Parse(ids)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
 
-// 	book.ID = id
+	menu.ID = id
 
-// 	updatedBook, err := h.menuService.UpdateBook(ctx, book)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Error updating book: %v", err), http.StatusInternalServerError)
-// 		return
-// 	}
+	updatedMenu, err := h.menuService.UpdateMenu(ctx, menu)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error updating book: %v", err), http.StatusInternalServerError)
+		return
+	}
 
-// 	response := response.NewSuccessResponse(updatedBook)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(response)
-// }
+	response := response.NewSuccessResponse(updatedMenu)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
 
 func (h *MenuHandler) DeleteMenu(w http.ResponseWriter, r *http.Request) {
 
