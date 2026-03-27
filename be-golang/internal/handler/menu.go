@@ -45,10 +45,10 @@ func (h *MenuHandler) Routes() http.Handler {
 
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
 	// r.Get("/", h.LisMenu)
-	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateMenu)
+	r.With(auditMiddleware("create-menu", "menu")).Post("/", h.CreateMenu)
 	// r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
 	// r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
-	// r.With(auditMiddleware("delete-book", "book")).Delete("/{id}", h.DeleteBook)
+	r.With(auditMiddleware("delete-menu", "menu")).Delete("/{id}", h.DeleteMenu)
 	return r
 
 }
@@ -170,20 +170,20 @@ func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 // 	json.NewEncoder(w).Encode(response)
 // }
 
-// func (h *MenuHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
+func (h *MenuHandler) DeleteMenu(w http.ResponseWriter, r *http.Request) {
 
-// 	ctx := r.Context()
-// 	id := chi.URLParam(r, "id")
+	ctx := r.Context()
+	id := chi.URLParam(r, "id")
 
-// 	err := h.menuService.DeleteBook(ctx, id)
-// 	if err != nil {
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	err := h.menuService.DeleteMenu(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-// 	successResponse := response.NewSuccessResponse("Book deleted successfully")
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)
-// }
+	successResponse := response.NewSuccessResponse("Menu deleted successfully")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
+}

@@ -22,7 +22,7 @@ type MenuRepo interface {
 	setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.Menu, error)
 	// Update(ctx context.Context, book *model.Menu) error
-	// Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 var _ MenuRepo = (*MenuRepository)(nil)
@@ -150,11 +150,11 @@ func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 
 
 
-// func (r *MenuRepository) Delete(ctx context.Context, id string) error {
-// 	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to delete menu: %w", err)
-// 	}
+func (r *MenuRepository) Delete(ctx context.Context, id string) error {
+	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete menu: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}

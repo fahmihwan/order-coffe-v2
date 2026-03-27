@@ -17,7 +17,7 @@ type MenuServiceInteface interface {
 	CreateMenu(ctx context.Context, book *model.Menu) (*model.Menu, error)
 	// GetBookByID(ctx context.Context, id string) (*model.Book, error)
 	// UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error)
-	// DeleteBook(ctx context.Context, id string) error
+	DeleteMenu(ctx context.Context, id string) error
 }
 
 type MenuService struct {
@@ -86,10 +86,10 @@ func (s *MenuService) ListMenu(ctx context.Context, filters map[string]string, s
 // 	return book, nil
 // }
 
-// func (s *MenuService) DeleteBook(ctx context.Context, id string) error {
-// 	err := s.repo.Book.Delete(ctx, id)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to delete form: %w", err)
-// 	}
-// 	return nil
-// }
+func (s *MenuService) DeleteMenu(ctx context.Context, id string) error {
+	err := s.repo.Menu.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete menu: %w", err)
+	}
+	return nil
+}

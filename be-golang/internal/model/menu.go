@@ -16,7 +16,8 @@ type Menu struct {
 	IsActive    bool       `gorm:"column:is_active;default:true" json:"is_active"`
 	CreatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"type:timestamp" json:"deleted_at,omitempty"`
+	// DeletedAt   gorm.DeletedAt `gorm:"type:timestamp" json:"deleted_at,omitempty"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (Menu) TableName() string {
