@@ -72,6 +72,17 @@ func SeedMenu(db *gorm.DB) error {
 			UpdatedAt:   now,
 			DeletedAt:   gorm.DeletedAt{},
 		},
+		{
+			ID:          uuid.MustParse("55555555-5555-5555-5555-555555555666"),
+			ImgURL:      "https://example.com/images/mocha.jpg",
+			Name:        "Mocha",
+			Description: stringPtr("Perpaduan kopi, susu, dan cokelat"),
+			Price:       30000.00,
+			IsActive:    false,
+			CreatedAt:   now,
+			UpdatedAt:   now,
+			DeletedAt:   gorm.DeletedAt{},
+		},
 	}
 
 	for _, menu := range menus {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -16,7 +17,7 @@ type MenuRepository struct {
 }
 
 type MenuRepo interface {
-	// Create(ctx context.Context, book *model.Menu) error
+	Create(ctx context.Context, book *model.Menu) error
 	List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error)
 	setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.Menu, error)
@@ -34,7 +35,7 @@ func NewMenuRepository(db *gorm.DB) *MenuRepository {
 
 type FilterMenu struct {
 	Pagination
-	ID          string     `json:"id,omitempty"`
+	ID       	*uuid.UUID `json:"id,omitempty"`
 	ImgURL      string     `json:"img_url,omitempty"`
 	Name        string     `json:"name,omitempty"`
 	Description *string    `json:"description,omitempty"`
@@ -45,14 +46,7 @@ type FilterMenu struct {
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-// func (r *MenuRepository) Create(ctx context.Context, book *model.Menu) error {
 
-// 	err := r.db.WithContext(ctx).Create(book).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create form: %w", err)
-// 	}
-// 	return nil
-// }
 
 func (r *MenuRepository) List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error) {
 
@@ -100,49 +94,67 @@ func (r *MenuRepository) List(ctx context.Context, filter FilterMenu) (res []*mo
 	return res, total, nil
 }
 
+
 func (r *MenuRepository) setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB {
 	if filter.Search != "" {
 		like := "%" + filter.Search + "%"
 		db = db.Where("name ILIKE ?", like)
-		// db = db.Where("name ILIKE ? OR name ILIKE ?", like, like)
-
 	}
 
-	if filter.ID != "" {
-		db = db.Where("id = ?", filter.ID)
+	if filter.ID != nil && *filter.ID != uuid.Nil {
+		db = db.Where("id = ?", *filter.ID)
 	}
 
-	// Soft delete: hanya yang belum dihapus
 	db = db.Where("deleted_at IS NULL")
 
 	return db
 }
 
+
+
+func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
+
+	err := r.db.WithContext(ctx).Create(menu).Error
+	if err != nil {
+		return fmt.Errorf("failed to create menu: %w", err)
+	}
+	return nil
+}
+
+
 // func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
+// 	var menu model.Menu
 
-// 	var book model.Menu
-
-// 	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&book).Error
+// 	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&menu).Error
 // 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get book by id: %w", err)
+// 		if err == gorm.ErrRecordNotFound {
+// 			return nil, fmt.Errorf("menu not found")
+// 		}
+// 		return nil, fmt.Errorf("failed to get menu by id: %w", err)
 // 	}
 
-// 	return &book, nil
+// 	return &menu, nil
 // }
 
-// func (r *MenuRepository) Update(ctx context.Context, book *model.Menu) error {
 
-// 	err := r.db.WithContext(ctx).Save(book).Error
+// func (r *MenuRepository) Update(ctx context.Context, menu *model.Menu) error {
+// 	menu.UpdatedAt = time.Now()
+
+// 	err := r.db.WithContext(ctx).Model(&model.Menu{}).Where("id = ? AND deleted_at IS NULL", menu.ID).Omit("created_at", clause.Associations).Updates(menu).Error
 // 	if err != nil {
-// 		return fmt.Errorf("failed to Update form: %w", err)
+// 		return fmt.Errorf("failed to update menu: %w", err)
 // 	}
+
 // 	return nil
 // }
+
+
 
 // func (r *MenuRepository) Delete(ctx context.Context, id string) error {
 // 	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
 // 	if err != nil {
-// 		return fmt.Errorf("failed to delete form: %w", err)
+// 		return fmt.Errorf("failed to delete menu: %w", err)
 // 	}
+
 // 	return nil
 // }

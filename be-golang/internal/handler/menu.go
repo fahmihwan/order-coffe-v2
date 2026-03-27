@@ -1,16 +1,14 @@
 package handler
 
 import (
-	// "best-pattern/internal/middleware"
-	// "best-pattern/internal/response"
-	// "best-pattern/internal/service"
-	// "best-pattern/internal/util"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"pos-coffeshop/internal/middleware"
+	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
 	"pos-coffeshop/internal/service"
-	"pos-coffeshop/util"
+	"pos-coffeshop/internal/util"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -47,7 +45,7 @@ func (h *MenuHandler) Routes() http.Handler {
 
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
 	// r.Get("/", h.LisMenu)
-	// r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
+	r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateMenu)
 	// r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
 	// r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
 	// r.With(auditMiddleware("delete-book", "book")).Delete("/{id}", h.DeleteBook)
@@ -55,24 +53,27 @@ func (h *MenuHandler) Routes() http.Handler {
 
 }
 
-// func (h *MenuHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	var req = new(request.BookRequest)
-// 	if err := request.ParseForm(r, req); err != nil {
-// 		middleware.HandleValidationErrors(err, w)
-// 		return
-// 	}
+func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.MenuRequest)
 
-// 	book := req.ToBook()
-// 	createBook, err := h.menuService.CreateBook(ctx, book)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	response := response.NewSuccessResponse(createBook)
-// 	w.WriteHeader(http.StatusCreated)
-// 	json.NewEncoder(w).Encode(response)
-// }
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	fmt.Print(req)
+
+	menu := req.ToMenu()
+	createMenu, err := h.menuService.CreateMenu(ctx, menu)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
+		return
+	}
+	response := response.NewSuccessResponse(createMenu)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
 
 func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 

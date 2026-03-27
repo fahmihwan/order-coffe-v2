@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"pos-coffeshop/internal/model"
 	"pos-coffeshop/internal/repository"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 var _ MenuServiceInteface = &MenuService{}
 
 type MenuServiceInteface interface {
 	ListMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error)
-	// CreateBook(ctx context.Context, book *model.Book) (*model.Book, error)
+	CreateMenu(ctx context.Context, book *model.Menu) (*model.Menu, error)
 	// GetBookByID(ctx context.Context, id string) (*model.Book, error)
 	// UpdateBook(ctx context.Context, book *model.Book) (*model.Book, error)
 	// DeleteBook(ctx context.Context, id string) error
@@ -27,19 +30,20 @@ func NewMenuService(repo repository.Repository) *MenuService {
 	}
 }
 
-// func (s *MenuService) CreateBook(ctx context.Context, book *model.Book) (*model.Book, error) {
+func (s *MenuService) CreateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error) {
 
-// 	// Generate a new UUID for the form
-// 	book.CreatedAt = time.Now()
-// 	book.UpdatedAt = time.Now()
+	menu.ID,_ = uuid.NewV7()
+	// Generate a new UUID for the form
+	menu.CreatedAt = time.Now()
+	menu.UpdatedAt = time.Now()
 
-// 	err := s.repo.Book.Create(ctx, book)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create form: %w", err)
-// 	}
+	err := s.repo.Menu.Create(ctx, menu)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create form: %w", err)
+	}
 
-// 	return book, nil
-// }
+	return menu, nil
+}
 
 func (s *MenuService) ListMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error) {
 

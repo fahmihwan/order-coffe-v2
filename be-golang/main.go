@@ -8,8 +8,9 @@ import (
 	"pos-coffeshop/internal/handler"
 	"pos-coffeshop/internal/repository"
 	"pos-coffeshop/internal/service"
+	"pos-coffeshop/internal/util"
 	"pos-coffeshop/pkg/database"
-	"pos-coffeshop/util"
+
 	"time"
 
 	"github.com/go-chi/chi/v5"

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 	internalMiddleware "pos-coffeshop/internal/middleware"
-	"pos-coffeshop/util"
+	"pos-coffeshop/internal/util"
 
 	"github.com/go-chi/chi/v5"
 )
