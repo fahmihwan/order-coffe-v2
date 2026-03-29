@@ -14,9 +14,7 @@ type Handler interface {
 
 type HandlerInteface struct {
 	MenuHandler MenuHandlerInterface
-	// UserHandler UserHandlerInterface
-	// BookHandler BookHandlerInterface
-	// handler lainnya banyak nanti
+	CategoryHandler CategoryHandlerInterface
 }
 
 func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
@@ -27,6 +25,10 @@ func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 	// isinya banyak routing nanti rencananya
 	r.Route("/menu", func(r chi.Router) {
 		r.Mount("/", handler.MenuHandler.Routes())
+	})
+
+	r.Route("/category", func(r chi.Router) {
+		r.Mount("/", handler.CategoryHandler.Routes())
 	})
 
 	// // error di book nil pointer

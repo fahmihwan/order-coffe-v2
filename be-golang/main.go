@@ -89,13 +89,25 @@ func provideRepositories(container *dig.Container) {
 		return *repository.NewMenuRepository(db)
 	})
 
+
 	if err != nil {
 		panic(fmt.Sprintf("Failed to provide MenuRepository: %v", err))
 	}
 
+	err = container.Provide(func(db *gorm.DB) repository.CategoryRepository {
+		return *repository.NewCategoryRepository(db)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide CategoryRepository: %v", err))
+	}
+
+
+
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
 			Menu: repository.NewMenuRepository(db),
+			Category: repository.NewCategoryRepository(db),
 		}
 	})
 }
@@ -109,6 +121,14 @@ func provideServices(container *dig.Container) {
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to provide BookService: %v", err))
+	}
+
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.CategoryService {
+		return service.NewCategoryService(repo)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide CategoryService: %v", err))
 	}
 
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) service.Service {
@@ -128,13 +148,19 @@ func provideHandler(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
 	}
 
+	if err := container.Provide(handler.NewCategoryHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
+	}
+
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(
 		MenuService *service.MenuService,
+		CategoryService *service.CategoryService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
-			MenuHandler: handler.NewMenuHandler(MenuService, jwtManager),
+			MenuHandler:    handler.NewMenuHandler(MenuService, jwtManager),
+			CategoryHandler: handler.NewCategoryHandler(CategoryService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))
