@@ -13,7 +13,7 @@ import (
 var _ CateogoryMenuServiceInterface = &CategoryMenuService{}
 
 type CateogoryMenuServiceInterface interface {
-	ListCategoryMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.CategoryMenu, int, error)
+	ListCategoryMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Category, int, error)
 	CreateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error)
 	GetCategoryMenuByID(ctx context.Context, id string) (*model.CategoryMenu, error)
 	UpdateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error)
@@ -30,7 +30,7 @@ func NewCategoryMenuService(repo repository.Repository) *CategoryMenuService {
 	}
 }
 
-func (s *CategoryMenuService) ListCategoryMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.CategoryMenu, int, error) {
+func (s *CategoryMenuService) ListCategoryMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Category, int, error) {
 
 	offset := (page - 1) * limit
 

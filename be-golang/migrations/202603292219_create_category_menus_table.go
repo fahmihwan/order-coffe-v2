@@ -24,9 +24,7 @@ func Migration_202603292219() *gormigrate.Migration {
 
 				CONSTRAINT fk_category_menus_menu
 					FOREIGN KEY (menu_id) REFERENCES menus(id)
-					ON DELETE CASCADE,
-
-				CONSTRAINT uq_category_menu UNIQUE (category_id, menu_id)
+					ON DELETE CASCADE
 			);
 			`).Error
 		},

@@ -21,7 +21,7 @@ type CategoryMenuRepository struct{
 
 // interface 
 type CategoryMenuRepo interface {
-	List(ctx context.Context, filter FilterCategoryMenu) (res []*model.CategoryMenu, total int, err error)
+	List(ctx context.Context, filter FilterCategoryMenu) (res []*model.Category, total int, err error)
 	Create(ctx context.Context, categoryMenu *model.CategoryMenu) error
 	setFilter(db *gorm.DB, filter FilterCategoryMenu) *gorm.DB
 	GetByID(ctx context.Context, id string) (*model.CategoryMenu, error)
@@ -50,20 +50,20 @@ type FilterCategoryMenu struct {
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (r *CategoryMenuRepository) List(ctx context.Context, filter FilterCategoryMenu) (res []*model.CategoryMenu, total int, err error) {
+func (r *CategoryMenuRepository) List(ctx context.Context, filter FilterCategoryMenu) (res []*model.Category, total int, err error) {
 	
 	funcName := "List"
-	tableName := model.CategoryMenu{}.TableName()
+	tableName := model.Category{}.TableName()
 
 	// Pastikan slice kosong (bukan nil)
-	res = make([]*model.CategoryMenu, 0)
+	res = make([]*model.Category, 0)
 
 	// GORM pakai context (ini bukan OpenTelemetry; ini untuk cancel/timeout dari request)
 	db := r.db.WithContext(ctx)
 
 	// Operation `count`
 	var count int64
-	err = r.setFilter(db, filter).Model(&model.CategoryMenu{}).Count(&count).Error
+	err = r.setFilter(db, filter).Model(&model.Category{}).Count(&count).Error
 
 	if err != nil {
 		return res, total, fmt.Errorf("failed to %s %s count: %w", funcName, tableName, err)
@@ -83,6 +83,8 @@ func (r *CategoryMenuRepository) List(ctx context.Context, filter FilterCategory
 
 	// Operation `select`
 	if err = r.setFilter(db, filter).
+		Preload("CategoryMenus").
+		Preload("CategoryMenus.Menu").
 		Order(clause.OrderByColumn{
 			Column: clause.Column{Name: filter.SortBy},
 			Desc:   desc,
