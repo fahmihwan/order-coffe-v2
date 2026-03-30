@@ -102,12 +102,19 @@ func provideRepositories(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide CategoryRepository: %v", err))
 	}
 
+	err = container.Provide(func(db *gorm.DB) repository.CategoryMenuRepository {
+		return *repository.NewCategoryMenuRepository(db)
+	})
 
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide CategoryMenuRepository: %v", err))
+	}
 
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
-			Menu: repository.NewMenuRepository(db),
-			Category: repository.NewCategoryRepository(db),
+			Menu:       repository.NewMenuRepository(db),
+			Category:  repository.NewCategoryRepository(db),
+			CategoryMenu: repository.NewCategoryMenuRepository(db),
 		}
 	})
 }
@@ -131,9 +138,18 @@ func provideServices(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide CategoryService: %v", err))
 	}
 
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.CategoryMenuService {
+		return service.NewCategoryMenuService(repo)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide CategoryMenuService: %v", err))
+	}
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) service.Service {
 		return service.Service{
-			Menu:  service.NewMenuService(repo),
+			Menu:       service.NewMenuService(repo),
+			Category:   service.NewCategoryService(repo),
+			CategoryMenu: service.NewCategoryMenuService(repo),
 		}
 	})
 
@@ -149,18 +165,25 @@ func provideHandler(container *dig.Container) {
 	}
 
 	if err := container.Provide(handler.NewCategoryHandler); err != nil {
-		panic(fmt.Sprintf("Failed to provide UserHandler: %v", err))
+		panic(fmt.Sprintf("Failed to provide CategoryHandler: %v", err))
 	}
+
+	if err := container.Provide(handler.NewCategoryMenuHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide CategoryMenuHandler: %v", err))
+	}
+
 
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(
 		MenuService *service.MenuService,
 		CategoryService *service.CategoryService,
+		CategoryMenuService *service.CategoryMenuService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
 			MenuHandler:    handler.NewMenuHandler(MenuService, jwtManager),
 			CategoryHandler: handler.NewCategoryHandler(CategoryService, jwtManager),
+			CategoryMenuHandler: handler.NewCategoryMenuHandler(CategoryMenuService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))

@@ -1,6 +1,8 @@
 package request
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func getStringFrom(values []string) string {
 	if len(values) > 0 {

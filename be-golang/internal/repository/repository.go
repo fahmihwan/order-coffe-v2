@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type Repository struct {
 	Menu MenuRepo
 	Category CategoryRepo
+	CategoryMenu CategoryMenuRepo
 	// Book BookRepo
 	// User UserRepo
 }
@@ -22,6 +23,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
 		Menu: NewMenuRepository(db),
 		Category: NewCategoryRepository(db),
+		CategoryMenu: NewCategoryMenuRepository(db),
 		// Book: NewBookRepository(db),
 		// User: NewUserRepository(db),
 	}

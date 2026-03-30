@@ -149,7 +149,7 @@ func (h *CategoryHandler) UpdateCategory(w http.ResponseWriter, r *http.Request)
 	}
 	ids := chi.URLParam(r, "id")
 	category := req.ToCategory()
-	// id, err := strconv.ParseInt(ids, 10, 64)
+
 	id, err := uuid.Parse(ids)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
