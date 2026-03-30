@@ -16,6 +16,7 @@ type HandlerInteface struct {
 	MenuHandler MenuHandlerInterface
 	CategoryHandler CategoryHandlerInterface
 	CategoryMenuHandler CategoryMenuHandlerInterface
+	AddOnHandler AddOnHandlerInterface
 }
 
 func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
@@ -32,14 +33,10 @@ func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 		r.Mount("/", handler.CategoryHandler.Routes())
 	})
 
-	r.Route("/category-menu", func(r chi.Router) {
-		r.Mount("/", handler.CategoryMenuHandler.Routes())
+	r.Route("/addon", func(r chi.Router) {
+		r.Mount("/", handler.AddOnHandler.Routes())
 	})
 
-	// // error di book nil pointer
-	// r.Route("/book", func(r chi.Router) {
-	// 	// r.Mount("/", handler.BookHandler.Routes())
-	// })
 
 	return r
 }
