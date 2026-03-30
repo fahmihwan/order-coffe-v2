@@ -10,5 +10,8 @@ func GetMigrations() []*gormigrate.Migration {
 		SeedCategories(),
 		Migration_202603292219(),
 		SeedCategoryMenus(),
+		Migration_202603301329(),
+		Migration_202603301333(),
+		SeedAddOn(),
 	}
 }
