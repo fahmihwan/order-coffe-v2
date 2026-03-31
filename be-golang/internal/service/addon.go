@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"pos-coffeshop/internal/model"
 	"pos-coffeshop/internal/repository"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 var _ AddOnServiceInterface = &AddOnService{}
 
 type AddOnServiceInterface interface {
 	ListAddon(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.AddOnGroup, int, error)
+	CreateAddon(ctx context.Context, addon *model.AddOnGroup) (*model.AddOnGroup, error)
 }
 
 type AddOnService struct {
@@ -44,3 +48,26 @@ func (s *AddOnService) ListAddon(ctx context.Context, filters map[string]string,
 
 	return addons, total, nil
 }	
+
+func (s *AddOnService) CreateAddon(ctx context.Context, addon *model.AddOnGroup) (*model.AddOnGroup, error)  {
+	now := time.Now()
+
+	addon.ID, _ = uuid.NewV7()
+	addon.CreatedAt = now
+	addon.UpdatedAt = now
+	
+	for i := range addon.AddOnOptions {
+		addon.AddOnOptions[i].ID = uuid.New()
+		addon.AddOnOptions[i].AddOnGroupID = addon.ID
+		addon.AddOnOptions[i].CreatedAt = now
+		addon.AddOnOptions[i].UpdatedAt = now
+	}
+
+	err := s.repo.AddOn.Create(ctx, addon)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create addon: %w", err)
+	}
+
+	return addon, nil
+
+}

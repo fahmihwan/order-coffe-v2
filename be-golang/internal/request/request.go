@@ -38,23 +38,24 @@ type RequestParse interface {
 }
 
 
-func ParseForm(r *http.Request, data RequestParse) (err error) {
-	if err = r.ParseMultipartForm(32 << 20); err != nil {
-		return
-	}
 
-	data.parse(r.MultipartForm)
+func ParseForm(r *http.Request, data RequestParse) error {
 	if data == nil {
 		return errors.New("invalid request type")
 	}
 
-	if err = data.validate(); err != nil {
-		return
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		return err
+	}
+
+	data.parse(r.MultipartForm)
+
+	if err := data.validate(); err != nil {
+		return err
 	}
 
 	return nil
 }
-
 
 type RequestParser interface {
 	ParseForm(*multipart.Form)

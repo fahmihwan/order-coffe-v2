@@ -33,6 +33,10 @@ func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 		r.Mount("/", handler.CategoryHandler.Routes())
 	})
 
+	r.Route("/category-menu", func(r chi.Router) {
+		r.Mount("/", handler.CategoryMenuHandler.Routes())
+	})
+
 	r.Route("/addon", func(r chi.Router) {
 		r.Mount("/", handler.AddOnHandler.Routes())
 	})

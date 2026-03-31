@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"pos-coffeshop/internal/middleware"
+	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
 	"pos-coffeshop/internal/service"
 	"pos-coffeshop/internal/util"
@@ -42,6 +43,7 @@ func (h *AddOnHandler) Routes() http.Handler {
 
 
 	r.With(auditMiddleware("list-addon", "addon")).Get("/", h.ListAddOn)
+	r.With(auditMiddleware("create-addon", "addon")).Post("/", h.CreateAddOn)
 
 	return r		
 }
@@ -88,3 +90,32 @@ func (h *AddOnHandler) ListAddOn(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(successResponse)
 }		
+
+func (h *AddOnHandler) CreateAddOn(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.AddOnGroupRequest)
+	// var req request.AddOnGroupRequest;
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil{
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	addon := req.ToAddOnGroup()
+
+	createAddOn, err := h.addOnService.CreateAddon(ctx, addon)
+
+	if err != nil {
+		http.Error(w, "Failed to create addon", http.StatusInternalServerError)
+		return
+	}
+
+	response := response.NewSuccessResponse(createAddOn)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}

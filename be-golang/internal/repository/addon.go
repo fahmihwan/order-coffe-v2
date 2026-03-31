@@ -34,7 +34,7 @@ type FilterAddon struct {
 
 type AddOnRepo interface {
 	List(ctx context.Context, filter FilterAddon) (res []*model.AddOnGroup, total int, err error)
-	// Create(ctx context.Context, addon *model.Addon) error
+	Create(ctx context.Context, addon *model.AddOnGroup) error
 	setFilter(db *gorm.DB, filter FilterAddon) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.Addon, error)
 	// Update(ctx context.Context, addon *model.Addon) error
@@ -76,8 +76,6 @@ func (r *AddOnRepository) List(ctx context.Context, filter FilterAddon) (res []*
 	// Operation `select`
 	if err = r.setFilter(db, filter).
 		Preload("AddOnOptions").
-		// Preload("CategoryMenus").
-		// Preload("CategoryMenus.Menu").
 		Order(clause.OrderByColumn{
 			Column: clause.Column{Name: filter.SortBy},
 			Desc:   desc,
@@ -96,20 +94,45 @@ func (r *AddOnRepository) setFilter(db *gorm.DB, filter FilterAddon) *gorm.DB {
 	if filter.ID != nil {
 		db = db.Where("id = ?", filter.ID)
 	}
-	// if filter.CategoryID != "" {
-	// 	db = db.Where("category_id = ?", filter.CategoryID)
-	// }
-	// if filter.MenuID != "" {
-	// 	db = db.Where("menu_id = ?", filter.MenuID)
-	// }
-	// if filter.CreatedAt != nil {
-	// 	db = db.Where("created_at >= ?", filter.CreatedAt)
-	// }
-	// if filter.UpdatedAt != nil {
-	// 	db = db.Where("updated_at >= ?", filter.UpdatedAt)
-	// }
 	
 	db = db.Where("deleted_at IS NULL")
 	
 	return db
-}			
+}	
+
+func (r *AddOnRepository) Create(ctx context.Context, addon *model.AddOnGroup) error {
+	funcName := "Create"
+	tableName := model.AddOnGroup{}.TableName()
+
+	db := r.db.WithContext(ctx)
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// create parent
+		group := *addon
+		group.AddOnOptions = nil //pastikan tidak ikut saat buat group, karena nanti dibuat terpisah
+
+		if err := tx.Create(&group).Error; err != nil {
+			return fmt.Errorf("failed to %s %s create group: %w", funcName, tableName, err)
+		}
+
+		// create children
+		if len(addon.AddOnOptions) > 0 {
+			for i := range addon.AddOnOptions {
+				addon.AddOnOptions[i].AddOnGroupID = group.ID
+			}
+
+			if err := tx.Create(&addon.AddOnOptions).Error; err != nil {
+				return fmt.Errorf("failed to %s %s create options: %w", funcName, tableName, err)
+			}
+		}
+		return nil
+	});
+
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

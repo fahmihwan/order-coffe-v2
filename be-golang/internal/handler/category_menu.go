@@ -101,7 +101,6 @@ func (h *CategoryMenuHandler) ListCategoryMenu(w http.ResponseWriter, r *http.Re
 func (h *CategoryMenuHandler) CreateCategoryMenu(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req = new(request.CategoryMenuRequest)
-
 	if err := request.ParseForm(r, req); err != nil {
 		middleware.HandleValidationErrors(err, w)
 		return
@@ -147,7 +146,6 @@ func (h *CategoryMenuHandler) UpdateCategoryMenu(w http.ResponseWriter, r *http.
 
 	ids := chi.URLParam(r, "id")
 	categoryMenu := req.ToCategoryMenu()
-
 	id, err := uuid.Parse(ids)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
