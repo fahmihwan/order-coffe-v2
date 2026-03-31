@@ -57,7 +57,7 @@ func (s *AddOnService) CreateAddon(ctx context.Context, addon *model.AddOnGroup)
 	addon.UpdatedAt = now
 	
 	for i := range addon.AddOnOptions {
-		addon.AddOnOptions[i].ID = uuid.New()
+		addon.AddOnOptions[i].ID, _ = uuid.NewV7()
 		addon.AddOnOptions[i].AddOnGroupID = addon.ID
 		addon.AddOnOptions[i].CreatedAt = now
 		addon.AddOnOptions[i].UpdatedAt = now
