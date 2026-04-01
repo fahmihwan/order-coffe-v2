@@ -25,6 +25,14 @@ func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(internalMiddleware.RateLimitingMiddleware)
+		// serve static files from ./public
+	fs := http.FileServer(http.Dir("./public"))
+	r.Handle("/public/*", http.StripPrefix("/public/", fs))
+
+	// serve uploaded files from ./uploads
+	uploadFS := http.FileServer(http.Dir("./uploads"))
+	r.Handle("/uploads/*", http.StripPrefix("/uploads/", uploadFS))
+
 
 	// isinya banyak routing nanti rencananya
 	r.Route("/menu", func(r chi.Router) {

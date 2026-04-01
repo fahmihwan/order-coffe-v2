@@ -18,7 +18,7 @@ type MenuServiceInteface interface {
 	ListMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error)
 	CreateMenu(ctx context.Context, menu *model.Menu, file multipart.File, header *multipart.FileHeader) (*model.Menu, error)
 	GetMenuByID(ctx context.Context, id string) (*model.Menu, error)
-	UpdateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error)
+	UpdateMenu(ctx context.Context, menu *model.Menu,file multipart.File,header *multipart.FileHeader) (*model.Menu, error)
 	DeleteMenu(ctx context.Context, id string) error
 }
 
@@ -78,7 +78,7 @@ func (s *MenuService) ListMenu(ctx context.Context, filters map[string]string, s
 }
 
 func (s *MenuService) GetMenuByID(ctx context.Context, id string) (*model.Menu, error) {
-
+	
 	menu, err := s.repo.Menu.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get menu by ID: %w", err)
@@ -86,19 +86,50 @@ func (s *MenuService) GetMenuByID(ctx context.Context, id string) (*model.Menu, 
 	return menu, nil
 }
 
-func (s *MenuService) UpdateMenu(ctx context.Context, menu *model.Menu) (*model.Menu, error) {
+func (s *MenuService) UpdateMenu(ctx context.Context, menu *model.Menu,file multipart.File,header *multipart.FileHeader) (*model.Menu, error) {
+	existingMenu, err := s.repo.Menu.GetByID(ctx, menu.ID.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get existing menu: %w", err)
+	}
 	menu.UpdatedAt = time.Now()
-	err := s.repo.Menu.Update(ctx, menu)
+
+
+	if file != nil && header != nil {
+		imageURL, err := util.UploadMenuImage(file, header)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload menu image: %w", err)
+		}
+
+		if existingMenu.ImgURL != "" {
+			_ = util.DeleteMenuImage(existingMenu.ImgURL)
+		}
+
+		menu.ImgURL = imageURL
+	} else {
+		menu.ImgURL = existingMenu.ImgURL
+	}
+
+	err = s.repo.Menu.Update(ctx, menu)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update menu: %w", err)
 	}
 	return menu, nil
 }
 
+
 func (s *MenuService) DeleteMenu(ctx context.Context, id string) error {
-	err := s.repo.Menu.Delete(ctx, id)
+	menu, err := s.repo.Menu.GetByID(ctx, id)
 	if err != nil {
+		return fmt.Errorf("failed to get menu: %w", err)
+	}
+
+	if err := s.repo.Menu.Delete(ctx, id); err != nil {
 		return fmt.Errorf("failed to delete menu: %w", err)
 	}
+
+	if menu.ImgURL != "" {
+		_ = util.DeleteMenuImage(menu.ImgURL)
+	}
+
 	return nil
 }

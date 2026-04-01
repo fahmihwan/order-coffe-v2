@@ -19,7 +19,7 @@ func SeedMenu(db *gorm.DB) error {
 	menus := []model.Menu{
 		{
 			ID:          uuid.MustParse("11111111-1111-1111-1111-111111111111"),
-			ImgURL:      "https://example.com/images/espresso.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Espresso",
 			Description: stringPtr("Kopi hitam pekat dengan rasa kuat"),
 			Price:       18000.00,
@@ -30,7 +30,7 @@ func SeedMenu(db *gorm.DB) error {
 		},
 		{
 			ID:          uuid.MustParse("22222222-2222-2222-2222-222222222222"),
-			ImgURL:      "https://example.com/images/americano.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Americano",
 			Description: stringPtr("Espresso dengan tambahan air panas"),
 			Price:       20000.00,
@@ -41,7 +41,7 @@ func SeedMenu(db *gorm.DB) error {
 		},
 		{
 			ID:          uuid.MustParse("33333333-3333-3333-3333-333333333333"),
-			ImgURL:      "https://example.com/images/cappuccino.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Cappuccino",
 			Description: stringPtr("Espresso dengan susu dan foam lembut"),
 			Price:       25000.00,
@@ -52,7 +52,7 @@ func SeedMenu(db *gorm.DB) error {
 		},
 		{
 			ID:          uuid.MustParse("44444444-4444-4444-4444-444444444444"),
-			ImgURL:      "https://example.com/images/latte.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Cafe Latte",
 			Description: stringPtr("Kopi susu creamy dengan rasa lembut"),
 			Price:       27000.00,
@@ -63,7 +63,7 @@ func SeedMenu(db *gorm.DB) error {
 		},
 		{
 			ID:          uuid.MustParse("55555555-5555-5555-5555-555555555555"),
-			ImgURL:      "https://example.com/images/mocha.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Mocha",
 			Description: stringPtr("Perpaduan kopi, susu, dan cokelat"),
 			Price:       30000.00,
@@ -74,7 +74,7 @@ func SeedMenu(db *gorm.DB) error {
 		},
 		{
 			ID:          uuid.MustParse("55555555-5555-5555-5555-555555555666"),
-			ImgURL:      "https://example.com/images/mocha.jpg",
+			ImgURL:      "/dummy.jpeg",
 			Name:        "Mocha",
 			Description: stringPtr("Perpaduan kopi, susu, dan cokelat"),
 			Price:       30000.00,

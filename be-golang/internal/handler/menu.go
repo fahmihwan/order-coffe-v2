@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/request"
@@ -148,50 +149,76 @@ func (h *MenuHandler) GetMenu(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MenuHandler) UpdateMenu(w http.ResponseWriter, r *http.Request) {
-	// Implementation for updating a book2
 	ctx := r.Context()
 
-	var req = new(request.MenuRequest)
-	if err := request.ParseForm(r, req); err != nil {
-		middleware.HandleValidationErrors(err, w)
-		return
-	}
 	ids := chi.URLParam(r, "id")
-	menu := req.ToMenu()
-	// id, err := strconv.ParseInt(ids, 10, 64)
 	id, err := uuid.Parse(ids)
 	if err != nil {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
-	menu.ID = id
-
-	updatedMenu, err := h.menuService.UpdateMenu(ctx, menu)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error updating book: %v", err), http.StatusInternalServerError)
+	var req = new(request.MenuRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
 		return
 	}
 
-	response := response.NewSuccessResponse(updatedMenu)
+	menu := req.ToMenu()
+	menu.ID = id
+
+	var file multipart.File
+	var header *multipart.FileHeader
+
+	file, header, err = r.FormFile("image")
+	if err != nil {
+		if err != http.ErrMissingFile {
+			http.Error(w, fmt.Sprintf("failed to read image: %v", err), http.StatusBadRequest)
+			return
+		}
+		file = nil
+		header = nil
+	}
+	if file != nil {
+		defer file.Close()
+	}
+
+	updatedMenu, err := h.menuService.UpdateMenu(ctx, menu, file, header)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error updating menu: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	resp := response.NewSuccessResponse(updatedMenu)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *MenuHandler) DeleteMenu(w http.ResponseWriter, r *http.Request) {
-
 	ctx := r.Context()
-	id := chi.URLParam(r, "id")
 
-	err := h.menuService.DeleteMenu(ctx, id)
+	ids := chi.URLParam(r, "id")
+	id, err := uuid.Parse(ids)
+	if err != nil {
+		response := response.NewErrorResponse("invalid id")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	err = h.menuService.DeleteMenu(ctx, id.String())
 	if err != nil {
 		response := response.NewErrorResponse(err.Error())
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 		return
 	}
 
 	successResponse := response.NewSuccessResponse("Menu deleted successfully")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(successResponse)
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(successResponse)
 }
