@@ -9,7 +9,7 @@ import (
 )
 
 type MenuRequest struct {
-	ImgURL      string  `json:"img_url" validate:"required"`
+	// ImgURL      string  `json:"img_url" validate:"required"`
 	Name        string  `json:"name" validate:"required"`
 	Description *string `json:"description,omitempty"`
 	Price       float64 `json:"price" validate:"required,gt=0"`
@@ -21,7 +21,7 @@ type MenuRequest struct {
 func (r *MenuRequest) parse(req *multipart.Form) {
 	values := req.Value
 
-	r.ImgURL = getStringFrom(values["img_url"])
+	// r.ImgURL = getStringFrom(values["img_url"])
 	r.Name = getStringFrom(values["name"])
 	desc := getStringFrom(values["description"])
 	if desc != "" {
@@ -52,7 +52,7 @@ func (r *MenuRequest) validate() error {
 
 func (r *MenuRequest) ToMenu() *model.Menu {
 	menu := &model.Menu{
-		ImgURL:      r.ImgURL,
+		// ImgURL:      r.ImgURL,
 		Name:        r.Name,
 		Description: r.Description,
 		Price:       r.Price,

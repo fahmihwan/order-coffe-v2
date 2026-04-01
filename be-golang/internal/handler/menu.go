@@ -63,14 +63,20 @@ func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Print(req)
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		fmt.Errorf("failed to create destination file: %w", err)
+		return
+	}
+	defer file.Close()
 
 	menu := req.ToMenu()
-	createMenu, err := h.menuService.CreateMenu(ctx, menu)
+	createMenu, err := h.menuService.CreateMenu(ctx, menu,file, header)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
 		return
 	}
+
 	response := response.NewSuccessResponse(createMenu)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
