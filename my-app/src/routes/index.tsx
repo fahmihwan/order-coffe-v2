@@ -1,13 +1,7 @@
 import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
-// layouts & guards (contoh import)
 
-// import LayoutCustomer from "../view/layout/LayoutCustomer";
-// import LayoutAdmin from "../view/layout/LayoutAdmin";
-// import ProtectedRouteUser from "./guards/ProtectedRouteUser";
-// import ProtectedRouteAdmin from "./guards/ProtectedRouteAdmin";
-// import ProtectedRouteChecker from "./guards/ProtectedRouteChecker";
 
 import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";

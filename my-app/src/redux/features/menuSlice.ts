@@ -32,7 +32,7 @@ const initialState: MenuState = {
 
 export const getMasterMenu = createAsyncThunk<Menu[], void, { rejectValue: string }>("menu/master/admin", async (_, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<Menu[]>>("/json/masterMenu.json");
+        const response = await apiClient.get<ApiResponse<Menu[]>>("/menu?page=1&limit=5");
         return response.data.data ?? [];
     } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to fetch add-ons";

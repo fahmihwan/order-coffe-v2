@@ -7,10 +7,11 @@ type AuthStorage = {
     [key: string]: unknown;
 };
 
-const baseURL = `${import.meta.env.VITE_API_BE_URL}/api`;
+// const baseURL = `${import.meta.env.VITE_API_BE_URL}/api`;
+const baseURL = `${import.meta.env.VITE_API_BE_URL}`;
 
 const apiClient: AxiosInstance = axios.create({
-    // baseURL,
+    baseURL,
     // timeout: 1000,
     // withCredentials: true,
     // headers: {
