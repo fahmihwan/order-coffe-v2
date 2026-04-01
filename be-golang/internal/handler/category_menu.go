@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
@@ -84,7 +85,7 @@ func (h *CategoryMenuHandler) ListCategoryMenu(w http.ResponseWriter, r *http.Re
 	}
 
 	// data := response.FromMenuModels(categoryMenus)
-	data := response.FromCategoryModels(categoryMenus)
+	data := mapper.FromCategoryWithMenuModels(categoryMenus)
 	// Calculate pagination
 	pagination := response.Pagination{
 		CurrentPage: page,

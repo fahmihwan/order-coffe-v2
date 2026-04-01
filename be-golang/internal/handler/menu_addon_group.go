@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/response"
 	"pos-coffeshop/internal/service"
@@ -79,8 +80,8 @@ func (h *MenuAddOnGroupHandler) ListMenuAddOnGroup(w http.ResponseWriter, r *htt
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	// fmt.Printf("Total category menus: %+v\n",categoryMenus )
-	data := response.FromMenuModels(categoryMenus)
+
+	data := mapper.ToMenuWithAddOnModels(categoryMenus)
 
 	// Calculate pagination
 	pagination := response.Pagination{
