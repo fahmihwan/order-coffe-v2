@@ -110,8 +110,8 @@ func provideRepositories(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide CategoryMenuRepository: %v", err))
 	}
 
-	err = container.Provide(func(db *gorm.DB) repository.AddOnRepository {
-		return *repository.NewAddOnRepository(db)
+	err = container.Provide(func(db *gorm.DB) repository.AddOnGroupRepository {
+		return *repository.NewAddOnGroupRepository(db)
 	})
 
 	if err != nil {
@@ -123,7 +123,7 @@ func provideRepositories(container *dig.Container) {
 			Menu:       repository.NewMenuRepository(db),
 			Category:  repository.NewCategoryRepository(db),
 			CategoryMenu: repository.NewCategoryMenuRepository(db),
-			AddOn:      repository.NewAddOnRepository(db),
+			AddOnGroup:      repository.NewAddOnGroupRepository(db),
 		}
 	})
 }
@@ -155,8 +155,8 @@ func provideServices(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide CategoryMenuService: %v", err))
 	}
 
-	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.AddOnService {
-		return service.NewAddOnService(repo)
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.AddOnGroupService {
+		return service.NewAddOnGroupService(repo)
 	})
 
 	if err != nil {
@@ -169,7 +169,7 @@ func provideServices(container *dig.Container) {
 			Menu:       service.NewMenuService(repo),
 			Category:   service.NewCategoryService(repo),
 			CategoryMenu: service.NewCategoryMenuService(repo),
-			AddOn:      service.NewAddOnService(repo),	
+			AddOnGroup:      service.NewAddOnGroupService(repo),
 		}
 	})
 
@@ -193,7 +193,7 @@ func provideHandler(container *dig.Container) {
 	}
 
 
-	if err := container.Provide(handler.NewAddOnHandler); err != nil {
+	if err := container.Provide(handler.NewAddOnGroupHandler); err != nil {
 		panic(fmt.Sprintf("Failed to provide AddOnHandler: %v", err))
 	}
 
@@ -203,14 +203,14 @@ func provideHandler(container *dig.Container) {
 		MenuService *service.MenuService,
 		CategoryService *service.CategoryService,
 		CategoryMenuService *service.CategoryMenuService,
-		AddOnService *service.AddOnService,
+		AddOnGroupService *service.AddOnGroupService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
 			MenuHandler:    handler.NewMenuHandler(MenuService, jwtManager),
 			CategoryHandler: handler.NewCategoryHandler(CategoryService, jwtManager),
 			CategoryMenuHandler: handler.NewCategoryMenuHandler(CategoryMenuService, jwtManager),
-			AddOnHandler: handler.NewAddOnHandler(AddOnService, jwtManager),
+			AddOnGroupHandler: handler.NewAddOnGroupHandler(AddOnGroupService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))
