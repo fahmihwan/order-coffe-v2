@@ -12,29 +12,29 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type AddOnGroupRepository struct {
+type AddOnOptionRepository struct {
 	db *gorm.DB
 }
 
-type AddOnGroupRepo interface {
-	List(ctx context.Context, filter FilterAddOnGroup) (res []*model.AddOnGroup, total int, err error)
-	Create(ctx context.Context, addon *model.AddOnGroup) error
-	setFilter(db *gorm.DB, filter FilterAddOnGroup) *gorm.DB
-	GetByID(ctx context.Context, id string) (*model.AddOnGroup, error)
-	Update(ctx context.Context, addon *model.AddOnGroup) error
+type AddOnOptionRepo interface {
+	List(ctx context.Context, filter FilterAddOnOption) (res []*model.AddOnOption, total int, err error)
+	Create(ctx context.Context, addon *model.AddOnOption) error
+	setFilter(db *gorm.DB, filter FilterAddOnOption) *gorm.DB
+	GetByID(ctx context.Context, id string) (*model.AddOnOption, error)
+	Update(ctx context.Context, addon *model.AddOnOption) error
 	Delete(ctx context.Context, id string) error
 }
 
-var _ AddOnGroupRepo = (*AddOnGroupRepository)(nil)
+var _ AddOnOptionRepo = (*AddOnOptionRepository)(nil)
 
-func NewAddOnGroupRepository(db *gorm.DB) *AddOnGroupRepository {
-	return &AddOnGroupRepository{
+func NewAddOnOptionRepository(db *gorm.DB) *AddOnOptionRepository {
+	return &AddOnOptionRepository{
 		db: db,
 	}
 }
 
 
-type FilterAddOnGroup struct {
+type FilterAddOnOption struct {
 	Pagination
 	ID       	*uuid.UUID `json:"id,omitempty"`
 	CategoryID      string     `json:"category_id,omitempty"`
@@ -47,20 +47,20 @@ type FilterAddOnGroup struct {
 
 
 
-func (r *AddOnGroupRepository) List(ctx context.Context, filter FilterAddOnGroup) (res []*model.AddOnGroup, total int, err error) {
+func (r *AddOnOptionRepository) List(ctx context.Context, filter FilterAddOnOption) (res []*model.AddOnOption, total int, err error) {
 	
 	funcName := "List"
-	tableName := model.AddOnGroup{}.TableName()
+	tableName := model.AddOnOption{}.TableName()
 
 	// Pastikan slice kosong (bukan nil)
-	res = make([]*model.AddOnGroup, 0)
+	res = make([]*model.AddOnOption, 0)
 
 	// GORM pakai context (ini bukan OpenTelemetry; ini untuk cancel/timeout dari request)
 	db := r.db.WithContext(ctx)
 
 	// Operation `count`
 	var count int64
-	err = r.setFilter(db, filter).Model(&model.AddOnGroup{}).Count(&count).Error
+	err = r.setFilter(db, filter).Model(&model.AddOnOption{}).Count(&count).Error
 
 	if err != nil {
 		return res, total, fmt.Errorf("failed to %s %s count: %w", funcName, tableName, err)
@@ -95,7 +95,7 @@ func (r *AddOnGroupRepository) List(ctx context.Context, filter FilterAddOnGroup
 }
 
 
-func (r *AddOnGroupRepository) setFilter(db *gorm.DB, filter FilterAddOnGroup) *gorm.DB {
+func (r *AddOnOptionRepository) setFilter(db *gorm.DB, filter FilterAddOnOption) *gorm.DB {
 	if filter.ID != nil {
 		db = db.Where("id = ?", filter.ID)
 	}
@@ -105,39 +105,39 @@ func (r *AddOnGroupRepository) setFilter(db *gorm.DB, filter FilterAddOnGroup) *
 	return db
 }	
 
-func (r *AddOnGroupRepository) Create(ctx context.Context, addon *model.AddOnGroup) error {
+func (r *AddOnOptionRepository) Create(ctx context.Context, addon *model.AddOnOption) error {
 	err := r.db.WithContext(ctx).Create(addon).Error
 	if err != nil {
-		return fmt.Errorf("failed to create addon group: %w", err)
+		return fmt.Errorf("failed to create addon option: %w", err)
 	}
 	return nil
 }
 
 
-func (r *AddOnGroupRepository) Update(ctx context.Context, addon *model.AddOnGroup) error {
+func (r *AddOnOptionRepository) Update(ctx context.Context, addon *model.AddOnOption) error {
 	addon.UpdatedAt = time.Now()
 
-	err := r.db.WithContext(ctx).Model(&model.AddOnGroup{}).Where("id = ? AND deleted_at IS NULL", addon.ID).Omit("created_at", clause.Associations).Updates(addon).Error
+	err := r.db.WithContext(ctx).Model(&model.AddOnOption{}).Where("id = ? AND deleted_at IS NULL", addon.ID).Omit("created_at", clause.Associations).Updates(addon).Error
 	if err != nil {
-		return fmt.Errorf("failed to update addon group: %w", err)
+		return fmt.Errorf("failed to update addon option: %w", err)
 	}
 	return nil
 }
 
-func (r *AddOnGroupRepository) GetByID(ctx context.Context, id string) (*model.AddOnGroup, error) {
-	var addon model.AddOnGroup
+func (r *AddOnOptionRepository) GetByID(ctx context.Context, id string) (*model.AddOnOption, error) {
+	var addon model.AddOnOption
 
 	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).Preload("AddOnOptions").First(&addon).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to get addon group by ID: %w", err)
+		return nil, fmt.Errorf("failed to get addon option by ID: %w", err)
 	}
 	return &addon, nil
 }	
 
-func (r *AddOnGroupRepository) Delete(ctx context.Context, id string) error {
-	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
+func (r *AddOnOptionRepository) Delete(ctx context.Context, id string) error {
+	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.AddOnOption{}).Error
 	if err != nil {
-		return fmt.Errorf("failed to delete menu: %w", err)
+		return fmt.Errorf("failed to delete addon option: %w", err)
 	}
 	return nil
 }	

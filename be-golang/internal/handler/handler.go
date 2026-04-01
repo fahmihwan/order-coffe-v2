@@ -17,6 +17,7 @@ type HandlerInteface struct {
 	CategoryHandler CategoryHandlerInterface
 	CategoryMenuHandler CategoryMenuHandlerInterface
 	AddOnGroupHandler AddOnGroupHandlerInterface
+	AddOnOptionHandler AddOnOptionHandlerInterface
 }
 
 func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
@@ -37,8 +38,12 @@ func NewRouter(handler *HandlerInteface, jwtm *util.JWTManager) *chi.Mux {
 		r.Mount("/", handler.CategoryMenuHandler.Routes())
 	})
 
-	r.Route("/addon", func(r chi.Router) {
+	r.Route("/addon-group", func(r chi.Router) {
 		r.Mount("/", handler.AddOnGroupHandler.Routes())
+	})
+
+	r.Route("/addon-option", func(r chi.Router) {
+		r.Mount("/", handler.AddOnOptionHandler.Routes())
 	})
 
 

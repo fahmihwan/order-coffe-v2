@@ -35,7 +35,7 @@ func (s *AddOnGroupService) ListAddOnGroup(ctx context.Context, filters map[stri
 
 	offset := (page - 1) * limit
 
-	addons, total, err := s.repo.AddOnGroup.List(ctx, repository.FilterAddon{
+	addons, total, err := s.repo.AddOnGroup.List(ctx, repository.FilterAddOnGroup{
 		Pagination: repository.Pagination{
 			Page:    page,
 			Limit:   limit,

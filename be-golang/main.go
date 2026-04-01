@@ -118,12 +118,20 @@ func provideRepositories(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide AddOnRepository: %v", err))
 	}
 
+	err = container.Provide(func(db *gorm.DB) repository.AddOnOptionRepository {
+		return *repository.NewAddOnOptionRepository(db)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide AddOnRepository: %v", err))
+	}
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
 			Menu:       repository.NewMenuRepository(db),
 			Category:  repository.NewCategoryRepository(db),
 			CategoryMenu: repository.NewCategoryMenuRepository(db),
 			AddOnGroup:      repository.NewAddOnGroupRepository(db),
+			AddOnOption: 	repository.NewAddOnOptionRepository(db),
 		}
 	})
 }
@@ -164,12 +172,21 @@ func provideServices(container *dig.Container) {
 	}
 	
 
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.AddOnOptionService {
+		return service.NewAddOnOptionService(repo)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide AddOnService: %v", err))
+	}
+
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) service.Service {
 		return service.Service{
 			Menu:       service.NewMenuService(repo),
 			Category:   service.NewCategoryService(repo),
 			CategoryMenu: service.NewCategoryMenuService(repo),
 			AddOnGroup:      service.NewAddOnGroupService(repo),
+			AddOnOption:     service.NewAddOnOptionService(repo),
 		}
 	})
 
@@ -197,6 +214,10 @@ func provideHandler(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide AddOnHandler: %v", err))
 	}
 
+	if err := container.Provide(handler.NewAddOnOptionHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide AddOnOptionHandler: %v", err))
+	}
+
 
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(
@@ -204,6 +225,7 @@ func provideHandler(container *dig.Container) {
 		CategoryService *service.CategoryService,
 		CategoryMenuService *service.CategoryMenuService,
 		AddOnGroupService *service.AddOnGroupService,
+		AddOnOptionService *service.AddOnOptionService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
@@ -211,6 +233,7 @@ func provideHandler(container *dig.Container) {
 			CategoryHandler: handler.NewCategoryHandler(CategoryService, jwtManager),
 			CategoryMenuHandler: handler.NewCategoryMenuHandler(CategoryMenuService, jwtManager),
 			AddOnGroupHandler: handler.NewAddOnGroupHandler(AddOnGroupService, jwtManager),
+			AddOnOptionHandler: handler.NewAddOnOptionHandler(AddOnOptionService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))
