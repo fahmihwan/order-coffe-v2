@@ -39,17 +39,6 @@ func SeedAddOnGroup(db *gorm.DB) error {
 			UpdatedAt:   now,
 			DeletedAt:   gorm.DeletedAt{},
 		},
-		{
-			ID:          uuid.MustParse("33333333-3333-3333-3333-333333333333"),
-			Title:       "Hot or Ice *",
-			Description: stringPtr("Pilih jenis"),
-			IsRequired:  true,
-			MinSelect:   1,
-			MaxSelect:   1,
-			CreatedAt:   now,
-			UpdatedAt:   now,
-			DeletedAt:   gorm.DeletedAt{},
-		},
 	}
 
 	for _, group := range groups {

@@ -79,28 +79,6 @@ func SeedAddOnOption(db *gorm.DB) error {
 			UpdatedAt:   now,
 			DeletedAt:   gorm.DeletedAt{},
 		},
-		{
-			ID:           uuid.MustParse("ccccccc1-1111-1111-1111-111111111111"),
-			AddOnGroupID: uuid.MustParse("33333333-3333-3333-3333-333333333333"),
-			Name:         "Ho2323t",
-			Price:        200,
-			IsActive:     true,
-			Type:        "radio",
-			CreatedAt:   now,
-			UpdatedAt:   now,
-			DeletedAt:   gorm.DeletedAt{},
-		},
-		{
-			ID:           uuid.MustParse("ccccccc2-2222-2222-2222-222222222222"),
-			AddOnGroupID: uuid.MustParse("33333333-3333-3333-3333-333333333333"),
-			Name:         "Ice",
-			Price:        0,
-			IsActive:     true,
-			Type:        "radio",
-			CreatedAt:   now,
-			UpdatedAt:   now,
-			DeletedAt:   gorm.DeletedAt{},
-		},
 	}
 
 	for _, option := range options {

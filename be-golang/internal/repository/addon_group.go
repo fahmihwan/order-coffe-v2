@@ -135,9 +135,9 @@ func (r *AddOnGroupRepository) GetByID(ctx context.Context, id string) (*model.A
 }	
 
 func (r *AddOnGroupRepository) Delete(ctx context.Context, id string) error {
-	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.AddOnGroup{}).Error
 	if err != nil {
-		return fmt.Errorf("failed to delete menu: %w", err)
+		return fmt.Errorf("failed to delete addon group: %w", err)
 	}
 	return nil
 }	
