@@ -53,7 +53,21 @@ func (r *AddOnOptionRepository) setFilter(db *gorm.DB, filter FilterAddOnOption)
 	if filter.ID != nil {
 		db = db.Where("id = ?", filter.ID)
 	}
-	
+	if filter.AddOnGroupID != nil {
+		db = db.Where("add_on_group_id = ?", filter.AddOnGroupID)
+	}
+	if filter.Name != nil {
+		db = db.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	}
+	if filter.Price != nil {
+		db = db.Where("price = ?", filter.Price)
+	}
+	if filter.IsActive != nil {
+		db = db.Where("is_active = ?", filter.IsActive)
+	}
+	if filter.Type != nil {
+		db = db.Where("type = ?", filter.Type)
+	}
 	db = db.Where("deleted_at IS NULL")
 	
 	return db
@@ -81,7 +95,7 @@ func (r *AddOnOptionRepository) Update(ctx context.Context, addon *model.AddOnOp
 func (r *AddOnOptionRepository) GetByID(ctx context.Context, id string) (*model.AddOnOption, error) {
 	var addon model.AddOnOption
 
-	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).Preload("AddOnOptions").First(&addon).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&addon).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to get addon option by ID: %w", err)
 	}

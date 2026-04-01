@@ -13,7 +13,6 @@ import (
 var _ AddOnOptionServiceInterface = &AddOnOptionService{}
 
 type AddOnOptionServiceInterface interface {
-	ListAddOnOption(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.AddOnOption, int, error)
 	CreateAddOnOption(ctx context.Context, addon *model.AddOnOption) (*model.AddOnOption, error)
 	GetAddOnOptionByID(ctx context.Context, id string) (*model.AddOnOption, error)
 	UpdateAddOnOption(ctx context.Context, addon *model.AddOnOption) (*model.AddOnOption, error)
@@ -31,27 +30,6 @@ func NewAddOnOptionService(repo repository.Repository) *AddOnOptionService {
 	}
 }
 
-func (s *AddOnOptionService) ListAddOnOption(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.AddOnOption, int, error) {
-
-	offset := (page - 1) * limit
-
-	addons, total, err := s.repo.AddOnOption.List(ctx, repository.FilterAddOnOption{
-		Pagination: repository.Pagination{
-			Page:    page,
-			Limit:   limit,
-			Offset:  offset,
-			SortBy:  sortBy,
-			OrderBy: orderBy,
-			Search:  search,
-		},
-	})
-
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list addons: %w", err)
-	}
-
-	return addons, total, nil
-}	
 
 func (s *AddOnOptionService) CreateAddOnOption(ctx context.Context, addon *model.AddOnOption) (*model.AddOnOption, error)  {
 	now := time.Now()
