@@ -83,17 +83,19 @@ func (h *CategoryMenuHandler) ListCategoryMenu(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// data := response.FromMenuModels(categoryMenus)
+	data := response.FromCategoryModels(categoryMenus)
 	// Calculate pagination
 	pagination := response.Pagination{
 		CurrentPage: page,
 		From:        (page-1)*limit + 1,
-		To:          (page-1)*limit + len(categoryMenus),
+		To:          (page-1)*limit + len(data),
 		Pages:       (total + limit - 1) / limit,
 		Total:       total,
 	}
 
 	// Write the response
-	successResponse := response.NewSuccessResponseWithPagination(categoryMenus, pagination)
+	successResponse := response.NewSuccessResponseWithPagination(data, pagination)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(successResponse)		
 }

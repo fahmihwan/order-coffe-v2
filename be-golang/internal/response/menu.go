@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+
 type MenuResponse struct {
 	ID          uuid.UUID            `json:"id"`
 	ImgURL      string              `json:"img_url,omitempty"`
@@ -16,23 +17,18 @@ type MenuResponse struct {
 	AddOnGroups []AddOnGroupResponse `json:"add_on_groups"`
 }
 
-type AddOnGroupResponse struct {
-	ID           uuid.UUID             `json:"id"`
-	Title        string                `json:"title"`
-	Description  *string               `json:"description,omitempty"`
-	IsRequired   bool                  `json:"is_required"`
-	MinSelect    int                   `json:"min_select"`
-	MaxSelect    int                   `json:"max_select"`
-	AddOnOptions []AddOnOptionResponse `json:"add_on_options"`
+
+type MenuCategoryMenuIdResponse struct {
+	ID          uuid.UUID            `json:"id"`
+	CategoryMenuId uuid.UUID            `json:"category_menu_id"`	
+	ImgURL      string              `json:"img_url,omitempty"`
+	Name        string               `json:"name"`
+	Description *string              `json:"description,omitempty"`
+	Price       float64              `json:"price"`
+	IsActive    bool                 `json:"is_active"`
 }
 
-type AddOnOptionResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Price    float64   `json:"price"`
-	IsActive bool      `json:"is_active"`
-	Type     string    `json:"type"`
-}
+
 
 func FromMenuModel(menu *model.Menu) *MenuResponse {
 	if menu == nil {
