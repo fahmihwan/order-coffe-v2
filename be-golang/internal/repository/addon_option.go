@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"pos-coffeshop/internal/model"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,7 +16,6 @@ type AddOnOptionRepository struct {
 }
 
 type AddOnOptionRepo interface {
-	List(ctx context.Context, filter FilterAddOnOption) (res []*model.AddOnOption, total int, err error)
 	Create(ctx context.Context, addon *model.AddOnOption) error
 	setFilter(db *gorm.DB, filter FilterAddOnOption) *gorm.DB
 	GetByID(ctx context.Context, id string) (*model.AddOnOption, error)
@@ -36,63 +34,19 @@ func NewAddOnOptionRepository(db *gorm.DB) *AddOnOptionRepository {
 
 type FilterAddOnOption struct {
 	Pagination
-	ID       	*uuid.UUID `json:"id,omitempty"`
-	CategoryID      string     `json:"category_id,omitempty"`
-	MenuID   string `json:"menu_id,omitempty"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
+	ID           *uuid.UUID `json:"id,omitempty"`
+	AddOnGroupID *uuid.UUID `json:"add_on_group_id,omitempty"`
+	Name         *string    `json:"name,omitempty"`
+	Price        *float64   `json:"price,omitempty"`
+	IsActive     *bool      `json:"is_active,omitempty"`
+	Type         *string    `json:"type,omitempty"`
+
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 
-
-
-func (r *AddOnOptionRepository) List(ctx context.Context, filter FilterAddOnOption) (res []*model.AddOnOption, total int, err error) {
-	
-	funcName := "List"
-	tableName := model.AddOnOption{}.TableName()
-
-	// Pastikan slice kosong (bukan nil)
-	res = make([]*model.AddOnOption, 0)
-
-	// GORM pakai context (ini bukan OpenTelemetry; ini untuk cancel/timeout dari request)
-	db := r.db.WithContext(ctx)
-
-	// Operation `count`
-	var count int64
-	err = r.setFilter(db, filter).Model(&model.AddOnOption{}).Count(&count).Error
-
-	if err != nil {
-		return res, total, fmt.Errorf("failed to %s %s count: %w", funcName, tableName, err)
-	}
-
-	if count == 0 {
-		return
-	}
-	total = int(count)
-
-	if filter.SortBy == "" {
-		filter.SortBy = "id"
-	}
-
-	order := strings.ToUpper(filter.OrderBy)
-	desc := order == "DESC" // default ASC kalau kosong / selain DESC
-
-	// Operation `select`
-	if err = r.setFilter(db, filter).
-		Preload("AddOnOptions").
-		Order(clause.OrderByColumn{
-			Column: clause.Column{Name: filter.SortBy},
-			Desc:   desc,
-		}).
-		Limit(filter.Limit).
-		Offset(filter.Offset).
-		Find(&res).Error; err != nil {
-		return res, total, fmt.Errorf("failed to %s %s find: %w", funcName, tableName, err)
-	}
-
-	return res, total, nil
-}
 
 
 func (r *AddOnOptionRepository) setFilter(db *gorm.DB, filter FilterAddOnOption) *gorm.DB {

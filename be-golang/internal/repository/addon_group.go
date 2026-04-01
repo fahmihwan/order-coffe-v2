@@ -36,14 +36,18 @@ func NewAddOnGroupRepository(db *gorm.DB) *AddOnGroupRepository {
 
 type FilterAddOnGroup struct {
 	Pagination
-	ID       	*uuid.UUID `json:"id,omitempty"`
-	CategoryID      string     `json:"category_id,omitempty"`
-	MenuID   string `json:"menu_id,omitempty"`
-	CreatedAt   *time.Time `json:"created_at,omitempty"`
-	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
-}
 
+	ID          *uuid.UUID `json:"id,omitempty"`
+	Title       *string    `json:"title,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	IsRequired  *bool      `json:"is_required,omitempty"`
+	MinSelect   *int       `json:"min_select,omitempty"`
+	MaxSelect   *int       `json:"max_select,omitempty"`
+
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
+}
 
 
 
