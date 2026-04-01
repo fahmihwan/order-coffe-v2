@@ -140,7 +140,8 @@ func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, e
 func (r *MenuRepository) Update(ctx context.Context, menu *model.Menu) error {
 	menu.UpdatedAt = time.Now()
 
-	err := r.db.WithContext(ctx).Model(&model.Menu{}).Where("id = ? AND deleted_at IS NULL", menu.ID).Omit("created_at", clause.Associations).Updates(menu).Error
+	err := r.db.WithContext(ctx)
+	.Model(&model.Menu{}).Where("id = ? AND deleted_at IS NULL", menu.ID).Omit("created_at", clause.Associations).Updates(menu).Error
 	if err != nil {
 		return fmt.Errorf("failed to update menu: %w", err)
 	}

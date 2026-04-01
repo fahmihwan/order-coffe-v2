@@ -1,4 +1,5 @@
 import {
+    Badge,
     Button,
     Label,
     Modal,
@@ -6,72 +7,169 @@ import {
     ModalFooter,
     ModalHeader,
     Pagination,
+    Select,
     TextInput,
 } from "flowbite-react";
-import { useEffect, useMemo, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { getMasterAddOn } from "../../../../redux/features/addOnSlice";
-import { formatRupiah } from "../../../../utils/cartUtils";
-import type { AddOn, AddOnType } from "../../../../types/addOn";
+import { useMemo, useState } from "react";
 
-type AddOnForm = {
-    id: string;
-    title: string;
-    description: string;
-    type: AddOnType;
-    isRequired: boolean;
-    options: {
-        id: string;
-        name: string;
-        price: string;
-    }[];
+type AddOnOptionType = "radio" | "checkbox";
+
+type AddOnOptionRequest = {
+    name: string;
+    price: number;
+    is_active: boolean;
+    type: AddOnOptionType;
 };
 
-const initialForm: AddOnForm = {
-    id: "",
-    title: "",
-    description: "",
+type AddOnGroupRequest = {
+    title: string;
+    description: string | null;
+    is_required: boolean;
+    min_select: number;
+    max_select: number;
+    add_on_options?: AddOnOptionRequest[];
+};
+
+type AddOptionForm = {
+    name: string;
+    price: string;
+    is_active: boolean;
+    type: AddOnOptionType;
+};
+
+const dummyAddOns: AddOnGroupRequest[] = [
+    {
+        title: "Hot or Ice *",
+        description: "Pilih jenis",
+        is_required: true,
+        min_select: 1,
+        max_select: 1,
+        add_on_options: [
+            {
+                name: "Hot",
+                price: 0,
+                is_active: true,
+                type: "radio",
+            },
+            {
+                name: "Ice",
+                price: 100,
+                is_active: true,
+                type: "radio",
+            },
+        ],
+    },
+    {
+        title: "Additional syrup *",
+        description: "Pilih hingga 3 opsi",
+        is_required: false,
+        min_select: 0,
+        max_select: 3,
+        add_on_options: [
+            {
+                name: "Vanilla",
+                price: 8000,
+                is_active: true,
+                type: "checkbox",
+            },
+            {
+                name: "Huzzlent",
+                price: 8000,
+                is_active: true,
+                type: "checkbox",
+            },
+            {
+                name: "Caramel",
+                price: 8000,
+                is_active: false,
+                type: "checkbox",
+            },
+            {
+                name: "Sugar",
+                price: 0,
+                is_active: true,
+                type: "checkbox",
+            },
+        ],
+    },
+    {
+        title: "Cup Size",
+        description: "Pilih ukuran cup",
+        is_required: true,
+        min_select: 1,
+        max_select: 1,
+        add_on_options: [
+            {
+                name: "Regular",
+                price: 0,
+                is_active: true,
+                type: "radio",
+            },
+            {
+                name: "Large",
+                price: 4000,
+                is_active: true,
+                type: "radio",
+            },
+        ],
+    },
+];
+
+const ITEMS_PER_PAGE = 10;
+
+const initialForm: AddOptionForm = {
+    name: "",
+    price: "",
+    is_active: true,
     type: "radio",
-    isRequired: false,
-    options: [
-        {
-            id: "",
-            name: "",
-            price: "0",
-        },
-    ],
 };
 
 const AddOnPage = () => {
-    const dispatch = useAppDispatch();
-    const masterAddOn = useAppSelector((state) => state.addOn.masterAddOn) as AddOn[];
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const [openModal, setOpenModal] = useState(false);
-    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const [addOns, setAddOns] = useState<AddOnGroupRequest[]>(dummyAddOns);
     const [search, setSearch] = useState("");
-    const [localData, setLocalData] = useState<AddOn[]>([]);
-    const [form, setForm] = useState<AddOnForm>(initialForm);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    useEffect(() => {
-        dispatch(getMasterAddOn());
-    }, [dispatch]);
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedAddOnIndex, setSelectedAddOnIndex] = useState<number | null>(null);
+    const [form, setForm] = useState<AddOptionForm>(initialForm);
 
-    const onPageChange = (page: number) => setCurrentPage(page);
-
-    const sourceData = localData.length > 0 ? localData : masterAddOn;
+    const selectedAddOn = useMemo(() => {
+        if (selectedAddOnIndex === null) return null;
+        return addOns[selectedAddOnIndex] ?? null;
+    }, [addOns, selectedAddOnIndex]);
 
     const filteredData = useMemo(() => {
-        return sourceData.filter((item) =>
-            item.title.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [sourceData, search]);
+        const keyword = search.trim().toLowerCase();
+
+        if (!keyword) return addOns;
+
+        return addOns.filter((item) => {
+            const matchTitle = item.title.toLowerCase().includes(keyword);
+            const matchDescription = (item.description ?? "")
+                .toLowerCase()
+                .includes(keyword);
+
+            const matchOption = (item.add_on_options ?? []).some((option) =>
+                option.name.toLowerCase().includes(keyword)
+            );
+
+            return matchTitle || matchDescription || matchOption;
+        });
+    }, [addOns, search]);
+
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredData.length / ITEMS_PER_PAGE)
+    );
+
+    const paginatedData = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredData, currentPage]);
 
     const resetForm = () => {
         setForm(initialForm);
-        setSelectedIndex(null);
-        setModalMode("add");
+        setSelectedAddOnIndex(null);
     };
 
     const closeModal = () => {
@@ -79,144 +177,68 @@ const AddOnPage = () => {
         resetForm();
     };
 
-    const openAddModal = () => {
-        resetForm();
-        setModalMode("add");
-        setOpenModal(true);
-    };
+    const openAddOptionModal = (groupIndex: number) => {
+        const selectedGroup = addOns[groupIndex];
 
-    const openEditModal = (item: AddOn, index: number) => {
-        setModalMode("edit");
-        setSelectedIndex(index);
-
-        const optionType: AddOnType = item.options?.[0]?.type ?? "radio";
-
+        setSelectedAddOnIndex(groupIndex);
         setForm({
-            id: String(item.id),
-            title: item.title,
-            description: item.description,
-            type: optionType,
-            isRequired: item.isRequired,
-            options: item.options.map((opt) => ({
-                id: String(opt.id),
-                name: opt.name,
-                price: String(opt.price),
-            })),
+            name: "",
+            price: "",
+            is_active: true,
+            type: selectedGroup?.add_on_options?.[0]?.type ?? "radio",
         });
-
         setOpenModal(true);
-    };
-
-    const handleChangeForm = (
-        key: keyof Omit<AddOnForm, "options">,
-        value: string | boolean
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
-    };
-
-    const handleOptionChange = (
-        index: number,
-        key: "id" | "name" | "price",
-        value: string
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            options: prev.options.map((opt, i) =>
-                i === index ? { ...opt, [key]: value } : opt
-            ),
-        }));
-    };
-
-    const handleAddOption = () => {
-        setForm((prev) => ({
-            ...prev,
-            options: [
-                ...prev.options,
-                {
-                    id: "",
-                    name: "",
-                    price: "0",
-                },
-            ],
-        }));
-    };
-
-    const handleRemoveOption = (index: number) => {
-        setForm((prev) => ({
-            ...prev,
-            options: prev.options.filter((_, i) => i !== index),
-        }));
     };
 
     const handleSubmit = () => {
-        if (!form.id || !form.title || !form.description) {
-            alert("ID, title, dan description wajib diisi.");
-            return;
-        }
+        if (selectedAddOnIndex === null || !form.name.trim()) return;
 
-        if (form.options.length === 0) {
-            alert("Minimal harus ada 1 option.");
-            return;
-        }
-
-        const hasEmptyOption = form.options.some(
-            (opt) => !opt.id || !opt.name || opt.price === ""
-        );
-
-        if (hasEmptyOption) {
-            alert("Semua field option wajib diisi.");
-            return;
-        }
-
-        const payload: AddOn = {
-            id: Number(form.id),
-            title: form.title,
-            description: form.description,
-            isRequired: form.isRequired,
-            options: form.options.map((opt) => ({
-                id: Number(opt.id),
-                name: opt.name,
-                price: Number(opt.price),
-                add_on_id: Number(form.id),
-                type: form.type,
-            })),
+        const newOption: AddOnOptionRequest = {
+            name: form.name.trim(),
+            price: Number(form.price) || 0,
+            is_active: form.is_active,
+            type: form.type,
         };
 
-        if (modalMode === "add") {
-            setLocalData((prev) => [...prev, payload]);
-        } else {
-            setLocalData((prev) => {
-                const base = prev.length > 0 ? prev : masterAddOn;
-                return base.map((item, index) =>
-                    index === selectedIndex ? payload : item
-                );
-            });
-        }
+        setAddOns((prev) =>
+            prev.map((item, index) =>
+                index === selectedAddOnIndex
+                    ? {
+                        ...item,
+                        add_on_options: [...(item.add_on_options ?? []), newOption],
+                    }
+                    : item
+            )
+        );
 
         closeModal();
     };
 
-    const handleDelete = (index: number) => {
-        setLocalData((prev) => {
-            const base = prev.length > 0 ? prev : masterAddOn;
-            return base.filter((_, i) => i !== index);
-        });
+    const handleDeleteOption = (groupIndex: number, optionIndex: number) => {
+        setAddOns((prev) =>
+            prev.map((item, index) =>
+                index === groupIndex
+                    ? {
+                        ...item,
+                        add_on_options: (item.add_on_options ?? []).filter(
+                            (_, optIndex) => optIndex !== optionIndex
+                        ),
+                    }
+                    : item
+            )
+        );
     };
 
     return (
         <div className="p-5">
             <div className="mb-5 flex justify-between">
-                <h1 className="text-2xl font-bold">Master AddOn</h1>
-                <Button onClick={openAddModal}>Tambah Data</Button>
+                <h1 className="text-2xl font-bold">Add On Page</h1>
             </div>
 
             <div className="block rounded-base border border-default bg-white p-6 shadow-xs">
                 <div className="relative overflow-x-auto rounded-base border border-default bg-neutral-primary-soft shadow-xs">
                     <div className="flex flex-column flex-wrap items-center justify-between space-y-4 p-4 md:flex-row md:space-y-0">
-                        <label htmlFor="input-group-1" className="sr-only">
+                        <label htmlFor="search-addon" className="sr-only">
                             Search
                         </label>
 
@@ -241,12 +263,15 @@ const AddOnPage = () => {
                             </div>
 
                             <input
+                                id="search-addon"
                                 type="text"
-                                id="input-group-1"
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setCurrentPage(1);
+                                }}
                                 className="block w-full max-w-96 rounded-base border border-default-medium bg-neutral-secondary-medium ps-9 pe-3 py-2 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-                                placeholder="Search add on"
+                                placeholder="Search add on / option"
                             />
                         </div>
                     </div>
@@ -257,85 +282,108 @@ const AddOnPage = () => {
                                 <th className="px-6 py-3 font-medium">No</th>
                                 <th className="px-6 py-3 font-medium">Title</th>
                                 <th className="px-6 py-3 font-medium">Description</th>
+                                <th className="px-6 py-3 font-medium">Required</th>
+                                <th className="px-6 py-3 font-medium">Min / Max</th>
                                 <th className="px-6 py-3 font-medium">Options</th>
-                                <th className="px-6 py-3 font-medium">Wajib di isi</th>
                                 <th className="px-6 py-3 font-medium">Action</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            {filteredData.map((d, i) => (
-                                <tr
-                                    key={`${d.id}-${i}`}
-                                    className="border-b border-default bg-neutral-primary-soft hover:bg-neutral-secondary-medium"
-                                >
-                                    <td className="whitespace-nowrap px-6 py-4 text-heading">
-                                        {i + 1}
-                                    </td>
-                                    <td className="px-6 py-4">{d.title}</td>
-                                    <td className="px-6 py-4">{d.description}</td>
+                            {paginatedData.length > 0 ? (
+                                paginatedData.map((addOn, index) => {
+                                    const originalIndex = addOns.findIndex((item) => item === addOn);
 
-                                    <td className="w-[500px] px-6 py-4">
-                                        {d.options?.map((opt, j) => (
-                                            <div className="mb-2 flex justify-between gap-4" key={j}>
-                                                {opt.type === "radio" ? (
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            disabled
-                                                            type="radio"
-                                                            name={`radio-${d.id}`}
-                                                            className="h-4 w-4 appearance-none rounded-full border border-default-medium bg-neutral-secondary-medium checked:border-brand focus:outline-none focus:ring-2 focus:ring-brand-subtle"
-                                                        />
-                                                        <label className="ms-2 select-none text-lg font-medium text-heading">
-                                                            {opt.name}
-                                                        </label>
+                                    return (
+                                        <tr
+                                            key={`${addOn.title}-${index}`}
+                                            className="border-b border-default bg-neutral-primary-soft align-top hover:bg-neutral-secondary-medium"
+                                        >
+                                            <td className="whitespace-nowrap px-6 py-4 text-heading">
+                                                {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                                            </td>
+
+                                            <td className="px-6 py-4 font-medium text-heading">
+                                                {addOn.title}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {addOn.description ?? "-"}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {addOn.is_required ? (
+                                                    <Badge color="failure">Required</Badge>
+                                                ) : (
+                                                    <Badge color="gray">Optional</Badge>
+                                                )}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {addOn.min_select} / {addOn.max_select}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {(addOn.add_on_options ?? []).length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {(addOn.add_on_options ?? []).map((option, optionIndex) => (
+                                                            <div
+                                                                key={`${option.name}-${optionIndex}`}
+                                                                className="flex items-center justify-between rounded-lg border border-default p-3"
+                                                            >
+                                                                <div>
+                                                                    <p className="font-medium text-heading">
+                                                                        {option.name}
+                                                                    </p>
+
+                                                                    <div className="mt-1 flex flex-wrap gap-2">
+                                                                        <Badge color="info">{option.type}</Badge>
+                                                                        {option.is_active ? (
+                                                                            <Badge color="success">Active</Badge>
+                                                                        ) : (
+                                                                            <Badge color="failure">Inactive</Badge>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <p className="mt-2 text-sm text-body">
+                                                                        Rp {option.price.toLocaleString("id-ID")}
+                                                                    </p>
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleDeleteOption(originalIndex, optionIndex)
+                                                                    }
+                                                                    className="font-medium text-red-600 hover:underline"
+                                                                >
+                                                                    Hapus Option
+                                                                </button>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 ) : (
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            disabled
-                                                            type="checkbox"
-                                                            className="h-4 w-4 rounded-xs border border-default-medium bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
-                                                        />
-                                                        <label className="ms-2 select-none text-lg font-medium text-heading">
-                                                            {opt.name}
-                                                        </label>
-                                                    </div>
+                                                    <span className="text-sm text-body">
+                                                        Belum ada option.
+                                                    </span>
                                                 )}
+                                            </td>
 
-                                                <span className="text-lg">
-                                                    + {formatRupiah(opt.price)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </td>
-
-                                    <td className="px-6 py-4">{d.isRequired ? "Ya" : "Tidak"}</td>
-
-                                    <td className="px-6 py-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => openEditModal(d, i)}
-                                            className="font-medium text-fg-brand hover:underline"
-                                        >
-                                            Edit
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(i)}
-                                            className="ml-5 font-medium text-red-600 hover:underline"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-
-                            {filteredData.length === 0 && (
+                                            <td className="px-6 py-4">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => openAddOptionModal(originalIndex)}
+                                                >
+                                                    Tambah Option
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
                                 <tr>
                                     <td
-                                        colSpan={6}
+                                        colSpan={7}
                                         className="px-6 py-6 text-center text-sm text-body"
                                     >
                                         Data add on tidak ditemukan.
@@ -349,193 +397,103 @@ const AddOnPage = () => {
                         <span className="mb-4 block w-full text-sm font-normal text-body md:mb-0 md:inline md:w-auto">
                             Showing{" "}
                             <span className="font-semibold text-heading">
-                                {filteredData.length}
+                                {paginatedData.length}
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {sourceData.length}
+                                {filteredData.length}
                             </span>
                         </span>
 
                         <Pagination
                             currentPage={currentPage}
-                            totalPages={1}
-                            onPageChange={onPageChange}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
                             showIcons
                         />
                     </div>
                 </div>
             </div>
 
-            <Modal dismissible show={openModal} size="4xl" onClose={closeModal}>
+            <Modal dismissible show={openModal} size="lg" onClose={closeModal}>
                 <ModalHeader>
-                    {modalMode === "add" ? "Tambah Add On" : "Edit Add On"}
+                    Tambah Option {selectedAddOn ? `- ${selectedAddOn.title}` : ""}
                 </ModalHeader>
 
                 <ModalBody>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="id">ID</Label>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-name">Nama Option</Label>
+                            </div>
                             <TextInput
-                                id="id"
-                                type="number"
-                                value={form.id}
-                                onChange={(e) => handleChangeForm("id", e.target.value)}
-                                placeholder="Masukkan id"
+                                id="option-name"
+                                placeholder="Masukkan nama option"
+                                value={form.name}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                                }
                             />
                         </div>
-                        <div className="w-full flex">
-                            <div className="w-1/2 mr-5">
-                                <Label htmlFor="title">Title</Label>
-                                <TextInput
-                                    id="title"
-                                    type="text"
-                                    value={form.title}
-                                    onChange={(e) => handleChangeForm("title", e.target.value)}
-                                    placeholder="Masukkan title"
-                                />
+
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-price">Harga</Label>
                             </div>
-                            <div className="w-1/2">
-                                <Label htmlFor="description">Description</Label>
-                                <TextInput
-                                    id="description"
-                                    type="text"
-                                    value={form.description}
-                                    onChange={(e) =>
-                                        handleChangeForm("description", e.target.value)
-                                    }
-                                    placeholder="Masukkan description"
-                                />
-                            </div>
+                            <TextInput
+                                id="option-price"
+                                type="number"
+                                placeholder="Masukkan harga"
+                                value={form.price}
+                                onChange={(e) =>
+                                    setForm((prev) => ({ ...prev, price: e.target.value }))
+                                }
+                            />
                         </div>
 
-                        <div className="w-full flex items-center">
-                            <div className="w-1/2 mr-5">
-                                <Label htmlFor="type">Type <span className="text-gray-400">(Type ini akan diterapkan ke semua option)</span></Label>
-                                <select
-                                    id="type"
-                                    value={form.type}
-                                    onChange={(e) =>
-                                        handleChangeForm("type", e.target.value as AddOnType)
-                                    }
-                                    className="block w-full rounded-lg border border-gray-300 p-2.5 text-sm"
-                                >
-                                    <option value="radio">radio</option>
-                                    <option value="checkbox">checkbox</option>
-                                </select>
-
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-type">Type</Label>
                             </div>
-                            <div className="w-1/2">
-                                <div className="flex items-center ">
-                                    <input
-                                        className="mr-2"
-                                        id="isRequired"
-                                        type="checkbox"
-                                        checked={form.isRequired}
-                                        onChange={(e) =>
-                                            handleChangeForm("isRequired", e.target.checked)
-                                        }
-                                    />
-                                    <Label htmlFor="isRequired">Wajib di isi</Label>
-                                </div>
-                            </div>
-
+                            <Select
+                                id="option-type"
+                                value={form.type}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        type: e.target.value as AddOnOptionType,
+                                    }))
+                                }
+                            >
+                                <option value="radio">radio</option>
+                                <option value="checkbox">checkbox</option>
+                            </Select>
                         </div>
 
-
-
-                        <div className="mt-4">
-                            <div className="mb-3 flex items-center justify-between">
-                                <h2 className="text-lg font-semibold">Options</h2>
-                                <Button size="sm" onClick={handleAddOption}>
-                                    Tambah Option
-                                </Button>
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-active">Status</Label>
                             </div>
-
-                            <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                                Semua option di bawah ini otomatis bertipe <b>{form.type}</b>.
-                            </div>
-
-                            <div className="overflow-x-auto rounded-lg border border-gray-200">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 text-gray-700">
-                                        <tr>
-                                            <th className="px-4 py-3 font-medium">No</th>
-                                            <th className="px-4 py-3 font-medium">Option ID</th>
-                                            <th className="px-4 py-3 font-medium">Option Name</th>
-                                            <th className="px-4 py-3 font-medium">Price</th>
-                                            <th className="px-4 py-3 font-medium text-center">Action</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {form.options.length > 0 ? (
-                                            form.options.map((opt, index) => (
-                                                <tr key={index} className="border-t">
-                                                    <td className="px-4 py-3">{index + 1}</td>
-
-                                                    <td className="min-w-[120px] px-4 py-3">
-                                                        <TextInput
-                                                            type="number"
-                                                            value={opt.id}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "id", e.target.value)
-                                                            }
-                                                            placeholder="ID"
-                                                        />
-                                                    </td>
-
-                                                    <td className="min-w-[220px] px-4 py-3">
-                                                        <TextInput
-                                                            type="text"
-                                                            value={opt.name}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "name", e.target.value)
-                                                            }
-                                                            placeholder="Nama option"
-                                                        />
-                                                    </td>
-
-                                                    <td className="min-w-[180px] px-4 py-3">
-                                                        <TextInput
-                                                            type="number"
-                                                            value={opt.price}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "price", e.target.value)
-                                                            }
-                                                            placeholder="Harga"
-                                                        />
-                                                    </td>
-
-                                                    <td className="px-4 py-3 text-center">
-                                                        <Button
-                                                            color="failure"
-                                                            size="xs"
-                                                            onClick={() => handleRemoveOption(index)}
-                                                            disabled={form.options.length === 1}
-                                                        >
-                                                            Hapus
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                                                    Belum ada option.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <Select
+                                id="option-active"
+                                value={String(form.is_active)}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        is_active: e.target.value === "true",
+                                    }))
+                                }
+                            >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </Select>
                         </div>
                     </div>
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button onClick={handleSubmit}>
-                        {modalMode === "add" ? "Simpan" : "Update"}
+                    <Button onClick={handleSubmit} disabled={!form.name.trim()}>
+                        Simpan Option
                     </Button>
 
                     <Button color="gray" onClick={closeModal}>

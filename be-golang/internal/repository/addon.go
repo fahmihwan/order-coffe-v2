@@ -37,7 +37,7 @@ type AddOnRepo interface {
 	Create(ctx context.Context, addon *model.AddOnGroup) error
 	setFilter(db *gorm.DB, filter FilterAddon) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.Addon, error)
-	// Update(ctx context.Context, addon *model.Addon) error
+	Update(ctx context.Context, addon *model.AddOnGroup) error
 	// Delete(ctx context.Context, id string) error
 }
 
@@ -128,11 +128,23 @@ func (r *AddOnRepository) Create(ctx context.Context, addon *model.AddOnGroup) e
 		return nil
 	});
 
-
 	if err != nil {
 		return err
 	}
-
 	return nil
+}
 
+
+func (r *AddOnRepository) Update(ctx context.Context, addon *model.AddOnGroup) error {
+	addon.UpdatedAt = time.Now()
+
+	// addon.AddOnOptions = nil;
+	group := *addon
+	group.AddOnOptions = nil
+
+	err := r.db.WithContext(ctx).
+	Model(&model.AddOnGroup{}).Where("id = ? AND deleted_at IS NULL", group.ID).
+	Omit("created_at", clause.Associations).
+	Update(group).Error
+	
 }

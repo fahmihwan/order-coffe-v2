@@ -10,12 +10,10 @@ import {
 } from "flowbite-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Category } from "../../../../types/category";
+import type { Menu } from "../../../../types/menu";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import { getMasterCategory } from "../../../../redux/features/categorySlice";
 import { getMasterMenu } from "../../../../redux/features/menuSlice";
-import type { Menu } from "../../../../types/menu";
-
-
 
 type CategoryWithMenus = Category & {
     menus?: Menu[];
@@ -29,24 +27,28 @@ const initialForm: RelationForm = {
     menuId: "",
 };
 
+const ITEMS_PER_PAGE = 10;
+
 const CategoryMenuPage = () => {
     const dispatch = useAppDispatch();
 
-    const masterCategories = useAppSelector((state) => state.category.masterCategories) as CategoryWithMenus[];
+    const masterCategories = useAppSelector(
+        (state) => state.category.masterCategories
+    ) as CategoryWithMenus[];
 
-    const masterMenus = useAppSelector((state) => state.menu.masterMenus) as Menu[];
+    const masterMenus = useAppSelector(
+        (state) => state.menu.masterMenus
+    ) as Menu[];
 
     const [currentPage, setCurrentPage] = useState(1);
-    const onPageChange = (page: number) => setCurrentPage(page);
-
     const [openModal, setOpenModal] = useState(false);
     const [search, setSearch] = useState("");
     const [form, setForm] = useState<RelationForm>(initialForm);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+        null
+    );
 
-    const [selectedCategory, setSelectedCategory] =
-        useState<CategoryWithMenus | null>(null);
-
-    // local state untuk simulasi relasi category-menu
+    // local state simulasi relasi category-menu
     const [categoryMenus, setCategoryMenus] = useState<CategoryWithMenus[]>([]);
 
     useEffect(() => {
@@ -57,16 +59,30 @@ const CategoryMenuPage = () => {
     useEffect(() => {
         if (masterCategories?.length > 0) {
             setCategoryMenus(masterCategories);
+        } else {
+            setCategoryMenus([]);
         }
     }, [masterCategories]);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
+
+    const selectedCategory = useMemo(() => {
+        if (selectedCategoryId === null) return null;
+        return (
+            categoryMenus.find((category) => Number(category.id) === selectedCategoryId) ??
+            null
+        );
+    }, [categoryMenus, selectedCategoryId]);
+
     const resetForm = () => {
         setForm(initialForm);
-        setSelectedCategory(null);
+        setSelectedCategoryId(null);
     };
 
     const openAddMenuModal = (category: CategoryWithMenus) => {
-        setSelectedCategory(category);
+        setSelectedCategoryId(Number(category.id));
         setForm(initialForm);
         setOpenModal(true);
     };
@@ -80,17 +96,17 @@ const CategoryMenuPage = () => {
         if (!selectedCategory || !form.menuId) return;
 
         const menuId = Number(form.menuId);
-        const selectedMenu = masterMenus.find((menu) => menu.id === menuId);
+        const selectedMenu = masterMenus.find((menu) => Number(menu.id) === menuId);
 
         if (!selectedMenu) return;
 
         setCategoryMenus((prev) =>
             prev.map((category) => {
-                if (category.id !== selectedCategory.id) return category;
+                if (Number(category.id) !== Number(selectedCategory.id)) return category;
 
                 const existingMenus = category.menus ?? [];
                 const isAlreadyExists = existingMenus.some(
-                    (menu) => menu.id === selectedMenu.id
+                    (menu) => Number(menu.id) === Number(selectedMenu.id)
                 );
 
                 if (isAlreadyExists) return category;
@@ -108,12 +124,12 @@ const CategoryMenuPage = () => {
     const handleDeleteRelation = (categoryId: number, menuId: number) => {
         setCategoryMenus((prev) =>
             prev.map((category) => {
-                if (category.id !== categoryId) return category;
+                if (Number(category.id) !== Number(categoryId)) return category;
 
                 return {
                     ...category,
                     menus: (category.menus ?? []).filter(
-                        (menu) => menu.id !== menuId
+                        (menu) => Number(menu.id) !== Number(menuId)
                     ),
                 };
             })
@@ -121,12 +137,12 @@ const CategoryMenuPage = () => {
     };
 
     const filteredData = useMemo(() => {
-        return categoryMenus.filter((item) => {
-            const keyword = search.toLowerCase();
+        const keyword = search.trim().toLowerCase();
 
-            const matchCategory = item.category_name
-                ?.toLowerCase()
-                .includes(keyword);
+        if (!keyword) return categoryMenus;
+
+        return categoryMenus.filter((item) => {
+            const matchCategory = item.category_name?.toLowerCase().includes(keyword);
 
             const matchMenu = (item.menus ?? []).some((menu) =>
                 menu.name?.toLowerCase().includes(keyword)
@@ -136,14 +152,25 @@ const CategoryMenuPage = () => {
         });
     }, [categoryMenus, search]);
 
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredData.length / ITEMS_PER_PAGE)
+    );
+
+    const paginatedData = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return filteredData.slice(startIndex, endIndex);
+    }, [filteredData, currentPage]);
+
     const availableMenus = useMemo(() => {
         if (!selectedCategory) return masterMenus;
 
         const usedMenuIds = new Set(
-            (selectedCategory.menus ?? []).map((menu) => menu.id)
+            (selectedCategory.menus ?? []).map((menu) => Number(menu.id))
         );
 
-        return masterMenus.filter((menu) => !usedMenuIds.has(menu.id));
+        return masterMenus.filter((menu) => !usedMenuIds.has(Number(menu.id)));
     }, [masterMenus, selectedCategory]);
 
     return (
@@ -209,14 +236,14 @@ const CategoryMenuPage = () => {
                         </thead>
 
                         <tbody>
-                            {filteredData.length > 0 ? (
-                                filteredData.map((category, i) => (
+                            {paginatedData.length > 0 ? (
+                                paginatedData.map((category, i) => (
                                     <tr
-                                        key={`${category.id}-${i}`}
+                                        key={category.id}
                                         className="border-b border-default bg-neutral-primary-soft align-top hover:bg-neutral-secondary-medium"
                                     >
                                         <td className="whitespace-nowrap px-6 py-4 text-heading">
-                                            {i + 1}
+                                            {(currentPage - 1) * ITEMS_PER_PAGE + i + 1}
                                         </td>
 
                                         <td className="px-6 py-4 font-medium text-heading">
@@ -233,7 +260,7 @@ const CategoryMenuPage = () => {
                                                         >
                                                             <div className="flex items-center gap-3">
                                                                 <img
-                                                                    src={menu.image}
+                                                                    src={menu.image || "/placeholder-image.png"}
                                                                     alt={menu.name}
                                                                     className="h-12 w-12 rounded-lg object-cover"
                                                                 />
@@ -242,10 +269,7 @@ const CategoryMenuPage = () => {
                                                                         {menu.name}
                                                                     </p>
                                                                     <p className="text-sm text-body">
-                                                                        Rp{" "}
-                                                                        {menu.price.toLocaleString(
-                                                                            "id-ID"
-                                                                        )}
+                                                                        Rp {(menu.price ?? 0).toLocaleString("id-ID")}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -255,7 +279,7 @@ const CategoryMenuPage = () => {
                                                                 onClick={() =>
                                                                     handleDeleteRelation(
                                                                         Number(category.id),
-                                                                        menu.id
+                                                                        Number(menu.id)
                                                                     )
                                                                 }
                                                                 className="font-medium text-red-600 hover:underline"
@@ -299,18 +323,18 @@ const CategoryMenuPage = () => {
                         <span className="mb-4 block w-full text-sm font-normal text-body md:mb-0 md:inline md:w-auto">
                             Showing{" "}
                             <span className="font-semibold text-heading">
-                                {filteredData.length}
+                                {paginatedData.length}
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {categoryMenus.length}
+                                {filteredData.length}
                             </span>
                         </span>
 
                         <Pagination
                             currentPage={currentPage}
-                            totalPages={1}
-                            onPageChange={onPageChange}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
                             showIcons
                         />
                     </div>
@@ -333,23 +357,30 @@ const CategoryMenuPage = () => {
                                 id="menuId"
                                 value={form.menuId}
                                 onChange={(e) =>
-                                    setForm({ ...form, menuId: e.target.value })
+                                    setForm((prev) => ({ ...prev, menuId: e.target.value }))
                                 }
                             >
                                 <option value="">-- Pilih Menu --</option>
                                 {availableMenus.map((menu) => (
                                     <option key={menu.id} value={menu.id}>
-                                        {menu.name} - Rp{" "}
-                                        {menu.price.toLocaleString("id-ID")}
+                                        {menu.name} - Rp {(menu.price ?? 0).toLocaleString("id-ID")}
                                     </option>
                                 ))}
                             </Select>
+
+                            {availableMenus.length === 0 && (
+                                <p className="mt-2 text-sm text-body">
+                                    Semua menu sudah ditambahkan ke category ini.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button onClick={handleSubmit}>Simpan Relasi</Button>
+                    <Button onClick={handleSubmit} disabled={!form.menuId}>
+                        Simpan Relasi
+                    </Button>
 
                     <Button color="gray" onClick={closeModal}>
                         Batal
