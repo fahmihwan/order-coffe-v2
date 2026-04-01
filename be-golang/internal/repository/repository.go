@@ -8,7 +8,8 @@ type Repository struct {
 	CategoryMenu CategoryMenuRepo
 	AddOnGroup AddOnGroupRepo
 	AddOnOption AddOnOptionRepo
-	// Book BookRepo
+	MenuAddOnGroup MenuAddOnGroupRepo
+	// Book BookRepos
 	// User UserRepo
 }
 
@@ -28,6 +29,7 @@ func NewRepository(db *gorm.DB) *Repository {
 		CategoryMenu: NewCategoryMenuRepository(db),
 		AddOnGroup: NewAddOnGroupRepository(db),
 		AddOnOption: NewAddOnOptionRepository(db),
+		MenuAddOnGroup: NewMenuAddOnGroupRepository(db),
 		// Book: NewBookRepository(db),
 		// User: NewUserRepository(db),
 	}

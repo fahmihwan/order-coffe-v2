@@ -12,7 +12,7 @@ type MenuAddOnGroup struct {
 	MenuID       uuid.UUID `gorm:"column:menu_id;type:uuid;not null" json:"menu_id"`
 	AddOnGroupID uuid.UUID `gorm:"column:add_on_group_id;type:uuid;not null" json:"add_on_group_id"`
 
-	Menu       Menu       `gorm:"foreignKey:MenuID;references:ID" json:"menu,omitempty"`
+	// Menu       Menu       `gorm:"foreignKey:MenuID;references:ID" json:"menu,omitempty"`
 	AddOnGroup AddOnGroup `gorm:"foreignKey:AddOnGroupID;references:ID" json:"add_on_group,omitempty"`
 
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`

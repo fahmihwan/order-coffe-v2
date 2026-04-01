@@ -125,6 +125,15 @@ func provideRepositories(container *dig.Container) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to provide AddOnRepository: %v", err))
 	}
+
+	err = container.Provide(func(db *gorm.DB) repository.MenuAddOnGroupRepository {
+		return *repository.NewMenuAddOnGroupRepository(db)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide MenuAddOnGroupRepository: %v", err))
+	}
+
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
 			Menu:       repository.NewMenuRepository(db),
@@ -132,6 +141,7 @@ func provideRepositories(container *dig.Container) {
 			CategoryMenu: repository.NewCategoryMenuRepository(db),
 			AddOnGroup:      repository.NewAddOnGroupRepository(db),
 			AddOnOption: 	repository.NewAddOnOptionRepository(db),
+			MenuAddOnGroup: repository.NewMenuAddOnGroupRepository(db),
 		}
 	})
 }
@@ -180,6 +190,15 @@ func provideServices(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide AddOnService: %v", err))
 	}
 
+
+	err = container.Provide(func(db *gorm.DB, repo repository.Repository) *service.MenuAddOnGroupService {
+		return service.NewMenuAddOnGroupService(repo)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide MenuAddOnGroupService: %v", err))
+	}
+
 	err = container.Provide(func(db *gorm.DB, repo repository.Repository) service.Service {
 		return service.Service{
 			Menu:       service.NewMenuService(repo),
@@ -187,6 +206,7 @@ func provideServices(container *dig.Container) {
 			CategoryMenu: service.NewCategoryMenuService(repo),
 			AddOnGroup:      service.NewAddOnGroupService(repo),
 			AddOnOption:     service.NewAddOnOptionService(repo),
+			MenuAddOnGroup: service.NewMenuAddOnGroupService(repo),
 		}
 	})
 
@@ -219,6 +239,11 @@ func provideHandler(container *dig.Container) {
 	}
 
 
+	if err := container.Provide(handler.NewMenuAddOnGroupHandler); err != nil {
+		panic(fmt.Sprintf("Failed to provide MenuAddOnGroupHandler: %v", err))
+	}
+
+
 	// 2) provide agregator HandlerInteface (isi field-fieldnya dari DI)
 	if err := container.Provide(func(
 		MenuService *service.MenuService,
@@ -226,6 +251,7 @@ func provideHandler(container *dig.Container) {
 		CategoryMenuService *service.CategoryMenuService,
 		AddOnGroupService *service.AddOnGroupService,
 		AddOnOptionService *service.AddOnOptionService,
+		MenuAddOnGroupService *service.MenuAddOnGroupService,
 		jwtManager *util.JWTManager,
 	) *handler.HandlerInteface {
 		return &handler.HandlerInteface{
@@ -234,6 +260,7 @@ func provideHandler(container *dig.Container) {
 			CategoryMenuHandler: handler.NewCategoryMenuHandler(CategoryMenuService, jwtManager),
 			AddOnGroupHandler: handler.NewAddOnGroupHandler(AddOnGroupService, jwtManager),
 			AddOnOptionHandler: handler.NewAddOnOptionHandler(AddOnOptionService, jwtManager),
+			MenuAddOnGroupHandler: handler.NewMenuAddOnGroupHandler(MenuAddOnGroupService, jwtManager),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide HandlerInteface: %v", err))

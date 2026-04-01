@@ -6,5 +6,6 @@ type Service struct {
 	CategoryMenu *CategoryMenuService
 	AddOnGroup *AddOnGroupService
 	AddOnOption *AddOnOptionService
+	MenuAddOnGroup *MenuAddOnGroupService
 	// User *UserService
 }
