@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"pos-coffeshop/internal/config"
 	"pos-coffeshop/internal/handler"
+	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/repository"
 	"pos-coffeshop/internal/service"
 	"pos-coffeshop/internal/util"
@@ -67,7 +68,7 @@ func main() {
 	if err := container.Provide(func(r *chi.Mux) *http.Server {
 		return &http.Server{
 			Addr:    ":8080",
-			Handler: r,
+			Handler: middleware.EnableCORS(r),
 		}
 	}); err != nil {
 		panic(fmt.Sprintf("Failed to provide server: %v", err))
