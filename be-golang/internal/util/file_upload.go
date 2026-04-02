@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
+
 func UploadMenuImage(file multipart.File, header *multipart.FileHeader) (string, error) {
 	ext := strings.ToLower(filepath.Ext(header.Filename))
 	switch ext {
@@ -19,11 +20,7 @@ func UploadMenuImage(file multipart.File, header *multipart.FileHeader) (string,
 		return "", fmt.Errorf("unsupported file type")
 	}
 
-	dir := os.Getenv("UPLOAD_MENU_DIR")
-	if dir == "" {
-		dir = "uploads/menu/"
-	}
-
+	dir := "./uploads/menus"
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create upload directory: %w", err)
 	}
@@ -41,31 +38,21 @@ func UploadMenuImage(file multipart.File, header *multipart.FileHeader) (string,
 		return "", fmt.Errorf("failed to save image: %w", err)
 	}
 
-	baseURL := os.Getenv("UPLOAD_MENU_URL")
-	if baseURL == "" {
-		baseURL = "/uploads/menu/"
-	}
-
+	baseURL := "/uploads/menus/"
 	return baseURL + filename, nil
 }
-
-
 
 func DeleteMenuImage(imageURL string) error {
 	if imageURL == "" {
 		return nil
 	}
 
-	uploadDir := os.Getenv("UPLOAD_MENU_DIR")
-	uploadURL := os.Getenv("UPLOAD_MENU_URL")
+	uploadDir := "./uploads/menus"
+	uploadURL := "/uploads/menus/"
 
-	if uploadDir == "" || uploadURL == "" {
-		return fmt.Errorf("UPLOAD_MENU_DIR or UPLOAD_MENU_URL is not set")
-	}
-
-	filename := strings.TrimPrefix(imageURL, strings.TrimRight(uploadURL, "/")+"/")
-	if filename == imageURL {
-		return fmt.Errorf("invalid image url")
+	filename := strings.TrimPrefix(imageURL, uploadURL)
+	if filename == imageURL || filename == "" {
+		return fmt.Errorf("invalid image url: %s", imageURL)
 	}
 
 	fullPath := filepath.Join(uploadDir, filename)

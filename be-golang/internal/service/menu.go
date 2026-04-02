@@ -101,9 +101,11 @@ func (s *MenuService) UpdateMenu(ctx context.Context, menu *model.Menu,file mult
 		}
 
 		if existingMenu.ImgURL != "" {
-			_ = util.DeleteMenuImage(existingMenu.ImgURL)
+			if err := util.DeleteMenuImage(existingMenu.ImgURL); err != nil {
+				return nil, fmt.Errorf("failed to delete old menu image: %w", err)
+			}
 		}
-
+		
 		menu.ImgURL = imageURL
 	} else {
 		menu.ImgURL = existingMenu.ImgURL
@@ -127,9 +129,10 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to delete menu: %w", err)
 	}
 
-	if menu.ImgURL != "" {
-		_ = util.DeleteMenuImage(menu.ImgURL)
+	if err := util.DeleteMenuImage(menu.ImgURL); err != nil {
+		return fmt.Errorf("failed to delete old menu image: %w", err)
 	}
+	
 
 	return nil
 }
