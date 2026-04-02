@@ -6,7 +6,7 @@ import (
 
 type MenuResponse struct {
 	ID          uuid.UUID            `json:"id"`
-	ImgURL      string              `json:"img_url,omitempty"`
+	Image      string              `json:"image,omitempty"`
 	Name        string               `json:"name"`
 	Description *string              `json:"description,omitempty"`
 	Price       float64              `json:"price"`
@@ -16,7 +16,7 @@ type MenuResponse struct {
 
 type MenuWithAddOnResponse struct {
 	ID          uuid.UUID            `json:"id"`
-	ImgURL      string              `json:"img_url,omitempty"`
+	Image      string              `json:"image,omitempty"`
 	Name        string               `json:"name"`
 	Description *string              `json:"description,omitempty"`
 	Price       float64              `json:"price"`
@@ -28,7 +28,7 @@ type MenuWithAddOnResponse struct {
 type MenuCategoryMenuItemResponse struct {
 	ID          uuid.UUID            `json:"id"`
 	CategoryMenuId uuid.UUID            `json:"category_menu_id"`	
-	ImgURL      string              `json:"img_url,omitempty"`
+	Image      string              `json:"image,omitempty"`
 	Name        string               `json:"name"`
 	Description *string              `json:"description,omitempty"`
 	Price       float64              `json:"price"`

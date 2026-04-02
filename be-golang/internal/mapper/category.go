@@ -21,7 +21,7 @@ func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuRes
 		res.Menu = append(res.Menu, response.MenuCategoryMenuItemResponse{
 			ID:          menu.Menu.ID,
 			CategoryMenuId: menu.ID,
-			ImgURL:      menu.Menu.ImgURL,
+			Image:      menu.Menu.ImgURL,
 			Name:        menu.Menu.Name,
 			Description: menu.Menu.Description,
 			Price:       menu.Menu.Price,

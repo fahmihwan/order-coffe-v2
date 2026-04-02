@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"pos-coffeshop/internal/config"
 	"pos-coffeshop/internal/handler"
+	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/repository"
 	"pos-coffeshop/internal/service"
@@ -25,6 +26,7 @@ func main() {
 
 	cfg, err := config.LoadConfig()
 
+	mapper.Init(cfg.AssetHost)
 	// // // Create a new DI container
 	container := dig.New()
 

@@ -3,9 +3,36 @@ package mapper
 import (
 	"pos-coffeshop/internal/model"
 	"pos-coffeshop/internal/response"
+	"pos-coffeshop/internal/util"
 )
 
 
+
+func ToMenus(menus []*model.Menu) []*response.MenuResponse {
+	if menus == nil {
+		return nil
+	}	
+	res := make([]*response.MenuResponse, 0, len(menus))
+	for _, menu := range menus {
+		res = append(res,ToMenu(menu))
+	}
+	return res;
+}
+
+func ToMenu(menu *model.Menu) *response.MenuResponse {
+	if menu == nil {
+		return nil
+	}
+
+	return &response.MenuResponse{
+		ID:          menu.ID,
+		Image:      util.BuildImageURL(menu.ImgURL,assetHost),
+		Name:        menu.Name,
+		Description: menu.Description,
+		Price:       menu.Price,
+		IsActive:    menu.IsActive,
+	}
+}
 
 
 func ToMenuWithAddOnModel(menu *model.Menu) *response.MenuWithAddOnResponse {
@@ -15,7 +42,7 @@ func ToMenuWithAddOnModel(menu *model.Menu) *response.MenuWithAddOnResponse {
 
 	res := &response.MenuWithAddOnResponse{
 		ID:          menu.ID,
-		ImgURL:      menu.ImgURL,
+		Image:      util.BuildImageURL(menu.ImgURL, assetHost),
 		Name:        menu.Name,
 		Description: menu.Description,
 		Price:       menu.Price,
@@ -57,3 +84,5 @@ func ToMenuWithAddOnModels(menus []*model.Menu) []*response.MenuWithAddOnRespons
 	}
 	return res
 }
+
+

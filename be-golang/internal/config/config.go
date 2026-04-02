@@ -11,11 +11,13 @@ import (
 type Config struct {
 	Port        int    `mapstructure:"PORT"`
 	DatabaseURL string `mapstructure:"DATABASE_URL"`
+	AssetHost string `mapstructure:ASSET_HOST`
 	// Storage              StorageConfig
 	JWT struct {
 		Secret    string `mapstructure:"JWT_SECRET"`
 		ExpiryMin int    `mapstructure:"JWT_EXPIRY_MIN"` // menit
 		Issuer    string `mapstructure:"JWT_ISSUER"`
+		
 	} `mapstructure:",squash"`
 }
 
@@ -34,6 +36,7 @@ func LoadConfig() (*Config, error) {
 		"JWT_SECRET",
 		"JWT_EXPIRY_MIN",
 		"JWT_ISSUER",
+		"ASSET_HOST",
 		// "STORAGE_LOGO_PATH",
 		// "STORAGE_BASE_URL",
 	}
@@ -81,6 +84,10 @@ func LoadConfig() (*Config, error) {
 
 	if cfg.JWT.Secret == "" {
 		return nil, fmt.Errorf("JWT_SECRET is required")
+	}
+
+	if cfg.AssetHost == "" {
+		cfg.AssetHost = "http://localhost:8080"
 	}
 
 	// Debug: Print the loaded configuration

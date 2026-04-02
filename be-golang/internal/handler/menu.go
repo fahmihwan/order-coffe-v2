@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
+	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
 	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
@@ -55,33 +56,6 @@ func (h *MenuHandler) Routes() http.Handler {
 
 }
 
-func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var req = new(request.MenuRequest)
-
-	if err := request.ParseForm(r, req); err != nil {
-		middleware.HandleValidationErrors(err, w)
-		return
-	}
-
-	file, header, err := r.FormFile("image")
-	if err != nil {
-		fmt.Errorf("failed to create destination file: %w", err)
-		return
-	}
-	defer file.Close()
-
-	menu := req.ToMenu()
-	createMenu, err := h.menuService.CreateMenu(ctx, menu,file, header)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	response := response.NewSuccessResponse(createMenu)
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
-}
 
 func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 
@@ -115,19 +89,50 @@ func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	datas := mapper.ToMenus(menus)
+
 	// Calculate pagination
 	pagination := response.Pagination{
 		CurrentPage: page,
 		From:        (page-1)*limit + 1,
-		To:          (page-1)*limit + len(menus),
+		To:          (page-1)*limit + len(datas),
 		Pages:       (total + limit - 1) / limit,
 		Total:       total,
 	}
 
 	// Create success response with pagination
-	successResponse := response.NewSuccessResponseWithPagination(menus, pagination)
+	successResponse := response.NewSuccessResponseWithPagination(datas, pagination)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(successResponse)
+}
+
+
+func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.MenuRequest)
+
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		fmt.Errorf("failed to create destination file: %w", err)
+		return
+	}
+	defer file.Close()
+
+	menu := req.ToMenu()
+	createMenu, err := h.menuService.CreateMenu(ctx, menu,file, header)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	response := response.NewSuccessResponse(createMenu)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *MenuHandler) GetMenu(w http.ResponseWriter, r *http.Request) {
