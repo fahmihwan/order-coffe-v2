@@ -9,7 +9,7 @@ import (
 
 type AddOnGroup struct {
 	ID          uuid.UUID 		`gorm:"type:uuid;primaryKey" json:"id"`
-	Title       string         `gorm:"column:title;type:varchar(255);not null" json:"title"`
+	Title       string         `gorm:"column:title;type:varchar(100);not null" json:"title"`
 	Description *string        `gorm:"column:description;type:text" json:"description,omitempty"`
 	IsRequired  bool           `gorm:"column:is_required;not null;default:false" json:"is_required"`
 	MinSelect   int            `gorm:"column:min_select;not null;default:0" json:"min_select"`

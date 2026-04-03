@@ -13,7 +13,7 @@ func Migration_202603301333() *gormigrate.Migration {
 			CREATE TABLE add_on_options (
 				id UUID NOT NULL PRIMARY KEY,
 				add_on_group_id UUID NOT NULL,
-				name VARCHAR(255) NOT NULL,
+				name VARCHAR(100) NOT NULL,
 				price NUMERIC(12,2) NOT NULL DEFAULT 0,
 				type VARCHAR(50) NOT NULL,
 				is_active BOOLEAN NOT NULL DEFAULT TRUE,

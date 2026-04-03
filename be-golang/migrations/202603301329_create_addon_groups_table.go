@@ -12,7 +12,7 @@ func Migration_202603301329() *gormigrate.Migration {
 			return tx.Exec(`
 			CREATE TABLE add_on_groups (
 				id UUID NOT NULL PRIMARY KEY,
-				title VARCHAR(255) NOT NULL,
+				title VARCHAR(100) NOT NULL,
 				description TEXT,
 				is_required BOOLEAN NOT NULL DEFAULT FALSE,
 				min_select INT NOT NULL DEFAULT 0,

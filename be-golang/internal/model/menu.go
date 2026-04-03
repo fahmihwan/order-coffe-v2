@@ -10,7 +10,7 @@ import (
 type Menu struct {
 	ID          uuid.UUID   `gorm:"type:uuid;primaryKey" json:"id"`
 	ImgURL      *string     `gorm:"column:img_url;type:text;" json:"img_url,omitempty"`
-	Name        string     `gorm:"type:varchar(255);not null" json:"name"`
+	Name        string     `gorm:"type:varchar(100);not null" json:"name"`
 	Description *string    `gorm:"type:text" json:"description,omitempty"`
 	Price       float64    `gorm:"type:decimal(10,2);not null" json:"price"`
 	IsActive    bool       `gorm:"column:is_active;default:true" json:"is_active"`

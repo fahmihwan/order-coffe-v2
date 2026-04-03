@@ -10,7 +10,7 @@ import (
 type AddOnOption struct {
 	ID           uuid.UUID      `gorm:"column:id;type:uuid;primaryKey" json:"id"`
 	AddOnGroupID uuid.UUID      `gorm:"column:add_on_group_id;type:uuid;not null" json:"add_on_group_id"`
-	Name         string         `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Name         string         `gorm:"column:name;type:varchar(100);not null" json:"name"`
 	Price        float64        `gorm:"column:price;type:decimal(12,2);not null;default:0" json:"price"`
 	IsActive     bool           `gorm:"column:is_active;not null;default:true" json:"is_active"`
 	Type         string         `gorm:"column:type;type:varchar(50);not null" json:"type"`

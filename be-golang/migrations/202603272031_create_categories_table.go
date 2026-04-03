@@ -12,7 +12,7 @@ func Migration_202603272031() *gormigrate.Migration {
 			return tx.Exec(`
 				CREATE TABLE IF NOT EXISTS categories (
 					id UUID NOT NULL PRIMARY KEY,
-					category_name VARCHAR(255) NOT NULL,
+					category_name VARCHAR(100) NOT NULL,
 					created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 					updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 					deleted_at TIMESTAMPTZ NULL
