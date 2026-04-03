@@ -40,7 +40,8 @@ func (s *MenuService) CreateMenu(ctx context.Context,menu *model.Menu,file multi
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload image: %w", err)
 	}
-	menu.ImgURL = imageURL
+
+	menu.ImgURL = &imageURL
 
 	// Generate a new UUID for the form
 	menu.CreatedAt = time.Now()
@@ -100,13 +101,13 @@ func (s *MenuService) UpdateMenu(ctx context.Context, menu *model.Menu,file mult
 			return nil, fmt.Errorf("failed to upload menu image: %w", err)
 		}
 
-		if existingMenu.ImgURL != "" {
-			if err := util.DeleteMenuImage(existingMenu.ImgURL); err != nil {
+		if existingMenu.ImgURL != nil {
+			if err := util.DeleteMenuImage(*existingMenu.ImgURL); err != nil {
 				return nil, fmt.Errorf("failed to delete old menu image: %w", err)
 			}
 		}
 		
-		menu.ImgURL = imageURL
+		menu.ImgURL = &imageURL
 	} else {
 		menu.ImgURL = existingMenu.ImgURL
 	}
@@ -129,7 +130,7 @@ func (s *MenuService) DeleteMenu(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to delete menu: %w", err)
 	}
 
-	if err := util.DeleteMenuImage(menu.ImgURL); err != nil {
+	if err := util.DeleteMenuImage(*menu.ImgURL); err != nil {
 		return fmt.Errorf("failed to delete old menu image: %w", err)
 	}
 	

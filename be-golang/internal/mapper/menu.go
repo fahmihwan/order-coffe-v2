@@ -23,10 +23,15 @@ func ToMenu(menu *model.Menu) *response.MenuResponse {
 	if menu == nil {
 		return nil
 	}
+	image := ""
+	if menu.ImgURL != nil {
+		image = util.BuildImageURL(*menu.ImgURL, assetHost)
+	}
+
 
 	return &response.MenuResponse{
 		ID:          menu.ID,
-		Image:      util.BuildImageURL(menu.ImgURL,assetHost),
+		Image:      image,
 		Name:        menu.Name,
 		Description: menu.Description,
 		Price:       menu.Price,
@@ -40,9 +45,16 @@ func ToMenuWithAddOnModel(menu *model.Menu) *response.MenuWithAddOnResponse {
 		return nil
 	}
 
+	image := ""
+	if menu.ImgURL != nil {
+		image = util.BuildImageURL(*menu.ImgURL, assetHost)
+	}
+
+	
+
 	res := &response.MenuWithAddOnResponse{
 		ID:          menu.ID,
-		Image:      util.BuildImageURL(menu.ImgURL, assetHost),
+		Image:      image,
 		Name:        menu.Name,
 		Description: menu.Description,
 		Price:       menu.Price,

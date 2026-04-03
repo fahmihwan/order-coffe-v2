@@ -6,7 +6,7 @@ import (
 
 type MenuResponse struct {
 	ID          uuid.UUID            `json:"id"`
-	Image      string              `json:"image,omitempty"`
+	Image      	string              `json:"image,omitempty"`
 	Name        string               `json:"name"`
 	Description *string              `json:"description,omitempty"`
 	Price       float64              `json:"price"`

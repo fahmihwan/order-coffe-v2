@@ -3,6 +3,7 @@ package mapper
 import (
 	"pos-coffeshop/internal/model"
 	"pos-coffeshop/internal/response"
+	"pos-coffeshop/internal/util"
 )
 
 
@@ -17,11 +18,18 @@ func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuRes
 		Menu: make([]response.MenuCategoryMenuItemResponse, 0),
 	}
 
+
 	for _, menu := range category.CategoryMenus {
+
+		image := ""
+		if menu.Menu.ImgURL != nil {
+			image = util.BuildImageURL(*menu.Menu.ImgURL, assetHost)
+		}
+
 		res.Menu = append(res.Menu, response.MenuCategoryMenuItemResponse{
 			ID:          menu.Menu.ID,
 			CategoryMenuId: menu.ID,
-			Image:      menu.Menu.ImgURL,
+			Image:      image,
 			Name:        menu.Menu.Name,
 			Description: menu.Menu.Description,
 			Price:       menu.Menu.Price,
