@@ -2,7 +2,8 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { Menu, MenuRequest } from "../../types/menu";
+import type { Menu, MenuPayload, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { PaginationState } from "../../types/type";
 
 type ApiResponse<T> = {
     message: string;
@@ -22,38 +23,6 @@ type GetMasterMenuParams = {
     limit?: number;
 };
 
-type PaginationState = {
-    currentPage: number;
-    from: number;
-    to: number;
-    totalPages: number;
-    total: number;
-    limit: number;
-};
-
-// type MenuPayload = {
-//     name: string;
-//     price: number;
-//     image?: File | null;
-// };
-
-type UpdateMenuPayload = {
-    id: string;
-    payload: MenuRequest;
-};
-
-type MenuState = {
-    menus: Category[];
-    addOnOptions: AddOn[];
-    masterMenus: Menu[];
-    selectedMenu: Menu | null;
-    loading: boolean;
-    actionLoading: boolean;
-    status: "idle" | "loading" | "success" | "failed";
-    error: string | null;
-    message: string;
-    pagination: PaginationState;
-};
 
 const initialState: MenuState = {
     menus: [],
