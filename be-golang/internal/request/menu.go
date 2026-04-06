@@ -58,10 +58,9 @@ func (r *MenuRequest) ToMenu() *model.Menu {
 		Price:       r.Price,
 	}
 
+
 	if r.IsActive != nil {
 		menu.IsActive = *r.IsActive
-	} else {
-		menu.IsActive = true
 	}
 
 	return menu

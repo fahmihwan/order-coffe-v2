@@ -13,7 +13,8 @@ type Menu struct {
 	Name        string     `gorm:"type:varchar(100);not null" json:"name"`
 	Description *string    `gorm:"type:text" json:"description,omitempty"`
 	Price       float64    `gorm:"type:decimal(10,2);not null" json:"price"`
-	IsActive    bool       `gorm:"column:is_active;default:true" json:"is_active"`
+	IsActive    bool       `gorm:"column:is_active;not null" json:"is_active"`
+
 
 	MenuAddOnGroups []MenuAddOnGroup `json:"menu_add_on_groups,omitempty" gorm:"foreignKey:MenuID;references:ID"`
 

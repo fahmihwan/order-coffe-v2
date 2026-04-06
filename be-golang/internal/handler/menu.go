@@ -121,7 +121,6 @@ func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
 		fmt.Errorf("failed to create destination file: %w", err)
 		return
 	}
-	defer file.Close()
 
 	menu := req.ToMenu()
 	createMenu, err := h.menuService.CreateMenu(ctx, menu,file, header)
@@ -193,6 +192,9 @@ func (h *MenuHandler) UpdateMenu(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("error updating menu: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	// fmt.Printf("cek %+v",updatedMenu)
+	// fmt.Println(updatedMenu)
 
 	resp := response.NewSuccessResponse(updatedMenu)
 	w.Header().Set("Content-Type", "application/json")

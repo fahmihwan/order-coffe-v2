@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -20,48 +18,48 @@ func getStringFrom(values []string) string {
 	return ""
 }
 
-func getSliceStringFrom(values []string) []string {
-	if len(values) > 0 {
-		return strings.Split(values[0], ",")
-	}
+// func getSliceStringFrom(values []string) []string {
+// 	if len(values) > 0 {
+// 		return strings.Split(values[0], ",")
+// 	}
 
-	return []string{}
-}
+// 	return []string{}
+// }
 
-func getSliceArrayFrom(values []string) []string {
-	var req []string
-	if len(values) > 0 {
-		req = append(req, values...)
-	}
+// func getSliceArrayFrom(values []string) []string {
+// 	var req []string
+// 	if len(values) > 0 {
+// 		req = append(req, values...)
+// 	}
 
-	return req
-}
+// 	return req
+// }
 
-func getOptionalStringFrom(values []string) *string {
-	if len(values) > 0 {
-		return &values[0]
-	}
-	return nil
-}
+// func getOptionalStringFrom(values []string) *string {
+// 	if len(values) > 0 {
+// 		return &values[0]
+// 	}
+// 	return nil
+// }
 
-func getOptionalInt64From(values []string) *int64 {
-	if len(values) == 0 || values[0] == "" {
-		return nil
-	}
-	val, err := strconv.ParseInt(values[0], 10, 64)
-	if err != nil {
-		return nil
-	}
-	return &val
-}
+// func getOptionalInt64From(values []string) *int64 {
+// 	if len(values) == 0 || values[0] == "" {
+// 		return nil
+// 	}
+// 	val, err := strconv.ParseInt(values[0], 10, 64)
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	return &val
+// }
 
-func getUintFrom(values []string) uint {
-	if len(values) > 0 {
-		v, _ := strconv.ParseUint(values[0], 10, 32)
-		return uint(v)
-	}
-	return 0
-}
+// func getUintFrom(values []string) uint {
+// 	if len(values) > 0 {
+// 		v, _ := strconv.ParseUint(values[0], 10, 32)
+// 		return uint(v)
+// 	}
+// 	return 0
+// }
 
 func getFloat64From(values []string) float64 {
 	if len(values) > 0 {
@@ -101,16 +99,16 @@ func getStringOrDefault(value string, defaultValue string) string {
 	return value
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
+// func stringPtr(s string) *string {
+// 	return &s
+// }
 
-func getFormValue(values map[string][]string, key string) string {
-	if v, ok := values[key]; ok && len(v) > 0 {
-		return v[0]
-	}
-	return ""
-}
+// func getFormValue(values map[string][]string, key string) string {
+// 	if v, ok := values[key]; ok && len(v) > 0 {
+// 		return v[0]
+// 	}
+// 	return ""
+// }
 
 type FileUpload struct {
 	OriginalFilename string
@@ -142,81 +140,81 @@ func getRequestFile(r *http.Request, key string) (FileUpload, error) {
 	return fileUpload, nil
 }
 
-func getRequestFileOrURL(r *http.Request, key string) (FileUpload, error) {
-	// First check if it's a URL string from a normal form field
-	if urlValue := r.FormValue(key); urlValue != "" && r.MultipartForm.File[key] == nil {
-		// This is a string, not a file upload
-		return FileUpload{
-			Filename: urlValue,
-			IsURL:    true,
-		}, nil
-	}
+// func getRequestFileOrURL(r *http.Request, key string) (FileUpload, error) {
+// 	// First check if it's a URL string from a normal form field
+// 	if urlValue := r.FormValue(key); urlValue != "" && r.MultipartForm.File[key] == nil {
+// 		// This is a string, not a file upload
+// 		return FileUpload{
+// 			Filename: urlValue,
+// 			IsURL:    true,
+// 		}, nil
+// 	}
 
-	// Otherwise, treat it as a file upload
-	return getRequestFile(r, key)
-}
+// 	// Otherwise, treat it as a file upload
+// 	return getRequestFile(r, key)
+// }
 
-func parseInt(s string) int {
-	i, _ := strconv.Atoi(s)
-	return i
-}
+// func parseInt(s string) int {
+// 	i, _ := strconv.Atoi(s)
+// 	return i
+// }
 
-func parseInt64(s string) int64 {
-	i, _ := strconv.ParseInt(s, 10, 64)
-	return i
-}
+// func parseInt64(s string) int64 {
+// 	i, _ := strconv.ParseInt(s, 10, 64)
+// 	return i
+// }
 
-func parseFloat(s string) float64 {
-	f, _ := strconv.ParseFloat(s, 64)
-	return f
-}
+// func parseFloat(s string) float64 {
+// 	f, _ := strconv.ParseFloat(s, 64)
+// 	return f
+// }
 
-func parseTime(s string) time.Time {
-	t, _ := time.Parse(time.RFC3339, s)
-	return t
-}
+// func parseTime(s string) time.Time {
+// 	t, _ := time.Parse(time.RFC3339, s)
+// 	return t
+// }
 
-func parseDate(s string) time.Time {
-	t, _ := time.Parse(time.DateOnly, s)
-	return t
-}
+// func parseDate(s string) time.Time {
+// 	t, _ := time.Parse(time.DateOnly, s)
+// 	return t
+// }
 
-func parseBool(s string) bool {
-	b, _ := strconv.ParseBool(s)
-	return b
-}
+// func parseBool(s string) bool {
+// 	b, _ := strconv.ParseBool(s)
+// 	return b
+// }
 
-func parseFloatPtr(s string) *float64 {
-	f, e := strconv.ParseFloat(s, 64)
-	if e != nil {
-		return nil
-	}
-	return &f
-}
+// func parseFloatPtr(s string) *float64 {
+// 	f, e := strconv.ParseFloat(s, 64)
+// 	if e != nil {
+// 		return nil
+// 	}
+// 	return &f
+// }
 
-func parseStringPtr(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
+// func parseStringPtr(s string) *string {
+// 	if s == "" {
+// 		return nil
+// 	}
+// 	return &s
+// }
 
-func parseTimePtr(s string) *time.Time {
-	if s == "" {
-		return nil
-	}
-	t, _ := time.Parse(time.RFC3339, s)
-	return &t
-}
+// func parseTimePtr(s string) *time.Time {
+// 	if s == "" {
+// 		return nil
+// 	}
+// 	t, _ := time.Parse(time.RFC3339, s)
+// 	return &t
+// }
 
-func parseTimeStr(s string) *time.Time {
-	layout := "2006-01-02"
-	if s == "" {
-		return nil
-	}
-	t, _ := time.Parse(layout, s)
-	return &t
-}
+// func parseTimeStr(s string) *time.Time {
+// 	layout := "2006-01-02"
+// 	if s == "" {
+// 		return nil
+// 	}
+// 	t, _ := time.Parse(layout, s)
+// 	return &t
+// }
 
 
 
