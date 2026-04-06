@@ -42,3 +42,10 @@ export interface MenuState {
     message: string;
     pagination: PaginationState;
 };
+
+
+export interface GetMasterMenuParams {
+    page?: number;
+    limit?: number;
+};
+

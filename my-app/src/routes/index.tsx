@@ -14,7 +14,7 @@ import OrderKasirPage from "../view/cmsAdmin/OrderKasir/OrderKasirPage.tsx";
 const DashboardPage = lazy(() => import("../view/cmsAdmin/Dashboard/DashboardPage.tsx"));
 const MenuPage = lazy(() => import("../view/cmsAdmin/Master/Menu/MenuPage.tsx"));
 const AddOnPage = lazy(() => import("../view/cmsAdmin/Master/AddOn/AddOnPage.tsx"));
-const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoriPage.tsx"));
+const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoryPage.tsx"));
 
 const CategoryMenuPage = lazy(() => import("../view/cmsAdmin/SettingProduct/CategoryMenu/CategoryMenuPage.tsx"));
 

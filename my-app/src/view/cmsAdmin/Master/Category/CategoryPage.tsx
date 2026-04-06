@@ -8,45 +8,46 @@ import {
     Pagination,
     TextInput,
 } from "flowbite-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Category } from "../../../../types/category";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { getMasterCategory } from "../../../../redux/features/categorySlice";
+import {
+    createCategory,
+    deleteCategory,
+    getMasterCategory,
+    updateCategory,
+} from "../../../../redux/features/categorySlice";
 
 type CategoryForm = {
-    id: string;
     category_name: string;
 };
 
 const initialForm: CategoryForm = {
-    id: "",
     category_name: "",
 };
 
+const LIMIT = 5;
+
 const CategoryPage = () => {
     const dispatch = useAppDispatch();
-    const masterCategories = useAppSelector((state) => state.category.masterCategories);
-
+    const { masterCategories, status, error, pagination } = useAppSelector(
+        (state) => state.category
+    );
 
     const [currentPage, setCurrentPage] = useState(1);
-    const onPageChange = (page: number) => setCurrentPage(page);
-
     const [openModal, setOpenModal] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [search, setSearch] = useState("");
-    const [data, setData] = useState<Category[]>([]);
     const [form, setForm] = useState<CategoryForm>(initialForm);
 
-
     useEffect(() => {
-        dispatch(getMasterCategory());
-    }, [dispatch]);
+        dispatch(getMasterCategory({ page: currentPage, limit: LIMIT }));
+    }, [dispatch, currentPage]);
 
     const resetForm = () => {
         setForm(initialForm);
-        setSelectedIndex(null);
+        setSelectedCategory(null);
         setModalMode("add");
     };
 
@@ -56,15 +57,12 @@ const CategoryPage = () => {
         setOpenModal(true);
     };
 
-    const openEditModal = (item: Category, index: number) => {
+    const openEditModal = (item: Category) => {
         setModalMode("edit");
-        setSelectedIndex(index);
-
+        setSelectedCategory(item);
         setForm({
-            id: String(item.id ?? ""),
             category_name: item.category_name ?? "",
         });
-
         setOpenModal(true);
     };
 
@@ -73,43 +71,55 @@ const CategoryPage = () => {
         resetForm();
     };
 
-    const handleSubmit = () => {
-        const payload: Category = {
-            id: Number(form.id),
-            category_name: form.category_name,
-        };
+    const handleSubmit = async () => {
+        try {
+            if (!form.category_name.trim()) return;
 
-        if (modalMode === "add") {
-            setData((prev) => [...prev, payload]);
-        } else {
-            setData((prev) =>
-                prev.map((item, index) =>
-                    index === selectedIndex ? { ...item, ...payload } : item
-                )
-            );
+            if (modalMode === "add") {
+                await dispatch(
+                    createCategory({
+                        category_name: form.category_name,
+                    })
+                ).unwrap();
+            } else if (selectedCategory) {
+                await dispatch(
+                    updateCategory({
+                        id: selectedCategory.id,
+                        data: {
+                            category_name: form.category_name,
+                        },
+                    })
+                ).unwrap();
+            }
+
+            await dispatch(getMasterCategory({ page: currentPage, limit: LIMIT }));
+            closeModal();
+        } catch (err) {
+            console.error("Submit category failed:", err);
         }
-
-        closeModal();
     };
 
-    const handleDelete = (index: number) => {
-        setData((prev) => prev.filter((_, i) => i !== index));
+    const handleDelete = async (id: string) => {
+        try {
+            await dispatch(deleteCategory(id)).unwrap();
+            await dispatch(getMasterCategory({ page: currentPage, limit: LIMIT }));
+        } catch (err) {
+            console.error("Delete category failed:", err);
+        }
     };
 
-    const filteredData = useMemo(() => {
-        return data.filter((item) =>
-            item.category_name.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [data, search]);
+    const filteredData = masterCategories.filter((item) =>
+        item.category_name.toLowerCase().includes(search.toLowerCase())
+    );
 
+    const onPageChange = (page: number) => {
+        setCurrentPage(page);
+    };
 
-    // sementara gabungkan data lokal + masterCategories
-    const tableData = data.length > 0 ? data : masterCategories;
     return (
         <div className="p-5">
             <div className="mb-5 flex justify-between">
                 <h1 className="text-2xl font-bold">Master Category</h1>
-
                 <Button onClick={openAddModal}>Tambah Data</Button>
             </div>
 
@@ -151,13 +161,16 @@ const CategoryPage = () => {
                         </div>
                     </div>
 
+                    {error && (
+                        <div className="px-4 pb-2 text-sm text-red-600">{error}</div>
+                    )}
+
                     <table className="w-full text-left text-sm text-body rtl:text-right">
                         <thead className="border-b border-t border-default-medium bg-neutral-secondary-medium text-sm text-body">
                             <tr>
                                 <th scope="col" className="px-6 py-3 font-medium">
                                     No
                                 </th>
-
                                 <th scope="col" className="px-6 py-3 font-medium">
                                     Category Name
                                 </th>
@@ -168,49 +181,49 @@ const CategoryPage = () => {
                         </thead>
 
                         <tbody>
-                            {tableData?.map((d: Menu, i: number) => (
-                                <tr
-                                    key={`${d.id}-${i}`}
-                                    className="border-b border-default bg-neutral-primary-soft hover:bg-neutral-secondary-medium"
-                                >
-                                    <th
-                                        scope="row"
-                                        className="whitespace-nowrap px-6 py-4 text-heading"
+                            {filteredData.length > 0 ? (
+                                filteredData.map((d, i) => (
+                                    <tr
+                                        key={d.id}
+                                        className="border-b border-default bg-neutral-primary-soft hover:bg-neutral-secondary-medium"
                                     >
-                                        {i + 1}
-                                    </th>
-
-
-
-                                    <td className="px-6 py-4">{d.category_name}</td>
-
-                                    <td className="px-6 py-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => openEditModal(d, i)}
-                                            className="font-medium text-fg-brand hover:underline"
+                                        <th
+                                            scope="row"
+                                            className="whitespace-nowrap px-6 py-4 text-heading"
                                         >
-                                            Edit
-                                        </button>
+                                            {((pagination?.current_page ?? 1) - 1) * LIMIT + i + 1}
+                                        </th>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(i)}
-                                            className="ml-5 font-medium text-red-600 hover:underline"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                                        <td className="px-6 py-4">{d.category_name}</td>
 
-                            {filteredData.length === 0 && (
+                                        <td className="px-6 py-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditModal(d)}
+                                                className="font-medium text-fg-brand hover:underline"
+                                            >
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(d.id)}
+                                                className="ml-5 font-medium text-red-600 hover:underline"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
                                 <tr>
                                     <td
-                                        colSpan={4}
+                                        colSpan={3}
                                         className="px-6 py-6 text-center text-sm text-body"
                                     >
-                                        Data category tidak ditemukan.
+                                        {status === "loading"
+                                            ? "Loading data..."
+                                            : "Data category tidak ditemukan."}
                                     </td>
                                 </tr>
                             )}
@@ -221,17 +234,17 @@ const CategoryPage = () => {
                         <span className="mb-4 block w-full text-sm font-normal text-body md:mb-0 md:inline md:w-auto">
                             Showing{" "}
                             <span className="font-semibold text-heading">
-                                {filteredData.length}
+                                {pagination?.from ?? 0}-{pagination?.to ?? 0}
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {data.length}
+                                {pagination?.total ?? 0}
                             </span>
                         </span>
 
                         <Pagination
                             currentPage={currentPage}
-                            totalPages={1}
+                            totalPages={pagination?.pages ?? 1}
                             onPageChange={onPageChange}
                             showIcons
                         />
@@ -246,20 +259,19 @@ const CategoryPage = () => {
 
                 <ModalBody>
                     <div className="space-y-4">
-                        <div>
-                            <div className="mb-2 block">
-                                <Label htmlFor="id">ID</Label>
+                        {modalMode === "edit" && selectedCategory && (
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="id">ID</Label>
+                                </div>
+                                <TextInput
+                                    id="id"
+                                    type="text"
+                                    value={selectedCategory.id}
+                                    disabled
+                                />
                             </div>
-                            <TextInput
-                                id="id"
-                                type="number"
-                                value={form.id}
-                                onChange={(e) =>
-                                    setForm({ ...form, id: e.target.value })
-                                }
-                                placeholder="Masukkan id"
-                            />
-                        </div>
+                        )}
 
                         <div>
                             <div className="mb-2 block">

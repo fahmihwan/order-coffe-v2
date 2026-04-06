@@ -18,12 +18,6 @@ type ApiResponse<T> = {
     meta?: Record<string, unknown>;
 };
 
-type GetMasterMenuParams = {
-    page?: number;
-    limit?: number;
-};
-
-
 const initialState: MenuState = {
     menus: [],
     addOnOptions: [],
