@@ -1,47 +1,9 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
-import type { Category } from "../../types/category";
+import type { Category, CategoryState, CreateCategoryPayload, GetMasterCategoryParams, UpdateCategoryPayload } from "../../types/category";
+import type { ApiResponse, PaginationState } from "../../types/type";
 
-type Pagination = {
-    current_page: number;
-    from: number;
-    to: number;
-    pages: number;
-    total: number;
-};
 
-type ApiResponse<T> = {
-    message: string;
-    data: T;
-    pagination?: Pagination;
-    meta?: Record<string, unknown>;
-};
-
-type CategoryStatus = "idle" | "loading" | "success" | "failed";
-
-type CategoryState = {
-    masterCategories: Category[];
-    message: string;
-    status: CategoryStatus;
-    error?: string;
-    pagination: Pagination | null;
-};
-
-type GetMasterCategoryParams = {
-    page?: number;
-    limit?: number;
-};
-
-type CreateCategoryPayload = {
-    category_name: string;
-};
-
-type UpdateCategoryPayload = {
-    id: string;
-    data: {
-        category_name: string;
-    };
-};
 
 const initialState: CategoryState = {
     masterCategories: [],
@@ -52,7 +14,7 @@ const initialState: CategoryState = {
 };
 
 export const getMasterCategory = createAsyncThunk<
-    { data: Category[]; pagination: Pagination | null; message: string },
+    { data: Category[]; pagination: PaginationState | null; message: string },
     GetMasterCategoryParams | void,
     { rejectValue: string }
 >("category/getAll", async (params, { rejectWithValue }) => {
@@ -83,7 +45,7 @@ export const createCategory = createAsyncThunk<
 >("category/create", async (payload, { rejectWithValue }) => {
     try {
         const formData = new FormData();
-        formData.append("category_name", payload.category_name);
+        formData.append("category_name", payload.categoryName);
 
         const response = await apiClient.post<ApiResponse<Category>>(
             "/category",
@@ -110,7 +72,7 @@ export const updateCategory = createAsyncThunk<
 >("category/update", async ({ id, data }, { rejectWithValue }) => {
     try {
         const formData = new FormData();
-        formData.append("category_name", data.category_name);
+        formData.append("category_name", data.categoryName);
 
         const response = await apiClient.put<ApiResponse<Category>>(
             `/category/${id}`,

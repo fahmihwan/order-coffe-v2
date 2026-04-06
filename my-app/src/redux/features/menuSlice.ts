@@ -2,21 +2,9 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { Menu, MenuPayload, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
-import type { PaginationState } from "../../types/type";
+import type { GetMasterMenuParams, Menu, MenuPayload, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { ApiResponse, PaginationState } from "../../types/type";
 
-type ApiResponse<T> = {
-    message: string;
-    data: T;
-    pagination?: {
-        current_page: number;
-        from: number;
-        to: number;
-        pages: number;
-        total: number;
-    };
-    meta?: Record<string, unknown>;
-};
 
 const initialState: MenuState = {
     menus: [],
@@ -32,7 +20,7 @@ const initialState: MenuState = {
         currentPage: 1,
         from: 0,
         to: 0,
-        totalPages: 1,
+        pages: 1,
         total: 0,
         limit: 5,
     },
@@ -90,7 +78,7 @@ export const getMasterMenu = createAsyncThunk<
         return {
             data: response.data.data ?? [],
             pagination: {
-                currentPage: response.data.pagination?.current_page ?? page,
+                currentPage: response.data.pagination?.currentPage ?? page,
                 from: response.data.pagination?.from ?? 0,
                 to: response.data.pagination?.to ?? 0,
                 totalPages: response.data.pagination?.pages ?? 1,

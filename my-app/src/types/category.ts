@@ -1,4 +1,5 @@
 import type { Menu } from "./menu";
+import type { PaginationState } from "./type";
 
 export interface Category {
     id: number;
@@ -17,10 +18,24 @@ export interface CategoryState {
 };
 
 export interface CreateCategoryPayload {
-    name: string;
+    categoryName: string;
 };
 
 export interface UpdateCategoryPayload {
     id: string;
     data: Partial<CreateCategoryPayload>;
 };
+
+export interface CategoryState {
+    masterCategories: Category[];
+    message: string;
+    status: CategoryStatus;
+    error?: string;
+    pagination: PaginationState | null;
+};
+
+export interface GetMasterCategoryParams {
+    page?: number;
+    limit?: number;
+};
+
