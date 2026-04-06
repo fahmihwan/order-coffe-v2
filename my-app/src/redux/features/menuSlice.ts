@@ -2,69 +2,254 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { Menu } from "../../types/menu";
+import type { Menu, MenuRequest } from "../../types/menu";
 
 type ApiResponse<T> = {
+    message: string;
     data: T;
-    message?: string;
+    pagination?: {
+        current_page: number;
+        from: number;
+        to: number;
+        pages: number;
+        total: number;
+    };
+    meta?: Record<string, unknown>;
 };
 
-type MenuStatus = "idle" | "loading" | "success" | "failed";
+type GetMasterMenuParams = {
+    page?: number;
+    limit?: number;
+};
+
+type PaginationState = {
+    currentPage: number;
+    from: number;
+    to: number;
+    totalPages: number;
+    total: number;
+    limit: number;
+};
+
+// type MenuPayload = {
+//     name: string;
+//     price: number;
+//     image?: File | null;
+// };
+
+type UpdateMenuPayload = {
+    id: string;
+    payload: MenuRequest;
+};
 
 type MenuState = {
     menus: Category[];
-    masterMenus: Menu[]
     addOnOptions: AddOn[];
+    masterMenus: Menu[];
+    selectedMenu: Menu | null;
+    loading: boolean;
+    actionLoading: boolean;
+    status: "idle" | "loading" | "success" | "failed";
+    error: string | null;
     message: string;
-    status: MenuStatus;
-    error?: string;
+    pagination: PaginationState;
 };
 
 const initialState: MenuState = {
     menus: [],
-    masterMenus: [],
     addOnOptions: [],
-    message: "",
+    masterMenus: [],
+    selectedMenu: null,
+    loading: false,
+    actionLoading: false,
     status: "idle",
-    error: undefined,
+    error: null,
+    message: "",
+    pagination: {
+        currentPage: 1,
+        from: 0,
+        to: 0,
+        totalPages: 1,
+        total: 0,
+        limit: 5,
+    },
 };
 
+const extractErrorMessage = (err: unknown, fallback: string) => {
+    if (
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: unknown }).response === "object" &&
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+        return (err as { response: { data: { message: string } } }).response.data.message;
+    }
 
-export const getMasterMenu = createAsyncThunk<Menu[], void, { rejectValue: string }>("menu/master/admin", async (_, { rejectWithValue }) => {
+    if (err instanceof Error) return err.message;
+    return fallback;
+};
+
+const buildMenuFormData = (payload: MenuRequest) => {
+    const formData = new FormData();
+    console.log(payload.is_active);
+
+    formData.append("name", payload.name);
+    formData.append("price", String(payload.price));
+
+    if (payload.description != null && payload.description !== "") {
+        formData.append("description", payload.description);
+    }
+
+    formData.append("is_active", String(payload.is_active));
+
+
+    if (payload.image) {
+        formData.append("image", payload.image);
+    }
+
+    return formData;
+};
+
+export const getMasterMenu = createAsyncThunk<
+    { data: Menu[]; pagination: PaginationState },
+    GetMasterMenuParams | undefined,
+    { rejectValue: string }
+>("menu/master/admin", async (params, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<Menu[]>>("/menu?page=1&limit=5");
-        return response.data.data ?? [];
+        const page = params?.page ?? 1;
+        const limit = params?.limit ?? 5;
+
+        const response = await apiClient.get<ApiResponse<Menu[]>>(
+            `/menu?page=${page}&limit=${limit}`
+        );
+
+        return {
+            data: response.data.data ?? [],
+            pagination: {
+                currentPage: response.data.pagination?.current_page ?? page,
+                from: response.data.pagination?.from ?? 0,
+                to: response.data.pagination?.to ?? 0,
+                totalPages: response.data.pagination?.pages ?? 1,
+                total: response.data.pagination?.total ?? 0,
+                limit,
+            },
+        };
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
-        return rejectWithValue(message);
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu"));
     }
 });
 
-
-export const getListMenu = createAsyncThunk<Category[], void, { rejectValue: string }>("menu/fetchListMenu", async (_, { rejectWithValue }) => {
+export const getMenuById = createAsyncThunk<
+    Menu,
+    string,
+    { rejectValue: string }
+>("menu/getById", async (id, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<Category[]>>("/json/listMenu.json");
-        return response.data.data ?? [];
+        const response = await apiClient.get<ApiResponse<Menu>>(`/menu/${id}`);
+        return response.data.data;
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
-        return rejectWithValue(message);
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu detail"));
     }
 });
 
-export const getAddOnOptionsByMenuId = createAsyncThunk<AddOn[], { menuId: number }, { rejectValue: string }>("menu/getAddOnOptionsByMenuId", async ({ menuId }, { rejectWithValue }) => {
-
+export const createMenu = createAsyncThunk<
+    { data: Menu; message: string },
+    MenuPayload,
+    { rejectValue: string }
+>("menu/create", async (payload, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<AddOn[]>>("/json/listAddOn.json");
-        return response.data.data ?? [];
-        // kalau JSON-nya semua addon, filter disini:
-        // return all.filter((x) => x.menuId === menuId);
+        const formData = buildMenuFormData(payload);
+
+        const response = await apiClient.post<ApiResponse<Menu>>("/menu", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Menu created successfully",
+        };
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
-        return rejectWithValue(message);
+        return rejectWithValue(extractErrorMessage(err, "Failed to create menu"));
     }
 });
 
+export const updateMenu = createAsyncThunk<
+    { data: Menu; message: string },
+    UpdateMenuPayload,
+    { rejectValue: string }
+>("menu/update", async ({ id, payload }, { rejectWithValue }) => {
+    try {
+        const formData = buildMenuFormData(payload);
 
+        const response = await apiClient.put<ApiResponse<Menu>>(`/menu/${id}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Menu updated successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to update menu"));
+    }
+});
+
+export const deleteMenu = createAsyncThunk<
+    { id: string; message: string },
+    string,
+    { rejectValue: string }
+>("menu/delete", async (id, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.delete<ApiResponse<null>>(`/menu/${id}`);
+        return {
+            id,
+            message: response.data.message ?? "Menu deleted successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to delete menu"));
+    }
+});
+
+export const getListMenu = createAsyncThunk<
+    Category[],
+    void,
+    { rejectValue: string }
+>("menu/fetchListMenu", async (_, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.get<ApiResponse<Category[]>>(
+            "/json/listMenu.json"
+        );
+        return response.data.data ?? [];
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu list"));
+    }
+});
+
+export const getAddOnOptionsByMenuId = createAsyncThunk<
+    AddOn[],
+    { menuId: number },
+    { rejectValue: string }
+>("menu/getAddOnOptionsByMenuId", async ({ menuId }, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.get<ApiResponse<AddOn[]>>(
+            "/json/listAddOn.json"
+        );
+
+        const allAddOns = response.data.data ?? [];
+
+        // If needed:
+        // return allAddOns.filter((item) => item.menuId === menuId);
+
+        return allAddOns;
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
+    }
+});
 
 export const menuSlice = createSlice({
     name: "menu",
@@ -74,62 +259,123 @@ export const menuSlice = createSlice({
             state.message = action.payload;
         },
         clearMenuError: (state) => {
-            state.error = undefined;
+            state.error = null;
         },
         clearAddOns: (state) => {
             state.addOnOptions = [];
         },
+        clearSelectedMenu: (state) => {
+            state.selectedMenu = null;
+        },
     },
     extraReducers: (builder) => {
-        builder.addCase(getListMenu.pending, (state) => {
-            return (state = { ...state, status: "loading" })
-        }).addCase(getListMenu.fulfilled, (state, action) => {
+        builder
+            .addCase(getListMenu.pending, (state) => {
+                state.status = "loading";
+                state.error = null;
+            })
+            .addCase(getListMenu.fulfilled, (state, action) => {
+                state.status = "success";
+                state.menus = action.payload;
+            })
+            .addCase(getListMenu.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload ?? "Failed to fetch menu list";
+            })
 
-            return (state = {
-                ...state,
-                menus: action.payload,
-                status: "success"
+            .addCase(getAddOnOptionsByMenuId.pending, (state) => {
+                state.status = "loading";
+                state.error = null;
             })
-        }).addCase(getListMenu.rejected, (state, action) => {
-            return (state = {
-                ...state,
-                status: "failed",
-                error: action.error.message,
-            });
-        }).addCase(getAddOnOptionsByMenuId.pending, (state) => {
-            return (state = { ...state, status: "loading" })
-        }).addCase(getAddOnOptionsByMenuId.fulfilled, (state, action) => {
+            .addCase(getAddOnOptionsByMenuId.fulfilled, (state, action) => {
+                state.status = "success";
+                state.addOnOptions = action.payload;
+            })
+            .addCase(getAddOnOptionsByMenuId.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload ?? "Failed to fetch add-ons";
+            })
 
-            return (state = {
-                ...state,
-                addOnOptions: action.payload,
-                status: "success"
+            .addCase(getMasterMenu.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
-        }).addCase(getAddOnOptionsByMenuId.rejected, (state, action) => {
-            return (state = {
-                ...state,
-                status: "failed",
-                error: action.error.message,
-            });
-        }).addCase(getMasterMenu.pending, (state) => {
-            return (state = { ...state, status: "loading" })
-        }).addCase(getMasterMenu.fulfilled, (state, action) => {
-            return (state = {
-                ...state,
-                masterMenus: action.payload,
-                status: "success"
+            .addCase(getMasterMenu.fulfilled, (state, action) => {
+                state.loading = false;
+                state.masterMenus = action.payload.data;
+                state.pagination = action.payload.pagination;
             })
-        }).addCase(getMasterMenu.rejected, (state, action) => {
-            return (state = {
-                ...state,
-                status: "failed",
-                error: action.error.message,
+            .addCase(getMasterMenu.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload ?? "Failed to fetch menu";
+            })
+
+            .addCase(getMenuById.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+            })
+            .addCase(getMenuById.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.selectedMenu = action.payload;
+            })
+            .addCase(getMenuById.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to fetch menu detail";
+            })
+
+            .addCase(createMenu.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(createMenu.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+            })
+            .addCase(createMenu.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to create menu";
+            })
+
+            .addCase(updateMenu.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(updateMenu.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+                state.selectedMenu = action.payload.data;
+            })
+            .addCase(updateMenu.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to update menu";
+            })
+
+            .addCase(deleteMenu.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(deleteMenu.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+                state.masterMenus = state.masterMenus.filter(
+                    (item) => String(item.id) !== action.payload.id
+                );
+            })
+            .addCase(deleteMenu.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to delete menu";
             });
-        })
-    }
+    },
 });
 
+export const {
+    setMessage,
+    clearMenuError,
+    clearAddOns,
+    clearSelectedMenu,
+} = menuSlice.actions;
 
-
-export const { setMessage, clearMenuError, clearAddOns } = menuSlice.actions;
 export default menuSlice.reducer;
