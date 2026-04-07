@@ -345,7 +345,7 @@ const MenuPage = () => {
 
                         <Pagination
                             currentPage={pagination.currentPage}
-                            totalPages={pagination.totalPages}
+                            totalPages={pagination.pages}
                             onPageChange={onPageChange}
                             showIcons
                         />

@@ -81,7 +81,7 @@ export const getMasterMenu = createAsyncThunk<
                 currentPage: response.data.pagination?.currentPage ?? page,
                 from: response.data.pagination?.from ?? 0,
                 to: response.data.pagination?.to ?? 0,
-                totalPages: response.data.pagination?.pages ?? 1,
+                pages: response.data.pagination?.pages ?? 1,
                 total: response.data.pagination?.total ?? 0,
                 limit,
             },
