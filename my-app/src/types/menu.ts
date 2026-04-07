@@ -38,8 +38,4 @@ export interface MenuState {
 };
 
 
-export interface GetMasterMenuParams {
-    page?: number;
-    limit?: number;
-};
 

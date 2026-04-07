@@ -9,6 +9,12 @@ export interface PaginationState {
 };
 
 
+export interface ParamsPaginate {
+    page?: number;
+    limit?: number;
+};
+
+
 export interface ApiResponse<T> {
     message: string;
     data: T;

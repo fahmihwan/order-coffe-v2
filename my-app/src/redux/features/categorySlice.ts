@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
-import type { Category, CategoryState, CreateCategoryPayload, GetMasterCategoryParams, UpdateCategoryPayload } from "../../types/category";
-import type { ApiResponse, PaginationState } from "../../types/type";
+import type { Category, CategoryState, CreateCategoryPayload, UpdateCategoryPayload } from "../../types/category";
+import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 
 
 
@@ -14,9 +14,7 @@ const initialState: CategoryState = {
 };
 
 export const getMasterCategory = createAsyncThunk<
-    { data: Category[]; pagination: PaginationState | null; message: string },
-    GetMasterCategoryParams | void,
-    { rejectValue: string }
+    { data: Category[]; pagination: PaginationState | null; message: string }, ParamsPaginate, { rejectValue: string }
 >("category/getAll", async (params, { rejectWithValue }) => {
     try {
         const page = params?.page ?? 1;

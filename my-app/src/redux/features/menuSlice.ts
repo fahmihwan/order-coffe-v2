@@ -2,8 +2,8 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { GetMasterMenuParams, Menu, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
-import type { ApiResponse, PaginationState } from "../../types/type";
+import type { Menu, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 
 
 const initialState: MenuState = {
@@ -44,9 +44,7 @@ const extractErrorMessage = (err: unknown, fallback: string) => {
 
 
 export const getMasterMenu = createAsyncThunk<
-    { data: Menu[]; pagination: PaginationState },
-    GetMasterMenuParams | undefined,
-    { rejectValue: string }
+    { data: Menu[]; pagination: PaginationState }, ParamsPaginate, { rejectValue: string }
 >("menu/master/admin", async (params, { rejectWithValue }) => {
     try {
         const page = params?.page ?? 1;

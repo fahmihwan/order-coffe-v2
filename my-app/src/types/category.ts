@@ -34,8 +34,3 @@ export interface CategoryState {
     pagination: PaginationState | null;
 };
 
-export interface GetMasterCategoryParams {
-    page?: number;
-    limit?: number;
-};
-
