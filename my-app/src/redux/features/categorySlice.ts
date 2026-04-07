@@ -72,8 +72,9 @@ export const updateCategory = createAsyncThunk<
 >("category/update", async ({ id, data }, { rejectWithValue }) => {
     try {
         const formData = new FormData();
-        formData.append("category_name", data.categoryName);
-
+        if (data.categoryName != undefined) {
+            formData.append("category_name", data.categoryName);
+        }
         const response = await apiClient.put<ApiResponse<Category>>(
             `/category/${id}`,
             formData,

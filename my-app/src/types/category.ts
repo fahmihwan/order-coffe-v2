@@ -2,7 +2,7 @@ import type { Menu } from "./menu";
 import type { PaginationState } from "./type";
 
 export interface Category {
-    id: number;
+    id: string;
     category_name: string;
     menus: Menu[]
 }

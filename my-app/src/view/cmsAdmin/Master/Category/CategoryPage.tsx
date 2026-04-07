@@ -9,7 +9,7 @@ import {
     TextInput,
 } from "flowbite-react";
 import { useEffect, useState } from "react";
-import type { Category } from "../../../../types/category";
+import type { Category, CreateCategoryPayload } from "../../../../types/category";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
     createCategory,
@@ -18,13 +18,6 @@ import {
     updateCategory,
 } from "../../../../redux/features/categorySlice";
 
-type CategoryForm = {
-    category_name: string;
-};
-
-const initialForm: CategoryForm = {
-    category_name: "",
-};
 
 const LIMIT = 5;
 
@@ -39,14 +32,18 @@ const CategoryPage = () => {
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [search, setSearch] = useState("");
-    const [form, setForm] = useState<CategoryForm>(initialForm);
+    const [form, setForm] = useState<CreateCategoryPayload>({
+        categoryName: "",
+    });
 
     useEffect(() => {
         dispatch(getMasterCategory({ page: currentPage, limit: LIMIT }));
     }, [dispatch, currentPage]);
 
     const resetForm = () => {
-        setForm(initialForm);
+        setForm({
+            categoryName: "",
+        });
         setSelectedCategory(null);
         setModalMode("add");
     };
@@ -61,8 +58,8 @@ const CategoryPage = () => {
         setModalMode("edit");
         setSelectedCategory(item);
         setForm({
-            category_name: item.category_name ?? "",
-        });
+            categoryName: item.category_name ?? "",
+        })
         setOpenModal(true);
     };
 
@@ -73,12 +70,12 @@ const CategoryPage = () => {
 
     const handleSubmit = async () => {
         try {
-            if (!form.category_name.trim()) return;
+            if (!form.categoryName.trim()) return;
 
             if (modalMode === "add") {
                 await dispatch(
                     createCategory({
-                        category_name: form.category_name,
+                        categoryName: form.categoryName,
                     })
                 ).unwrap();
             } else if (selectedCategory) {
@@ -86,7 +83,7 @@ const CategoryPage = () => {
                     updateCategory({
                         id: selectedCategory.id,
                         data: {
-                            category_name: form.category_name,
+                            categoryName: form.categoryName,
                         },
                     })
                 ).unwrap();
@@ -191,7 +188,7 @@ const CategoryPage = () => {
                                             scope="row"
                                             className="whitespace-nowrap px-6 py-4 text-heading"
                                         >
-                                            {((pagination?.current_page ?? 1) - 1) * LIMIT + i + 1}
+                                            {((pagination?.currentPage ?? 1) - 1) * LIMIT + i + 1}
                                         </th>
 
                                         <td className="px-6 py-4">{d.category_name}</td>
@@ -275,16 +272,16 @@ const CategoryPage = () => {
 
                         <div>
                             <div className="mb-2 block">
-                                <Label htmlFor="category_name">Nama Category</Label>
+                                <Label htmlFor="categoryName">Nama Category</Label>
                             </div>
                             <TextInput
-                                id="category_name"
+                                id="categoryName"
                                 type="text"
-                                value={form.category_name}
+                                value={form.categoryName}
                                 onChange={(e) =>
                                     setForm({
                                         ...form,
-                                        category_name: e.target.value,
+                                        categoryName: e.target.value,
                                     })
                                 }
                                 placeholder="Masukkan nama category"
