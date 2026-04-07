@@ -19,12 +19,6 @@ export interface MenuRequest {
     is_active: boolean,
 };
 
-export interface MenuPayload {
-    name: string;
-    price: number;
-    image?: File | null;
-};
-
 export interface UpdateMenuPayload {
     id: string;
     payload: MenuRequest;

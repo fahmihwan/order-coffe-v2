@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { GetMasterMenuParams, Menu, MenuPayload, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { GetMasterMenuParams, Menu, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState } from "../../types/type";
 
 
@@ -41,26 +41,7 @@ const extractErrorMessage = (err: unknown, fallback: string) => {
     return fallback;
 };
 
-const buildMenuFormData = (payload: MenuRequest) => {
-    const formData = new FormData();
-    console.log(payload.is_active);
 
-    formData.append("name", payload.name);
-    formData.append("price", String(payload.price));
-
-    if (payload.description != null && payload.description !== "") {
-        formData.append("description", payload.description);
-    }
-
-    formData.append("is_active", String(payload.is_active));
-
-
-    if (payload.image) {
-        formData.append("image", payload.image);
-    }
-
-    return formData;
-};
 
 export const getMasterMenu = createAsyncThunk<
     { data: Menu[]; pagination: PaginationState },
@@ -106,11 +87,25 @@ export const getMenuById = createAsyncThunk<
 
 export const createMenu = createAsyncThunk<
     { data: Menu; message: string },
-    MenuPayload,
+    MenuRequest,
     { rejectValue: string }
 >("menu/create", async (payload, { rejectWithValue }) => {
     try {
-        const formData = buildMenuFormData(payload);
+        const formData = new FormData();
+
+        formData.append("name", payload.name);
+        formData.append("price", String(payload.price));
+
+        if (payload.description != null && payload.description !== "") {
+            formData.append("description", payload.description);
+        }
+
+        formData.append("is_active", String(payload.is_active));
+
+
+        if (payload.image) {
+            formData.append("image", payload.image);
+        }
 
         const response = await apiClient.post<ApiResponse<Menu>>("/menu", formData, {
             headers: {
@@ -133,7 +128,23 @@ export const updateMenu = createAsyncThunk<
     { rejectValue: string }
 >("menu/update", async ({ id, payload }, { rejectWithValue }) => {
     try {
-        const formData = buildMenuFormData(payload);
+        const formData = new FormData();
+        console.log(payload.is_active);
+
+        formData.append("name", payload.name);
+        formData.append("price", String(payload.price));
+
+        if (payload.description != null && payload.description !== "") {
+            formData.append("description", payload.description);
+        }
+
+        formData.append("is_active", String(payload.is_active));
+
+
+        if (payload.image) {
+            formData.append("image", payload.image);
+        }
+
 
         const response = await apiClient.put<ApiResponse<Menu>>(`/menu/${id}`, formData, {
             headers: {
@@ -166,6 +177,9 @@ export const deleteMenu = createAsyncThunk<
     }
 });
 
+
+
+// =====
 export const getListMenu = createAsyncThunk<
     Category[],
     void,
