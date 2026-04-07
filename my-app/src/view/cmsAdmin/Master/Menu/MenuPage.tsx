@@ -17,10 +17,10 @@ import {
     getMenuById,
     updateMenu,
 } from "../../../../redux/features/menuSlice";
-import type { Menu, MenuRequest } from "../../../../types/menu";
+import type { Menu, MenuPayload } from "../../../../types/menu";
 import { formatRupiah } from "../../../../utils/cartUtils";
 
-const initialForm: MenuRequest = {
+const initialForm: MenuPayload = {
     name: "",
     price: "",
     image: null,
@@ -40,7 +40,7 @@ const MenuPage = () => {
     const [openModal, setOpenModal] = useState(false);
     const [modalMode, setModalMode] = useState<"add" | "edit">("add");
     const [selectedMenuId, setSelectedMenuId] = useState<string>("");
-    const [form, setForm] = useState<MenuRequest>(initialForm);
+    const [form, setForm] = useState<MenuPayload>(initialForm);
     const [preview, setPreview] = useState("");
     const [search, setSearch] = useState("");
 

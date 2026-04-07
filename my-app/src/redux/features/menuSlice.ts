@@ -2,8 +2,9 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOn } from "../../types/addOn";
-import type { Menu, MenuRequest, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { Menu, MenuPayload, MenuState, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
+import { extractErrorMessage } from "../../utils/errorUtils";
 
 
 const initialState: MenuState = {
@@ -24,21 +25,6 @@ const initialState: MenuState = {
         total: 0,
         limit: 5,
     },
-};
-
-const extractErrorMessage = (err: unknown, fallback: string) => {
-    if (
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: unknown }).response === "object" &&
-        (err as { response?: { data?: { message?: string } } }).response?.data?.message
-    ) {
-        return (err as { response: { data: { message: string } } }).response.data.message;
-    }
-
-    if (err instanceof Error) return err.message;
-    return fallback;
 };
 
 
@@ -85,7 +71,7 @@ export const getMenuById = createAsyncThunk<
 
 export const createMenu = createAsyncThunk<
     { data: Menu; message: string },
-    MenuRequest,
+    MenuPayload,
     { rejectValue: string }
 >("menu/create", async (payload, { rejectWithValue }) => {
     try {

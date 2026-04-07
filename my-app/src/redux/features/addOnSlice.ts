@@ -1,36 +1,154 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
-import type { AddOn } from "../../types/addOn";
+import type { AddOn, AddOnOption, AddOnOptionPayload, UpdateAddonOptionPayload } from "../../types/addOn";
+import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
+import { extractErrorMessage } from "../../utils/errorUtils";
 
-type ApiResponse<T> = {
-    data: T;
-    message?: string;
-};
+
 
 type CategoryStatus = "idle" | "loading" | "success" | "failed";
 
 type AddOnState = {
-    masterAddOn: AddOn[]
+    masterAddOns: AddOn[]
     message: string;
     status: CategoryStatus;
-    error?: string;
+    selectedAddOnOption: AddOn | null,
+    error: string | null;
+    actionLoading: boolean;
+    loading: boolean;
+    pagination: PaginationState;
 };
 
 const initialState: AddOnState = {
-    masterAddOn: [],
+    masterAddOns: [],
     message: "",
     status: "idle",
-    error: undefined,
+    loading: false,
+    selectedAddOnOption: null,
+    actionLoading: false,
+    error: null,
+    pagination: {
+        currentPage: 1,
+        from: 0,
+        to: 0,
+        pages: 1,
+        total: 0,
+        limit: 5,
+    },
 };
 
 
-export const getMasterAddOn = createAsyncThunk<AddOn[], void, { rejectValue: string }>("menu/master/addon", async (_, { rejectWithValue }) => {
+export const getMasterAddOn = createAsyncThunk<
+    { data: AddOn[]; pagination: PaginationState }, ParamsPaginate, { rejectValue: string }
+>("menu/master/addon", async (params, { rejectWithValue }) => {
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 5;
+
     try {
-        const response = await apiClient.get<ApiResponse<AddOn[]>>("/json/listAddOn.json");
-        return response.data.data ?? [];
+        const response = await apiClient.get<ApiResponse<AddOn[]>>(
+            `/addon-group?page=${page}&limit=${limit}`
+        );
+
+        return {
+            data: response.data.data ?? [],
+            pagination: {
+                currentPage: response.data.pagination?.currentPage ?? page,
+                from: response.data.pagination?.from ?? 0,
+                to: response.data.pagination?.to ?? 0,
+                pages: response.data.pagination?.pages ?? 1,
+                total: response.data.pagination?.total ?? 0,
+                limit,
+            },
+        };
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to fetch add-ons";
-        return rejectWithValue(message);
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
+    }
+});
+export const createAddOnOption = createAsyncThunk<
+    { data: AddOnOption; message: string },
+    AddOnOptionPayload,
+    { rejectValue: string }
+>("addonoption/create", async (payload, { rejectWithValue }) => {
+    try {
+        const formData = new FormData();
+
+        formData.append("name", payload.name);
+        formData.append("add_on_group_id", payload.add_on_group_id);
+        formData.append("price", String(payload.price));
+        formData.append("is_active", String(payload.is_active));
+
+        if (payload.type !== undefined) {
+            formData.append("type", String(payload.type));
+        }
+
+        const response = await apiClient.post<ApiResponse<AddOnOption>>(
+            "/addon-option",
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Add On Option created successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to create Add On Option"));
+    }
+});
+
+
+export const updateAddOnOption = createAsyncThunk<
+    { data: AddOnOption; message: string },
+    UpdateAddonOptionPayload,
+    { rejectValue: string }
+>("addonoption/update", async ({ id, payload }, { rejectWithValue }) => {
+    try {
+        const formData = new FormData();
+
+        formData.append("name", payload.name);
+        formData.append("add_on_group_id", payload.add_on_group_id);
+        formData.append("price", String(payload.price));
+        formData.append("is_active", String(payload.is_active));
+
+        if (payload.type !== undefined) {
+            formData.append("type", payload.type);
+        }
+
+        const response = await apiClient.put<ApiResponse<AddOnOption>>(
+            `/addon-option/${id}`,
+            formData,
+            { headers: { "Content-Type": "multipart/form-data", }, }
+        );
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Add-on option updated successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(
+            extractErrorMessage(err, "Failed to update add-on option")
+        );
+    }
+});
+
+
+export const deleteAddOnOption = createAsyncThunk<
+    { id: string; message: string },
+    string,
+    { rejectValue: string }
+>("addonoption/delete", async (id, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.delete<ApiResponse<AddOnOption>>(`/addon-option/${id}`);
+        return {
+            id,
+            message: response.data.message ?? "add on option deleted successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to delete add on option"));
     }
 });
 
@@ -43,25 +161,67 @@ export const addOnSlice = createSlice({
             state.message = action.payload;
         },
         clearCategoryError: (state) => {
-            state.error = undefined;
+            state.error = null;
         },
     },
     extraReducers: (builder) => {
-        builder.addCase(getMasterAddOn.pending, (state) => {
-            return (state = { ...state, status: "loading" })
-        }).addCase(getMasterAddOn.fulfilled, (state, action) => {
-            return (state = {
-                ...state,
-                masterAddOn: action.payload,
-                status: "success"
+        builder
+            .addCase(getMasterAddOn.pending, (state) => {
+                state.loading = true;
+                state.error = null;
             })
-        }).addCase(getMasterAddOn.rejected, (state, action) => {
-            return (state = {
-                ...state,
-                status: "failed",
-                error: action.error.message,
+            .addCase(getMasterAddOn.fulfilled, (state, action) => {
+                state.loading = false;
+                state.masterAddOns = action.payload.data;
+                state.pagination = action.payload.pagination;
+            })
+            .addCase(getMasterAddOn.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload ?? "Failed to fetch menu";
+            })
+            .addCase(createAddOnOption.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(createAddOnOption.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+            })
+            .addCase(createAddOnOption.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to create menu";
+            })
+
+            .addCase(updateAddOnOption.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(updateAddOnOption.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+
+            })
+            .addCase(updateAddOnOption.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to update menu";
+            })
+
+            .addCase(deleteAddOnOption.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(deleteAddOnOption.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+            })
+            .addCase(deleteAddOnOption.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to delete menu";
             });
-        })
+
     }
 });
 

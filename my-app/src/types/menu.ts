@@ -11,7 +11,7 @@ export interface Menu {
     is_active: boolean;
 }
 
-export interface MenuRequest {
+export interface MenuPayload {
     name: string;
     price: string;
     image?: File | null;
@@ -21,7 +21,7 @@ export interface MenuRequest {
 
 export interface UpdateMenuPayload {
     id: string;
-    payload: MenuRequest;
+    payload: MenuPayload;
 };
 
 export interface MenuState {
