@@ -526,7 +526,7 @@ const MenuPage = () => {
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button onClick={handleSubmit} isProcessing={actionLoading}>
+                    <Button onClick={handleSubmit} >
                         {modalMode === "add" ? "Simpan" : "Update"}
                     </Button>
 
