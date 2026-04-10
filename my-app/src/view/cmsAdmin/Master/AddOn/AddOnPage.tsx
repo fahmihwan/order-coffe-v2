@@ -10,7 +10,7 @@ import {
     Select,
     TextInput,
 } from "flowbite-react";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import type { AppDispatch, RootState } from "../../../../redux/store";
@@ -59,11 +59,16 @@ const AddOnPage = () => {
     const [expandedRows, setExpandedRows] = useState<number[]>([]);
     const [form, setForm] = useState<AddOptionForm>(initialForm);
 
+    const currentPaginationPage = pagination?.current_page ?? 1;
+    const totalPaginationPages = pagination?.pages ?? 1;
+    const totalPaginationItems = pagination?.total ?? masterAddOns.length;
+    // const paginationLimit = pagination?.limit ?? 5;
+
     useEffect(() => {
         dispatch(
             getMasterAddOn({
                 page: currentPage,
-                // limit: pagination.limit ?? 5,
+                // limit: paginationLimit,
             })
         );
     }, [dispatch, currentPage]);
@@ -176,7 +181,7 @@ const AddOnPage = () => {
                 dispatch(
                     getMasterAddOn({
                         page: currentPage,
-                        // limit: pagination.limit ?? 5,
+                        // limit: paginationLimit,
                     })
                 );
             }
@@ -196,11 +201,10 @@ const AddOnPage = () => {
 
         if (createAddOnOption.fulfilled.match(resultAction)) {
             closeModal();
-
             dispatch(
                 getMasterAddOn({
                     page: currentPage,
-                    // limit: pagination.limit ?? 5,
+                    // limit: paginationLimit,
                 })
             );
         }
@@ -213,7 +217,7 @@ const AddOnPage = () => {
             dispatch(
                 getMasterAddOn({
                     page: currentPage,
-                    // limit: pagination.limit ?? 5,
+                    // limit: paginationLimit,
                 })
             );
         }
@@ -322,14 +326,11 @@ const AddOnPage = () => {
                                         const isExpanded = expandedRows.includes(addOn.id);
 
                                         return (
-                                            <>
-                                                <tr
-                                                    key={addOn.id}
-                                                    className="border-b border-default bg-white align-top hover:bg-neutral-secondary-medium/40"
-                                                >
+                                            <Fragment key={addOn.id}>
+                                                <tr className="border-b border-default bg-white align-top hover:bg-neutral-secondary-medium/40">
                                                     <td className="whitespace-nowrap px-6 py-4 text-heading">
-                                                        {(pagination.current_page - 1) *
-                                                            // pagination.limit +
+                                                        {(currentPaginationPage - 1) *
+                                                            filteredData.length +
                                                             index +
                                                             1}
                                                     </td>
@@ -390,9 +391,7 @@ const AddOnPage = () => {
                                                                     option
                                                                 </span>
                                                                 <svg
-                                                                    className={`h-4 w-4 transition-transform ${isExpanded
-                                                                        ? "rotate-180"
-                                                                        : ""
+                                                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
                                                                         }`}
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
@@ -431,10 +430,7 @@ const AddOnPage = () => {
                                                 </tr>
 
                                                 {isExpanded && (
-                                                    <tr
-                                                        key={`${addOn.id}-expanded`}
-                                                        className="border-b border-default bg-neutral-primary-soft"
-                                                    >
+                                                    <tr className="border-b border-default bg-neutral-primary-soft">
                                                         <td colSpan={7} className="px-6 py-4">
                                                             <div className="rounded-xl border border-default bg-white p-4">
                                                                 <div className="mb-4 flex items-center justify-between">
@@ -487,23 +483,19 @@ const AddOnPage = () => {
                                                                         <tbody>
                                                                             {options.map((option) => {
                                                                                 const isActive =
-                                                                                    "is_active" in
-                                                                                        option
+                                                                                    "is_active" in option
                                                                                         ? Boolean(
                                                                                             (
                                                                                                 option as AddOnOption & {
                                                                                                     is_active?: boolean;
                                                                                                 }
-                                                                                            )
-                                                                                                .is_active
+                                                                                            ).is_active
                                                                                         )
                                                                                         : true;
 
                                                                                 return (
                                                                                     <tr
-                                                                                        key={
-                                                                                            option.id
-                                                                                        }
+                                                                                        key={option.id}
                                                                                         className="border-t border-default bg-white"
                                                                                     >
                                                                                         <td className="px-4 py-3 font-medium text-heading">
@@ -512,9 +504,7 @@ const AddOnPage = () => {
 
                                                                                         <td className="px-4 py-3">
                                                                                             <Badge color="info">
-                                                                                                {
-                                                                                                    option.type
-                                                                                                }
+                                                                                                {option.type}
                                                                                             </Badge>
                                                                                         </td>
 
@@ -548,9 +538,7 @@ const AddOnPage = () => {
                                                                                                         )
                                                                                                     }
                                                                                                     className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                                                                                    disabled={
-                                                                                                        actionLoading
-                                                                                                    }
+                                                                                                    disabled={actionLoading}
                                                                                                 >
                                                                                                     Edit
                                                                                                 </button>
@@ -563,9 +551,7 @@ const AddOnPage = () => {
                                                                                                         )
                                                                                                     }
                                                                                                     className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                                                                                    disabled={
-                                                                                                        actionLoading
-                                                                                                    }
+                                                                                                    disabled={actionLoading}
                                                                                                 >
                                                                                                     Hapus
                                                                                                 </button>
@@ -581,7 +567,7 @@ const AddOnPage = () => {
                                                         </td>
                                                     </tr>
                                                 )}
-                                            </>
+                                            </Fragment>
                                         );
                                     })
                                 ) : (
@@ -606,14 +592,14 @@ const AddOnPage = () => {
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {pagination.total}
+                                {totalPaginationItems}
                             </span>
                         </span>
 
-                        {!search.trim() && pagination.pages > 1 && (
+                        {!search.trim() && totalPaginationPages > 1 && (
                             <Pagination
-                                currentPage={pagination.current_page}
-                                totalPages={pagination.pages}
+                                currentPage={currentPaginationPage}
+                                totalPages={totalPaginationPages}
                                 onPageChange={setCurrentPage}
                                 showIcons
                             />

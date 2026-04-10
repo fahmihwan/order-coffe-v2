@@ -1,4 +1,4 @@
-import type { AddOn } from "./addOn";
+import type { AddOnGroup } from "./addOn";
 import type { Category } from "./category";
 import type { PaginationState } from "./type";
 
@@ -9,7 +9,11 @@ export interface Menu {
     description?: string; // *string + omitempty
     price: number;        // float64 -> number
     is_active: boolean;
+    add_on_groups?: AddOnGroup[]
 }
+
+
+
 export interface MenuWithCategoryMenuId {
     id: string;           // uuid.UUID -> string
     category_menu_id: string,
@@ -35,7 +39,7 @@ export interface UpdateMenuPayload {
 
 export interface MenuState {
     menus: Category[];
-    addOnOptions: AddOn[];
+    addOnOptions: AddOnGroup[];
     masterMenus: Menu[];
     selectedMenu: Menu | null;
     loading: boolean;

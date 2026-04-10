@@ -16,7 +16,7 @@ type AddOnState = {
     error: string | null;
     actionLoading: boolean;
     loading: boolean;
-    pagination: PaginationState;
+    pagination: PaginationState | null;
 };
 
 const initialState: AddOnState = {
@@ -27,32 +27,29 @@ const initialState: AddOnState = {
     selectedAddOnOption: null,
     actionLoading: false,
     error: null,
-    pagination: {
-        currentPage: 1,
-        from: 0,
-        to: 0,
-        pages: 1,
-        total: 0,
-        limit: 5,
-    },
+    pagination: null,
 };
 
 
 export const getMasterAddOn = createAsyncThunk<
-    { data: AddOn[]; pagination: PaginationState }, ParamsPaginate, { rejectValue: string }
+    { data: AddOn[]; pagination: PaginationState | null }, ParamsPaginate, { rejectValue: string }
 >("menu/master/addon", async (params, { rejectWithValue }) => {
-    const page = params?.page ?? 1;
-    const limit = params?.limit ?? 5;
+
+    const page = params?.page;
+    const limit = params?.limit;
+
 
     try {
         const response = await apiClient.get<ApiResponse<AddOn[]>>(
-            `/addon-group?page=${page}&limit=${limit}`
+            `/addon-group`, {
+            params: { page, limit },
+        }
         );
 
         return {
             data: response.data.data ?? [],
             pagination: {
-                currentPage: response.data.pagination?.currentPage ?? page,
+                currentPage: response.data.pagination?.current_page ?? page,
                 from: response.data.pagination?.from ?? 0,
                 to: response.data.pagination?.to ?? 0,
                 pages: response.data.pagination?.pages ?? 1,

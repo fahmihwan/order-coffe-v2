@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
-import type { AddOn } from "../../types/addOn";
+import type { AddOnGroup } from "../../types/addOn";
 import type { Menu, MenuPayload, MenuState, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
@@ -21,10 +21,8 @@ const initialState: MenuState = {
 };
 
 
-
-export const getMasterMenu = createAsyncThunk<
-    { data: Menu[]; pagination: PaginationState | null, message: string }, ParamsPaginate, { rejectValue: string }
->("menu/master/admin", async (params, { rejectWithValue }) => {
+// list all menu and menu pagination 
+export const getMasterMenu = createAsyncThunk<{ data: Menu[]; pagination: PaginationState | null, message: string }, ParamsPaginate, { rejectValue: string }>("menu/master/admin", async (params, { rejectWithValue }) => {
     try {
         const page = params?.page;
         const limit = params?.limit;
@@ -43,11 +41,9 @@ export const getMasterMenu = createAsyncThunk<
     }
 });
 
-export const getMenuById = createAsyncThunk<
-    Menu,
-    string,
-    { rejectValue: string }
->("menu/getById", async (id, { rejectWithValue }) => {
+
+
+export const getMenuById = createAsyncThunk<Menu, string, { rejectValue: string }>("menu/getById", async (id, { rejectWithValue }) => {
     try {
         const response = await apiClient.get<ApiResponse<Menu>>(`/menu/${id}`);
         return response.data.data;
@@ -56,11 +52,8 @@ export const getMenuById = createAsyncThunk<
     }
 });
 
-export const createMenu = createAsyncThunk<
-    { data: Menu; message: string },
-    MenuPayload,
-    { rejectValue: string }
->("menu/create", async (payload, { rejectWithValue }) => {
+
+export const createMenu = createAsyncThunk<{ data: Menu; message: string }, MenuPayload, { rejectValue: string }>("menu/create", async (payload, { rejectWithValue }) => {
     try {
         const formData = new FormData();
 
@@ -93,11 +86,7 @@ export const createMenu = createAsyncThunk<
     }
 });
 
-export const updateMenu = createAsyncThunk<
-    { data: Menu; message: string },
-    UpdateMenuPayload,
-    { rejectValue: string }
->("menu/update", async ({ id, payload }, { rejectWithValue }) => {
+export const updateMenu = createAsyncThunk<{ data: Menu; message: string }, UpdateMenuPayload, { rejectValue: string }>("menu/update", async ({ id, payload }, { rejectWithValue }) => {
     try {
         const formData = new FormData();
         console.log(payload.is_active);
@@ -132,11 +121,7 @@ export const updateMenu = createAsyncThunk<
     }
 });
 
-export const deleteMenu = createAsyncThunk<
-    { id: string; message: string },
-    string,
-    { rejectValue: string }
->("menu/delete", async (id, { rejectWithValue }) => {
+export const deleteMenu = createAsyncThunk<{ id: string; message: string }, string, { rejectValue: string }>("menu/delete", async (id, { rejectWithValue }) => {
     try {
         const response = await apiClient.delete<ApiResponse<null>>(`/menu/${id}`);
         return {
@@ -149,13 +134,31 @@ export const deleteMenu = createAsyncThunk<
 });
 
 
+// list all menu and menu pagination 
+export const getMenuAddOn = createAsyncThunk<{ data: Menu[]; pagination: PaginationState | null, message: string }, ParamsPaginate, { rejectValue: string }>("menu/add-on-groups/add-on-options", async (params, { rejectWithValue }) => {
+    try {
+        const page = params?.page;
+        const limit = params?.limit;
+
+        const response = await apiClient.get<ApiResponse<Menu[]>>(`/menu-addon`, {
+            params: { page, limit },
+        });
+
+        return {
+            data: response.data.data ?? [],
+            pagination: response.data.pagination ?? null,
+            message: response.data.message ?? "Success",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu"));
+    }
+});
+
+
+
 
 // =====
-export const getListMenu = createAsyncThunk<
-    Category[],
-    void,
-    { rejectValue: string }
->("menu/fetchListMenu", async (_, { rejectWithValue }) => {
+export const getListMenu = createAsyncThunk<Category[], void, { rejectValue: string }>("menu/fetchListMenu", async (_, { rejectWithValue }) => {
     try {
         const response = await apiClient.get<ApiResponse<Category[]>>(
             "/json/listMenu.json"
@@ -166,13 +169,9 @@ export const getListMenu = createAsyncThunk<
     }
 });
 
-export const getAddOnOptionsByMenuId = createAsyncThunk<
-    AddOn[],
-    { menuId: number },
-    { rejectValue: string }
->("menu/getAddOnOptionsByMenuId", async ({ menuId }, { rejectWithValue }) => {
+export const getAddOnOptionsByMenuId = createAsyncThunk<AddOnGroup[], { menuId: number }, { rejectValue: string }>("menu/getAddOnOptionsByMenuId", async ({ menuId }, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<AddOn[]>>(
+        const response = await apiClient.get<ApiResponse<AddOnGroup[]>>(
             "/json/listAddOn.json"
         );
 
@@ -186,6 +185,8 @@ export const getAddOnOptionsByMenuId = createAsyncThunk<
         return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
     }
 });
+
+
 
 export const menuSlice = createSlice({
     name: "menu",
@@ -206,19 +207,6 @@ export const menuSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getListMenu.pending, (state) => {
-                state.status = "loading";
-                state.error = null;
-            })
-            .addCase(getListMenu.fulfilled, (state, action) => {
-                state.status = "success";
-                state.menus = action.payload;
-            })
-            .addCase(getListMenu.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.payload ?? "Failed to fetch menu list";
-            })
-
             .addCase(getAddOnOptionsByMenuId.pending, (state) => {
                 state.status = "loading";
                 state.error = null;
@@ -231,7 +219,6 @@ export const menuSlice = createSlice({
                 state.status = "failed";
                 state.error = action.payload ?? "Failed to fetch add-ons";
             })
-
             .addCase(getMasterMenu.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -303,7 +290,32 @@ export const menuSlice = createSlice({
             .addCase(deleteMenu.rejected, (state, action) => {
                 state.actionLoading = false;
                 state.error = action.payload ?? "Failed to delete menu";
-            });
+            })
+            .addCase(getMenuAddOn.pending, (state) => {
+                state.status = "loading";
+                state.error = null;
+            })
+            .addCase(getMenuAddOn.fulfilled, (state, action) => {
+                state.status = "success";
+                state.masterMenus = action.payload.data;
+                state.pagination = action.payload.pagination;
+            })
+            .addCase(getMenuAddOn.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload ?? "Failed to fetch menu list";
+            })
+            .addCase(getListMenu.pending, (state) => {
+                state.status = "loading";
+                state.error = null;
+            })
+            .addCase(getListMenu.fulfilled, (state, action) => {
+                state.status = "success";
+                state.menus = action.payload;
+            })
+            .addCase(getListMenu.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.payload ?? "Failed to fetch menu list";
+            })
     },
 });
 

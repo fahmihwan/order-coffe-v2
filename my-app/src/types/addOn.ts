@@ -1,7 +1,7 @@
 export type AddOnType = "radio" | "checkbox";
 
 
-export interface AddOn {
+export interface AddOnGroup {
     id: number;
     title: string;
     description: string;

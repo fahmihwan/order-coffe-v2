@@ -35,6 +35,7 @@ const CategoryMenuPage = () => {
     const dispatch = useAppDispatch();
 
     const categoryMenus = useAppSelector((state) => state.category.masterCategories) as Category[];
+
     // const { masterMenus, pagination, loading, actionLoading, error } = useAppSelector((state) => state.menu);
 
     const pagination = useAppSelector((state) => state.category.pagination);
