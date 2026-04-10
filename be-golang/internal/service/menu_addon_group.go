@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"pos-coffeshop/internal/model"
 	"pos-coffeshop/internal/repository"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 var _ MenuAddOnGroupServiceInterface = &MenuAddOnGroupService{}
 
 type MenuAddOnGroupServiceInterface interface {
 	ListMenuAddOnGroup(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error)
-	// CreateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error)
+	CreateMenuAddOnGroup(ctx context.Context, menuAddOn *model.MenuAddOnGroup) (*model.MenuAddOnGroup, error)
 	// GetCategoryMenuByID(ctx context.Context, id string) (*model.CategoryMenu, error)
 	// UpdateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error)
-	// DeleteCategoryMenu(ctx context.Context, id string) error
+	DeleteMenuAddGroup(ctx context.Context, id string) error
 }
 
 type MenuAddOnGroupService struct {
@@ -50,20 +53,20 @@ func (s *MenuAddOnGroupService) ListMenuAddOnGroup(ctx context.Context, filters 
 }	
 
 
-// func (s *MenuAddOnGroupService) CreateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error) {
+func (s *MenuAddOnGroupService) CreateMenuAddOnGroup(ctx context.Context, menuAddOnGroups *model.MenuAddOnGroup) (*model.MenuAddOnGroup, error) {
 
-// 	categoryMenu.ID, _ = uuid.NewV7()
-// 	// Generate a new UUID for the form
-// 	categoryMenu.CreatedAt = time.Now()
-// 	categoryMenu.UpdatedAt = time.Now()
+	menuAddOnGroups.ID, _ = uuid.NewV7()
+	// Generate a new UUID for the form
+	menuAddOnGroups.CreatedAt = time.Now()
+	menuAddOnGroups.UpdatedAt = time.Now()
 
-// 	err := s.repo.CategoryMenu.Create(ctx, categoryMenu)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create category menu: %w", err)
-// 	}
+	err := s.repo.MenuAddOnGroup.Create(ctx, menuAddOnGroups)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create category menu: %w", err)
+	}
 
-// 	return categoryMenu, nil
-// }
+	return menuAddOnGroups, nil
+}
 
 // func (s *MenuAddOnGroupService) GetCategoryMenuByID(ctx context.Context, id string) (*model.CategoryMenu, error) {
 
@@ -87,12 +90,12 @@ func (s *MenuAddOnGroupService) ListMenuAddOnGroup(ctx context.Context, filters 
 // 	return categoryMenu, nil
 // }
 
-// func (s *MenuAddOnGroupService) DeleteCategoryMenu(ctx context.Context, id string) error {
+func (s *MenuAddOnGroupService) DeleteMenuAddGroup(ctx context.Context, id string) error {
 
-// 	err := s.repo.CategoryMenu.Delete(ctx, id)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to delete category menu: %w", err)
-// 	}
+	err := s.repo.MenuAddOnGroup.Delete(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete category menu: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
+	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
 	"pos-coffeshop/internal/service"
 	"pos-coffeshop/internal/util"
@@ -42,10 +44,11 @@ func (h *MenuAddOnGroupHandler) Routes() http.Handler {
 	}
 
 	r.With(auditMiddleware("list-menu-add-on-group", "menu-add-on-group")).Get("/", h.ListMenuAddOnGroup)
-	// r.With(auditMiddleware("create-menu-add-on-group", "menu-add-on-group")).Post("/", h.CreateMenuAddOnGroup)
+	// r.With(auditMiddleware("create-menu-add-on-group","menu-add-on-group")).Post("/"h)
+	r.With(auditMiddleware("create-menu-add-on-group", "menu-add-on-group")).Post("/", h.CreateMenuAddOnGroup)
 	// r.With(auditMiddleware("get-menu-add-on-group", "menu-add-on-group")).Get("/{id}", h.GetMenuAddOnGroupByID)
 	// r.With(auditMiddleware("update-menu-add-on-group", "menu-add-on-group")).Put("/{id}", h.UpdateMenuAddOnGroup)
-	// r.With(auditMiddleware("delete-menu-add-on-group", "menu-add-on-group")).Delete("/{id}", h.DeleteMenuAddOnGroup)
+	r.With(auditMiddleware("delete-menu-add-on-group", "menu-add-on-group")).Delete("/{id}", h.DeleteMenuAddOnGroup)
 	return  r
 }
 
@@ -98,24 +101,24 @@ func (h *MenuAddOnGroupHandler) ListMenuAddOnGroup(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(successResponse)		
 }
 
-// func (h *MenuAddOnGroupHandler) CreateCategoryMenu(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	var req = new(request.CategoryMenuRequest)
-// 	if err := request.ParseForm(r, req); err != nil {
-// 		middleware.HandleValidationErrors(err, w)
-// 		return
-// 	}
+func (h *MenuAddOnGroupHandler) CreateMenuAddOnGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.MenuAddOnGroupRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
 
-// 	categoryMenu := req.ToCategoryMenu()
-// 	createCategoryMenu, err := h.menuAddOnGroupService.CreateCategoryMenu(ctx, categoryMenu)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Error creating category menu: %v", err), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	response := response.NewSuccessResponse(createCategoryMenu)
-// 	w.WriteHeader(http.StatusCreated)
-// 	json.NewEncoder(w).Encode(response)	
-// }	
+	menuAddOnGroup := req.ToMenuAddOnGroup()
+	createMenuAddOnGroup, err := h.menuAddOnGroupService.CreateMenuAddOnGroup(ctx, menuAddOnGroup)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating category menu: %v", err), http.StatusInternalServerError)
+		return
+	}
+	response := response.NewSuccessResponse(createMenuAddOnGroup)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)	
+}	
 
 // func (h *MenuAddOnGroupHandler) GetCategoryMenuByID(w http.ResponseWriter, r *http.Request) {
 // 	ctx := r.Context()
@@ -167,19 +170,19 @@ func (h *MenuAddOnGroupHandler) ListMenuAddOnGroup(w http.ResponseWriter, r *htt
 // 	json.NewEncoder(w).Encode(successResponse)
 // }	
 
-// func (h *MenuAddOnGroupHandler) DeleteCategoryMenu(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	id := chi.URLParam(r, "id")
+func (h *MenuAddOnGroupHandler) DeleteMenuAddOnGroup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id := chi.URLParam(r, "id")
 
-// 	err := h.menuAddOnGroupService.DeleteCategoryMenu(ctx, id)
-// 	if err != nil {
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	err := h.menuAddOnGroupService.DeleteMenuAddGroup(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
 
-// 	successResponse := response.NewSuccessResponse(nil)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)	
-// }
+	successResponse := response.NewSuccessResponse(nil)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)	
+}

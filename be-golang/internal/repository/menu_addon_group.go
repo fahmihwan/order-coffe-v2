@@ -21,11 +21,11 @@ type MenuAddOnGroupRepository struct{
 // interface 
 type MenuAddOnGroupRepo interface {
 	List(ctx context.Context, filter FilterMenuAddOnGroup) (res []*model.Menu, total int, err error)
-	// Create(ctx context.Context, menuAddOn *model.MenuAddOnGroup) error
+	Create(ctx context.Context, menuAddOn *model.MenuAddOnGroup) error
 	// setFilter(db *gorm.DB, filter FilterMenuAddOnGroup) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.MenuAddOnGroup, error)
 	// Update(ctx context.Context, menuAddOn *model.MenuAddOnGroup) error
-	// Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 // make sure MenuAddOnGroupRepository implements MenuAddOnGroupRepo interface
@@ -120,18 +120,18 @@ func (r *MenuAddOnGroupRepository) setFilter(db *gorm.DB, filter FilterMenuAddOn
 	return db
 }			
 
-// func (r *MenuAddOnGroupRepository) Create(ctx context.Context, categoryMenu *model.CategoryMenu) error {
-// 	funcName := "Create"
-// 	tableName := model.CategoryMenu{}.TableName()
+func (r *MenuAddOnGroupRepository) Create(ctx context.Context, AddOnGroup *model.MenuAddOnGroup) error {
+	funcName := "Create"
+	tableName := model.MenuAddOnGroup{}.TableName()
 
-// 	db := r.db.WithContext(ctx)
+	db := r.db.WithContext(ctx)
 
-// 	if err := db.Create(categoryMenu).Error; err != nil {
-// 		return fmt.Errorf("failed to %s %s: %w", funcName, tableName, err)
-// 	}
+	if err := db.Create(AddOnGroup).Error; err != nil {
+		return fmt.Errorf("failed to %s %s: %w", funcName, tableName, err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 // func (r *MenuAddOnGroupRepository) GetByID(ctx context.Context, id string) (*model.CategoryMenu, error) {
 // 	funcName := "GetByID"
@@ -163,15 +163,15 @@ func (r *MenuAddOnGroupRepository) setFilter(db *gorm.DB, filter FilterMenuAddOn
 // 	return nil
 // }
 
-// func (r *MenuAddOnGroupRepository) Delete(ctx context.Context, id string) error {
-// 	funcName := "Delete"
-// 	tableName := model.CategoryMenu{}.TableName()
+func (r *MenuAddOnGroupRepository) Delete(ctx context.Context, id string) error {
+	funcName := "Delete"
+	tableName := model.MenuAddOnGroup{}.TableName()
 
-// 	db := r.db.WithContext(ctx)
+	db := r.db.WithContext(ctx)
 
-// 	if err := db.Where("id = ?", id).Delete(&model.CategoryMenu{}).Error; err != nil {
-// 		return fmt.Errorf("failed to %s %s: %w", funcName, tableName, err)
-// 	}
+	if err := db.Where("id = ?", id).Delete(&model.MenuAddOnGroup{}).Error; err != nil {
+		return fmt.Errorf("failed to %s %s: %w", funcName, tableName, err)
+	}
 
-// 	return nil
-// }	
+	return nil
+}	
