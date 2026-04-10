@@ -63,10 +63,10 @@ const AddOnPage = () => {
         dispatch(
             getMasterAddOn({
                 page: currentPage,
-                limit: pagination.limit ?? 5,
+                // limit: pagination.limit ?? 5,
             })
         );
-    }, [dispatch, currentPage, pagination.limit]);
+    }, [dispatch, currentPage]);
 
     useEffect(() => {
         if (message) {
@@ -176,7 +176,7 @@ const AddOnPage = () => {
                 dispatch(
                     getMasterAddOn({
                         page: currentPage,
-                        limit: pagination.limit ?? 5,
+                        // limit: pagination.limit ?? 5,
                     })
                 );
             }
@@ -200,7 +200,7 @@ const AddOnPage = () => {
             dispatch(
                 getMasterAddOn({
                     page: currentPage,
-                    limit: pagination.limit ?? 5,
+                    // limit: pagination.limit ?? 5,
                 })
             );
         }
@@ -213,7 +213,7 @@ const AddOnPage = () => {
             dispatch(
                 getMasterAddOn({
                     page: currentPage,
-                    limit: pagination.limit ?? 5,
+                    // limit: pagination.limit ?? 5,
                 })
             );
         }
@@ -328,8 +328,8 @@ const AddOnPage = () => {
                                                     className="border-b border-default bg-white align-top hover:bg-neutral-secondary-medium/40"
                                                 >
                                                     <td className="whitespace-nowrap px-6 py-4 text-heading">
-                                                        {(pagination.currentPage - 1) *
-                                                            pagination.limit +
+                                                        {(pagination.current_page - 1) *
+                                                            // pagination.limit +
                                                             index +
                                                             1}
                                                     </td>
@@ -391,8 +391,8 @@ const AddOnPage = () => {
                                                                 </span>
                                                                 <svg
                                                                     className={`h-4 w-4 transition-transform ${isExpanded
-                                                                            ? "rotate-180"
-                                                                            : ""
+                                                                        ? "rotate-180"
+                                                                        : ""
                                                                         }`}
                                                                     xmlns="http://www.w3.org/2000/svg"
                                                                     fill="none"
@@ -612,7 +612,7 @@ const AddOnPage = () => {
 
                         {!search.trim() && pagination.pages > 1 && (
                             <Pagination
-                                currentPage={pagination.currentPage}
+                                currentPage={pagination.current_page}
                                 totalPages={pagination.pages}
                                 onPageChange={setCurrentPage}
                                 showIcons
