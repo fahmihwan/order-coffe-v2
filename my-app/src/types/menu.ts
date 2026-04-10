@@ -37,6 +37,12 @@ export interface UpdateMenuPayload {
     payload: MenuPayload;
 };
 
+export interface MenuAddOnPayload {
+    add_on_group_id: string,
+    menu_id: string
+}
+
+
 export interface MenuState {
     menus: Category[];
     addOnOptions: AddOnGroup[];

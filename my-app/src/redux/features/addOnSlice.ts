@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
-import type { AddOn, AddOnOption, AddOnOptionPayload, UpdateAddonOptionPayload } from "../../types/addOn";
+import type { AddOnGroup, AddOnOption, AddOnOptionPayload, UpdateAddonOptionPayload } from "../../types/addOn";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
 
@@ -9,10 +9,10 @@ import { extractErrorMessage } from "../../utils/errorUtils";
 type CategoryStatus = "idle" | "loading" | "success" | "failed";
 
 type AddOnState = {
-    masterAddOns: AddOn[]
+    masterAddOns: AddOnGroup[]
     message: string;
     status: CategoryStatus;
-    selectedAddOnOption: AddOn | null,
+    selectedAddOnOption: AddOnGroup | null,
     error: string | null;
     actionLoading: boolean;
     loading: boolean;
@@ -32,35 +32,25 @@ const initialState: AddOnState = {
 
 
 export const getMasterAddOn = createAsyncThunk<
-    { data: AddOn[]; pagination: PaginationState | null }, ParamsPaginate, { rejectValue: string }
->("menu/master/addon", async (params, { rejectWithValue }) => {
+    { data: AddOnGroup[]; pagination: PaginationState | null }, ParamsPaginate, { rejectValue: string }>("menu/master/addon-group", async (params, { rejectWithValue }) => {
 
-    const page = params?.page;
-    const limit = params?.limit;
+        const page = params?.page;
+        const limit = params?.limit;
 
 
-    try {
-        const response = await apiClient.get<ApiResponse<AddOn[]>>(
-            `/addon-group`, {
-            params: { page, limit },
+        try {
+            const response = await apiClient.get<ApiResponse<AddOnGroup[]>>(
+                `/addon-group`, { params: { page, limit } });
+
+            return {
+                data: response.data.data ?? [],
+                pagination: response.data.pagination ?? null,
+                message: response.data.message ?? "success"
+            };
+        } catch (err: unknown) {
+            return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
         }
-        );
-
-        return {
-            data: response.data.data ?? [],
-            pagination: {
-                currentPage: response.data.pagination?.current_page ?? page,
-                from: response.data.pagination?.from ?? 0,
-                to: response.data.pagination?.to ?? 0,
-                pages: response.data.pagination?.pages ?? 1,
-                total: response.data.pagination?.total ?? 0,
-                limit,
-            },
-        };
-    } catch (err: unknown) {
-        return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
-    }
-});
+    });
 export const createAddOnOption = createAsyncThunk<
     { data: AddOnOption; message: string },
     AddOnOptionPayload,

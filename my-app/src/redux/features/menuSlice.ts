@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import apiClient from "../../api/api";
 import type { Category } from "../../types/category";
 import type { AddOnGroup } from "../../types/addOn";
-import type { Menu, MenuPayload, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { Menu, MenuAddOnPayload, MenuPayload, MenuState, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
 
@@ -154,6 +154,43 @@ export const getMenuAddOn = createAsyncThunk<{ data: Menu[]; pagination: Paginat
     }
 });
 
+export const createMenuAddOn = createAsyncThunk<{ data: MenuAddOnPayload; message: string }, MenuAddOnPayload, { rejectValue: string }>("create/menu-addon", async (payload, { rejectWithValue }) => {
+    try {
+        const formData = new FormData();
+
+        formData.append("add_on_group_id", payload.add_on_group_id);
+        formData.append("menu_id", String(payload.menu_id));
+
+        const response = await apiClient.post<ApiResponse<MenuAddOnPayload>>("/menu-addon", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Menu Addon created successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to create menu Addon "));
+    }
+});
+
+
+export const deleteMenuAddOn = createAsyncThunk<{ id: string; message: string }, string, { rejectValue: string }>("delete/menu-addon", async (id, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.delete<ApiResponse<null>>(`/menu-addon/${id}`);
+        return {
+            id,
+            message: response.data.message ?? "Menu Addon deleted successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to delete Menu Addon"));
+    }
+});
+
+
+
 
 
 
@@ -177,8 +214,6 @@ export const getAddOnOptionsByMenuId = createAsyncThunk<AddOnGroup[], { menuId: 
 
         const allAddOns = response.data.data ?? [];
 
-        // If needed:
-        // return allAddOns.filter((item) => item.menuId === menuId);
 
         return allAddOns;
     } catch (err: unknown) {

@@ -2,7 +2,7 @@ export type AddOnType = "radio" | "checkbox";
 
 
 export interface AddOnGroup {
-    id: number;
+    id: string;
     title: string;
     description: string;
     is_required: boolean;
@@ -12,7 +12,7 @@ export interface AddOnGroup {
 }
 
 export interface AddOnOption {
-    id: number;
+    id: string;
     name: string;
     price: number;
     add_on_id: number,
