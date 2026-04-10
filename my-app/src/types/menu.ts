@@ -10,6 +10,15 @@ export interface Menu {
     price: number;        // float64 -> number
     is_active: boolean;
 }
+export interface MenuWithCategoryMenuId {
+    id: string;           // uuid.UUID -> string
+    category_menu_id: string,
+    image?: string;       // omitempty
+    name: string;
+    description?: string; // *string + omitempty
+    price: number;        // float64 -> number
+    is_active: boolean;
+}
 
 export interface MenuPayload {
     name: string;
@@ -34,7 +43,7 @@ export interface MenuState {
     status: "idle" | "loading" | "success" | "failed";
     error: string | null;
     message: string;
-    pagination: PaginationState;
+    pagination: PaginationState | null;
 };
 
 

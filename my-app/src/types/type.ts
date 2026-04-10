@@ -1,11 +1,10 @@
 
 export interface PaginationState {
-    currentPage: number;
+    current_page: number;
     from: number;
     to: number;
     pages: number;
     total: number;
-    limit: number;
 };
 
 

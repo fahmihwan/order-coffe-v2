@@ -25,7 +25,7 @@ const CategoryPage = () => {
     const dispatch = useAppDispatch();
     const { masterCategories, status, error, pagination } = useAppSelector(
         (state) => state.category
-    );
+    );;
 
     const [currentPage, setCurrentPage] = useState(1);
     const [openModal, setOpenModal] = useState(false);
@@ -33,7 +33,7 @@ const CategoryPage = () => {
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [search, setSearch] = useState("");
     const [form, setForm] = useState<CreateCategoryPayload>({
-        categoryName: "",
+        category_name: "",
     });
 
     useEffect(() => {
@@ -42,7 +42,7 @@ const CategoryPage = () => {
 
     const resetForm = () => {
         setForm({
-            categoryName: "",
+            category_name: "",
         });
         setSelectedCategory(null);
         setModalMode("add");
@@ -58,7 +58,7 @@ const CategoryPage = () => {
         setModalMode("edit");
         setSelectedCategory(item);
         setForm({
-            categoryName: item.category_name ?? "",
+            category_name: item.category_name ?? "",
         })
         setOpenModal(true);
     };
@@ -70,12 +70,12 @@ const CategoryPage = () => {
 
     const handleSubmit = async () => {
         try {
-            if (!form.categoryName.trim()) return;
+            if (!form.category_name.trim()) return;
 
             if (modalMode === "add") {
                 await dispatch(
                     createCategory({
-                        categoryName: form.categoryName,
+                        category_name: form.category_name,
                     })
                 ).unwrap();
             } else if (selectedCategory) {
@@ -83,7 +83,7 @@ const CategoryPage = () => {
                     updateCategory({
                         id: selectedCategory.id,
                         data: {
-                            categoryName: form.categoryName,
+                            category_name: form.category_name,
                         },
                     })
                 ).unwrap();
@@ -272,16 +272,16 @@ const CategoryPage = () => {
 
                         <div>
                             <div className="mb-2 block">
-                                <Label htmlFor="categoryName">Nama Category</Label>
+                                <Label htmlFor="category_name">Nama Category</Label>
                             </div>
                             <TextInput
-                                id="categoryName"
+                                id="category_name"
                                 type="text"
-                                value={form.categoryName}
+                                value={form.category_name}
                                 onChange={(e) =>
                                     setForm({
                                         ...form,
-                                        categoryName: e.target.value,
+                                        category_name: e.target.value,
                                     })
                                 }
                                 placeholder="Masukkan nama category"

@@ -1,29 +1,23 @@
-import type { Menu } from "./menu";
+import type { MenuWithCategoryMenuId } from "./menu";
 import type { PaginationState } from "./type";
 
 export interface Category {
     id: string;
     category_name: string;
-    menus: Menu[]
+    menu: MenuWithCategoryMenuId[]
 }
 
 
 type CategoryStatus = "idle" | "loading" | "success" | "failed";
 
-export interface CategoryState {
-    masterCategories: Category[];
-    message: string;
-    status: CategoryStatus;
-    error?: string;
-};
 
 export interface CreateCategoryPayload {
-    categoryName: string;
+    category_name: string;
 };
 
 export interface UpdateCategoryPayload {
     id: string;
-    data: Partial<CreateCategoryPayload>;
+    data: CreateCategoryPayload;
 };
 
 export interface CategoryState {
@@ -33,4 +27,16 @@ export interface CategoryState {
     error?: string;
     pagination: PaginationState | null;
 };
+
+export interface CreateCategoryMenuPayload {
+    category_id: string
+    menu_id: string,
+}
+
+export interface UpdateCategoryMenuPayload {
+    id: string;
+    data: CreateCategoryMenuPayload;
+}
+
+
 

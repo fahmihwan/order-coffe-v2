@@ -17,39 +17,26 @@ const initialState: MenuState = {
     status: "idle",
     error: null,
     message: "",
-    pagination: {
-        currentPage: 1,
-        from: 0,
-        to: 0,
-        pages: 1,
-        total: 0,
-        limit: 5,
-    },
+    pagination: null,
 };
 
 
 
 export const getMasterMenu = createAsyncThunk<
-    { data: Menu[]; pagination: PaginationState }, ParamsPaginate, { rejectValue: string }
+    { data: Menu[]; pagination: PaginationState | null, message: string }, ParamsPaginate, { rejectValue: string }
 >("menu/master/admin", async (params, { rejectWithValue }) => {
     try {
-        const page = params?.page ?? 1;
-        const limit = params?.limit ?? 5;
+        const page = params?.page;
+        const limit = params?.limit;
 
-        const response = await apiClient.get<ApiResponse<Menu[]>>(
-            `/menu?page=${page}&limit=${limit}`
-        );
+        const response = await apiClient.get<ApiResponse<Menu[]>>(`/menu`, {
+            params: { page, limit },
+        });
 
         return {
             data: response.data.data ?? [],
-            pagination: {
-                currentPage: response.data.pagination?.currentPage ?? page,
-                from: response.data.pagination?.from ?? 0,
-                to: response.data.pagination?.to ?? 0,
-                pages: response.data.pagination?.pages ?? 1,
-                total: response.data.pagination?.total ?? 0,
-                limit,
-            },
+            pagination: response.data.pagination ?? null,
+            message: response.data.message ?? "Success",
         };
     } catch (err: unknown) {
         return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu"));

@@ -276,7 +276,7 @@ const MenuPage = () => {
                                             scope="row"
                                             className="flex items-center whitespace-nowrap px-6 py-4 text-heading"
                                         >
-                                            {pagination.from + i}
+                                            {/* {pagination?.from + i} */}
                                         </th>
 
                                         <td className="px-6 py-4">{d.name}</td>
@@ -335,20 +335,23 @@ const MenuPage = () => {
                         <span className="mb-4 block w-full text-sm font-normal text-body md:mb-0 md:inline md:w-auto">
                             Showing{" "}
                             <span className="font-semibold text-heading">
-                                {pagination.from}-{pagination.to}
+                                {pagination?.from}-{pagination?.to}
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {pagination.total}
+                                {pagination?.total}
                             </span>
                         </span>
 
-                        <Pagination
-                            currentPage={pagination.currentPage}
-                            totalPages={pagination.pages}
-                            onPageChange={onPageChange}
-                            showIcons
-                        />
+                        {pagination?.pages != null && (
+                            <Pagination
+                                currentPage={pagination?.current_page ?? 1}
+                                totalPages={pagination?.pages ?? 1}
+                                onPageChange={onPageChange}
+                                showIcons
+                            />
+                        )}
+
                     </div>
                 </div>
             </div>
