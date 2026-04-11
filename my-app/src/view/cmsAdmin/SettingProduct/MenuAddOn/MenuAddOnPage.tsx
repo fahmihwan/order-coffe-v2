@@ -421,7 +421,7 @@ const MenuAddOnPage = () => {
                                                                 color="failure"
                                                                 size="xs"
                                                                 disabled={deletingId === group.id}
-                                                                onClick={() => handleDelete(group.id)}
+                                                                onClick={() => handleDelete(group.menu_add_on_group_id)}
                                                             >
                                                                 Hapus
                                                             </Button>

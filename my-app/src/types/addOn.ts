@@ -9,6 +9,7 @@ export interface AddOnGroup {
     min_select: number,
     max_select: number,
     add_on_options: AddOnOption[]
+    menu_add_on_group_id: string
 }
 
 export interface AddOnOption {
