@@ -46,7 +46,7 @@ func (h *MenuAddOnGroupHandler) Routes() http.Handler {
 	r.With(auditMiddleware("list-menu-add-on-group", "menu-add-on-group")).Get("/", h.ListMenuAddOnGroup)
 	// r.With(auditMiddleware("create-menu-add-on-group","menu-add-on-group")).Post("/"h)
 	r.With(auditMiddleware("create-menu-add-on-group", "menu-add-on-group")).Post("/", h.CreateMenuAddOnGroup)
-	// r.With(auditMiddleware("get-menu-add-on-group", "menu-add-on-group")).Get("/{id}", h.GetMenuAddOnGroupByID)
+	r.With(auditMiddleware("get-menu-add-on-group", "menu-add-on-group")).Get("/{menu_id}/menu", h.GetMenuAddOnGroupByMenuID)
 	// r.With(auditMiddleware("update-menu-add-on-group", "menu-add-on-group")).Put("/{id}", h.UpdateMenuAddOnGroup)
 	r.With(auditMiddleware("delete-menu-add-on-group", "menu-add-on-group")).Delete("/{id}", h.DeleteMenuAddOnGroup)
 	return  r
@@ -130,22 +130,23 @@ func (h *MenuAddOnGroupHandler) CreateMenuAddOnGroup(w http.ResponseWriter, r *h
 	json.NewEncoder(w).Encode(response)	
 }	
 
-// func (h *MenuAddOnGroupHandler) GetCategoryMenuByID(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	id := chi.URLParam(r, "id")
+func (h *MenuAddOnGroupHandler) GetMenuAddOnGroupByMenuID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	menuID := chi.URLParam(r, "menu_id")
 
-// 	categoryMenu, err := h.menuAddOnGroupService.GetCategoryMenuByID(ctx, id)
-// 	if(err != nil){
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)	
-// 		return
-// 	}
+	menuAddOnGroup, err := h.menuAddOnGroupService.GetMenuAddOnGroupByMenuID(ctx, menuID)
+	if(err != nil){
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)	
+		return
+	}
+	data := mapper.ToMenuWithAddOnModel(menuAddOnGroup)
 
-// 	successResponse := response.NewSuccessResponse(categoryMenu)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)	
-// }	
+	successResponse := response.NewSuccessResponse(data)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)	
+}	
 
 
 // func (h *MenuAddOnGroupHandler) UpdateCategoryMenu(w http.ResponseWriter, r *http.Request) {

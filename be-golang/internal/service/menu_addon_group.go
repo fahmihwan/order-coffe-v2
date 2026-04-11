@@ -17,6 +17,7 @@ type MenuAddOnGroupServiceInterface interface {
 	CreateMenuAddOnGroup(ctx context.Context, menuAddOn *model.MenuAddOnGroup) (*model.MenuAddOnGroup, error)
 	// GetCategoryMenuByID(ctx context.Context, id string) (*model.CategoryMenu, error)
 	// UpdateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error)
+	GetMenuAddOnGroupByMenuID(ctx context.Context, menuID string) (*model.Menu, error)
 	DeleteMenuAddGroup(ctx context.Context, id string) error
 }
 
@@ -68,15 +69,15 @@ func (s *MenuAddOnGroupService) CreateMenuAddOnGroup(ctx context.Context, menuAd
 	return menuAddOnGroups, nil
 }
 
-// func (s *MenuAddOnGroupService) GetCategoryMenuByID(ctx context.Context, id string) (*model.CategoryMenu, error) {
+func (s *MenuAddOnGroupService) GetMenuAddOnGroupByMenuID(ctx context.Context, id string) (*model.Menu, error) {
 
-// 	categoryMenu, err := s.repo.CategoryMenu.GetByID(ctx, id)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get category menu by ID: %w", err)
-// 	}
+	menuAddOnGroup, err := s.repo.MenuAddOnGroup.GetMenuAddOnGroupByMenuID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get category menu by ID: %w", err)
+	}
 
-// 	return categoryMenu, nil
-// }
+	return menuAddOnGroup, nil
+}
 
 // func (s *MenuAddOnGroupService) UpdateCategoryMenu(ctx context.Context, categoryMenu *model.CategoryMenu) (*model.CategoryMenu, error) {
 

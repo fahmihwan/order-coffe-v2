@@ -15,7 +15,7 @@ func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuRes
 	res := &response.CategoryMenuResponse{
 		ID:          category.ID,
 		CategoryName      	: category.CategoryName,
-		Menu: make([]response.MenuCategoryMenuItemResponse, 0),
+		Menus: make([]response.MenuCategoryMenuItemResponse, 0),
 	}
 
 
@@ -26,7 +26,7 @@ func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuRes
 			image = util.BuildImageURL(*menu.Menu.ImgURL, assetHost)
 		}
 
-		res.Menu = append(res.Menu, response.MenuCategoryMenuItemResponse{
+		res.Menus = append(res.Menus, response.MenuCategoryMenuItemResponse{
 			ID:          menu.Menu.ID,
 			CategoryMenuId: menu.ID,
 			Image:      image,

@@ -125,7 +125,8 @@ func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
 	var menu model.Menu
 
-	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&menu).Error
+	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).
+	Preload("MenuAddOnGroups").First(&menu).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("menu not found")

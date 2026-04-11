@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"pos-coffeshop/internal/model"
 	"strings"
@@ -24,6 +25,7 @@ type MenuAddOnGroupRepo interface {
 	Create(ctx context.Context, menuAddOn *model.MenuAddOnGroup) error
 	// setFilter(db *gorm.DB, filter FilterMenuAddOnGroup) *gorm.DB
 	// GetByID(ctx context.Context, id string) (*model.MenuAddOnGroup, error)
+	GetMenuAddOnGroupByMenuID(ctx context.Context, menuID string) (*model.Menu, error)
 	// Update(ctx context.Context, menuAddOn *model.MenuAddOnGroup) error
 	Delete(ctx context.Context, id string) error
 }
@@ -133,22 +135,28 @@ func (r *MenuAddOnGroupRepository) Create(ctx context.Context, AddOnGroup *model
 	return nil
 }
 
-// func (r *MenuAddOnGroupRepository) GetByID(ctx context.Context, id string) (*model.CategoryMenu, error) {
-// 	funcName := "GetByID"
-// 	tableName := model.CategoryMenu{}.TableName()
 
-// 	db := r.db.WithContext(ctx)
+func (r *MenuAddOnGroupRepository) GetMenuAddOnGroupByMenuID(ctx context.Context, menuID string) (*model.Menu, error){
+	funcName := "GetByID"
+	tableName := model.Menu{}.TableName()
 
-// 	var categoryMenu model.CategoryMenu
-// 	if err := db.Where("id = ?", id).First(&categoryMenu).Error; err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			return nil, nil
-// 		}
-// 		return nil, fmt.Errorf("failed to %s %s by id: %w", funcName, tableName, err)
-// 	}
+	
+	db := r.db.WithContext(ctx)
 
-// 	return &categoryMenu, nil
-// }
+	var menuAddOnGroup model.Menu
+	if err := db.Where("id = ?", menuID).
+	Preload("MenuAddOnGroups").
+	Preload("MenuAddOnGroups.AddOnGroup").
+	Preload("MenuAddOnGroups.AddOnGroup.AddOnOptions").
+	First(&menuAddOnGroup).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to %s %s by id: %w", funcName, tableName, err)
+	}
+
+	return &menuAddOnGroup, nil	
+}
 
 // func (r *MenuAddOnGroupRepository) Update(ctx context.Context, categoryMenu *model.CategoryMenu) error {
 // 	funcName := "Update"

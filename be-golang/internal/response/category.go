@@ -7,5 +7,5 @@ import (
 type CategoryMenuResponse struct {
 	ID          uuid.UUID            `json:"id"`
 	CategoryName string     	 `json:"category_name"`
-	Menu []MenuCategoryMenuItemResponse `json:"menu"`
+	Menus []MenuCategoryMenuItemResponse `json:"menus"`
 }
