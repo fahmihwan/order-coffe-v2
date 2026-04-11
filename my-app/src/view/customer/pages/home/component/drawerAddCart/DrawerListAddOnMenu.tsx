@@ -4,7 +4,7 @@ import { Drawer, DrawerHeader, DrawerItems } from "flowbite-react";
 import AddOnCompt from "./AddOnCompt";
 
 import type { Menu } from "../../../../../../types/menu";
-import type { AddOn, AddOnOption } from "../../../../../../types/addOn";
+import type { AddOnOption } from "../../../../../../types/addOn";
 
 import { useAppDispatch, useAppSelector } from "../../../../../../redux/hooks";
 import {
@@ -19,7 +19,7 @@ import { formatRupiah } from "../../../../../../utils/cartUtils";
 type DrawerListAddOnMenuProps = {
     open: boolean;
     menu: Menu | null;
-    addOns: AddOn[];
+    menuWithAddOns: Menu | null;
     onClose: () => void;
     editingCartKey?: string | null;
     initialQty?: number;
@@ -28,13 +28,15 @@ type DrawerListAddOnMenuProps = {
 const DrawerListAddOnMenu = ({
     open,
     menu,
-    addOns,
+    menuWithAddOns,
     onClose,
     editingCartKey = null,
     initialQty = 1,
 }: DrawerListAddOnMenuProps) => {
     const dispatch = useAppDispatch();
     const drawerSelectedOptions = useAppSelector((state) => state.cart.drawerSelectedOptions);
+
+    console.log(drawerSelectedOptions);
 
     const [qty, setQty] = useState(initialQty ?? 1);
 
@@ -43,14 +45,14 @@ const DrawerListAddOnMenu = ({
 
 
     const missingRequiredAddOns = useMemo(() => {
-        return addOns.filter((addOn) => {
-            if (!addOn.isRequired) return false;
+        return (menuWithAddOns?.add_on_groups ?? []).filter((addOn) => {
+            if (!addOn.is_required) return false;
 
             return !drawerSelectedOptions.some(
-                (selectedOption) => selectedOption.add_on_id === addOn.id
+                (selectedOption) => selectedOption.add_on_group_id === addOn.id
             );
         });
-    }, [addOns, drawerSelectedOptions]);
+    }, [menuWithAddOns, drawerSelectedOptions]);
 
     const isFormValid = missingRequiredAddOns.length === 0;
 
@@ -87,7 +89,7 @@ const DrawerListAddOnMenu = ({
             onAddOptions({
                 opt,
                 type: opt.type,
-                add_on_id: opt.add_on_id,
+                add_on_id: opt.add_on_group_id
             })
         );
     };
@@ -149,9 +151,9 @@ const DrawerListAddOnMenu = ({
 
                     <div>
                         <ul className="list-none p-0 m-0">
-                            {addOns.map((addOn) => {
+                            {(menuWithAddOns?.add_on_groups ?? []).map((addOn) => {
                                 const hasSelectedOption = drawerSelectedOptions.some(
-                                    (selected) => selected.add_on_id === addOn.id
+                                    (selected) => selected.add_on_group_id === addOn.id
                                 );
 
                                 return (
@@ -165,7 +167,7 @@ const DrawerListAddOnMenu = ({
 
                                                 {hasSelectedOption ? (
                                                     <p className="text-sm text-green-600 mt-1">✓ Sudah dipilih</p>
-                                                ) : addOn.isRequired ? (
+                                                ) : addOn.is_required ? (
                                                     <span className="bg-red-100 text-red-800 text-xs font-light h-5 px-2 py-0.5 rounded-sm">
                                                         Wajib Diisi
                                                     </span>
@@ -177,7 +179,7 @@ const DrawerListAddOnMenu = ({
                                             </div>
 
                                             <ul className="list-none p-0 m-0">
-                                                {addOn.options.map((option) => {
+                                                {addOn.add_on_options.map((option) => {
                                                     const checked = drawerSelectedOptions.some(
                                                         (selected) => selected.id === option.id
                                                     );

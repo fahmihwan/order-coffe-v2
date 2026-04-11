@@ -46,6 +46,7 @@ export interface MenuAddOnPayload {
 export interface MenuState {
     menus: Category[];
     addOnOptions: AddOnGroup[];
+    menu: Menu | null;
     masterMenus: Menu[];
     selectedMenu: Menu | null;
     loading: boolean;

@@ -19,4 +19,5 @@ type AddOnOptionResponse struct {
 	Price    float64   `json:"price"`
 	IsActive bool      `json:"is_active"`
 	Type     string    `json:"type"`
+	AddOnGroupID uuid.UUID `json:"add_on_group_id"`
 }

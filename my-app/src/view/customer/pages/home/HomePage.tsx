@@ -8,36 +8,40 @@ import DrawerListAddOnMenu from "./component/drawerAddCart/DrawerListAddOnMenu";
 import { DrawerRepeatMenu } from "../../../shared/component/DrawerRepeatMenu";
 
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { getListMenu, getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
+import { getMenuWithAddOnByMenuId } from "../../../../redux/features/menuSlice";
 import { incrementMenu, resetDrawerOptions } from "../../../../redux/features/cartSlice";
 
 import { getMenuQty } from "../../../../utils/cartUtils";
 
 import type { Menu } from "../../../../types/menu";
 import type { CartItem } from "../../../../types/cartItem";
+import { getCategoryMenu } from "../../../../redux/features/categorySlice";
 
 export default function HomePage() {
     const dispatch = useAppDispatch();
 
     const cartItems = useAppSelector((state) => state.cart.items);
-    const menuGroups = useAppSelector((state) => state.menu.menus);
-    const addOnOptions = useAppSelector((state) => state.menu.addOnOptions);
+    const menuCategories = useAppSelector((state) => state.category.masterCategories);
+    // const addOnOptions = useAppSelector((state) => state.menu.addOnOptions);
     const status = useAppSelector((state) => state.menu.status);
+    const menuWithAddOn = useAppSelector((state) => state.menu.menu);
     const error = useAppSelector((state) => state.menu.error);
+
 
     const [isAddOnDrawerOpen, setIsAddOnDrawerOpen] = useState(false);
     const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
     const [repeatMenuItem, setRepeatMenuItem] = useState<CartItem | null>(null);
 
     useEffect(() => {
-        dispatch(getListMenu());
+        dispatch(getCategoryMenu({}));
     }, [dispatch]);
+
 
     const openAddOnDrawer = (menu: Menu) => {
         setSelectedMenu(menu);
         setIsAddOnDrawerOpen(true);
         dispatch(resetDrawerOptions());
-        dispatch(getAddOnOptionsByMenuId({ menuId: menu.id }));
+        dispatch(getMenuWithAddOnByMenuId({ menuId: menu.id }));
     };
 
     const closeAddOnDrawer = () => {
@@ -73,7 +77,7 @@ export default function HomePage() {
 
 
     if (status === "loading") return <div>Loading menu...</div>;
-    if (status === "failed") return <div>Error: {error}</div>;
+    // if (status === "failed") return <div>Error: {error}</div>;
 
     return (
         <>
@@ -83,7 +87,7 @@ export default function HomePage() {
                 <SearchFilter />
 
                 <div className="w-full">
-                    {menuGroups?.map((group) => (
+                    {menuCategories?.map((group) => (
                         <ul key={group.id} className="list-none p-0 m-0 mt-5">
                             <li className="mb-2">{group.category_name}</li>
 
@@ -119,7 +123,7 @@ export default function HomePage() {
                     <DrawerListAddOnMenu
                         open={isAddOnDrawerOpen}
                         menu={selectedMenu}
-                        addOns={addOnOptions}
+                        menuWithAddOns={menuWithAddOn}
                         onClose={closeAddOnDrawer}
                     />
 
@@ -129,7 +133,7 @@ export default function HomePage() {
                         isRepeatMenuDrawer={handleRepeatMenuChoice}
                     />
                 </div>
-            </div>
+            </div >
         </>
     );
 }

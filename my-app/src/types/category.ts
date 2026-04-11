@@ -4,7 +4,7 @@ import type { PaginationState } from "./type";
 export interface Category {
     id: string;
     category_name: string;
-    menu: MenuWithCategoryMenuId[]
+    menus: MenuWithCategoryMenuId[]
 }
 
 

@@ -16,7 +16,7 @@ type IncrementMenuPayload = {
 };
 
 type DecrementMenuPayload = {
-    menuId: number;
+    menuId: string;
     cartKey: string | null
 };
 
@@ -31,7 +31,7 @@ export type CartState = {
 type ToggleDrawerOptionPayload = {
     opt: AddOnOption;
     type: "radio" | "checkbox";
-    add_on_id: number;
+    add_on_id: string;
 };
 
 
@@ -174,7 +174,7 @@ export const cartSlice = createSlice({
             }
 
             if (type === "radio") {
-                const radioOptExist = prev.find((d) => add_on_id === d.add_on_id);
+                const radioOptExist = prev.find((d) => add_on_id === d.add_on_group_id);
                 if (!radioOptExist) {
                     state.drawerSelectedOptions = [...prev, opt];
                     return;

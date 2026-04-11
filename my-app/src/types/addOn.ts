@@ -16,8 +16,9 @@ export interface AddOnOption {
     id: string;
     name: string;
     price: number;
-    add_on_id: number,
+    // add_on_id: string,
     type: AddOnType;
+    add_on_group_id: string,
 };
 
 

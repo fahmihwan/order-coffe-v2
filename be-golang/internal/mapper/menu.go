@@ -81,6 +81,7 @@ func ToMenuWithAddOnModel(menu *model.Menu) *response.MenuWithAddOnResponse {
 				Price:    option.Price,
 				IsActive: option.IsActive,
 				Type:     option.Type,
+				AddOnGroupID:  option.AddOnGroupID,
 			})
 		}
 

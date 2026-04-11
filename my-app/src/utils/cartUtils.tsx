@@ -3,7 +3,7 @@ import type { CartItems } from "../types/cartItem";
 import type { Menu } from "../types/menu";
 
 
-export function buildCartKey(menuId: number, addons: AddOnOption[]) {
+export function buildCartKey(menuId: string, addons: AddOnOption[]) {
     const addonKey = [...addons]
         .map((addon) => addon.id)
         .sort((a, b) => a - b)
@@ -25,7 +25,7 @@ export function calcUnitPrice(menu: Menu, addonsPrice: number) {
     return (menu.price ?? 0) + (addonsPrice ?? 0);
 }
 
-export function getMenuQty(cart: CartItems | null | undefined, menuId: number): number {
+export function getMenuQty(cart: CartItems | null | undefined, menuId: string): number {
     return Object.values(cart ?? {})
         .filter((it) => it.menu.id === menuId)
         .reduce((sum, it) => sum + it.qty, 0);
