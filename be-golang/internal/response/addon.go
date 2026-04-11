@@ -9,6 +9,7 @@ type AddOnGroupResponse struct {
 	IsRequired   bool                  `json:"is_required"`
 	MinSelect    int                   `json:"min_select"`
 	MaxSelect    int                   `json:"max_select"`
+	MenuAddOnGroupId uuid.UUID         `json:"menu_add_on_group_id,omitempty"`
 	AddOnOptions []AddOnOptionResponse `json:"add_on_options"`
 }
 

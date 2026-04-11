@@ -77,6 +77,15 @@ func (h *MenuAddOnGroupHandler) ListMenuAddOnGroup(w http.ResponseWriter, r *htt
 
 	// Call the service to get the category menu list
 	categoryMenus, total, err := h.menuAddOnGroupService.ListMenuAddOnGroup(ctx, filters, search, page, limit, sortBy, orderBy)	
+	
+	
+	b, err := json.MarshalIndent(categoryMenus, "", "  ")
+	if err != nil {
+		fmt.Println("marshal error:", err)
+	} else {
+		fmt.Println(string(b))
+	}
+	// fmt.Printf("%+v\n", categoryMenus) 
 	if err != nil {
 		response := response.NewErrorResponse(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,6 +94,7 @@ func (h *MenuAddOnGroupHandler) ListMenuAddOnGroup(w http.ResponseWriter, r *htt
 	}
 
 	data := mapper.ToMenuWithAddOnModels(categoryMenus)
+	
 
 	// Calculate pagination
 	pagination := response.Pagination{

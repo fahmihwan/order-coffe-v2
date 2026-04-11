@@ -69,7 +69,8 @@ func ToMenuWithAddOnModel(menu *model.Menu) *response.MenuWithAddOnResponse {
 			Description:  menuAddOnGroup.AddOnGroup.Description,
 			IsRequired:   menuAddOnGroup.AddOnGroup.IsRequired,
 			MinSelect:    menuAddOnGroup.AddOnGroup.MinSelect,
-			MaxSelect:    menuAddOnGroup.AddOnGroup.MaxSelect,
+			MaxSelect:    menuAddOnGroup.AddOnGroup.MaxSelect,	
+			MenuAddOnGroupId: menuAddOnGroup.ID,
 			AddOnOptions: make([]response.AddOnOptionResponse, 0),
 		}
 
