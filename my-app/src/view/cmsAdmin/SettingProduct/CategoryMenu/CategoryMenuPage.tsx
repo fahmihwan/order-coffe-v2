@@ -115,7 +115,7 @@ const CategoryMenuPage = () => {
         return categoryMenus.filter((item) => {
             const matchCategory = item.category_name?.toLowerCase().includes(keyword);
 
-            const matchMenu = (item.menu ?? []).some((menu) =>
+            const matchMenu = (item.menus ?? []).some((menu) =>
                 menu.name?.toLowerCase().includes(keyword)
             );
 
@@ -143,7 +143,7 @@ const CategoryMenuPage = () => {
         if (!selectedCategory) return masterMenus;
 
         const usedMenuIds = new Set(
-            (selectedCategory.menu ?? []).map((menu) => menu.id)
+            (selectedCategory.menus ?? []).map((menu) => menu.id)
         );
 
         return masterMenus.filter((menu) => !usedMenuIds.has(String(menu.id)));
