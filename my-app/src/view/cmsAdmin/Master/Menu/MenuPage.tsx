@@ -184,46 +184,51 @@ const MenuPage = () => {
     return (
         <div className="p-5">
             <div className="mb-5 flex justify-between">
-                <h1 className="text-2xl font-bold">Master Menu</h1>
+                <div>
+                    <h1 className="text-2xl font-bold">Master Menu</h1>
+
+                    <label htmlFor="input-group-1" className="sr-only">
+                        Search
+                    </label>
+
+                    <div className="relative">
+                        <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                            <svg
+                                className="h-4 w-4 text-body"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={24}
+                                height={24}
+                                fill="none"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke="currentColor"
+                                    strokeLinecap="round"
+                                    strokeWidth={2}
+                                    d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+                                />
+                            </svg>
+                        </div>
+
+                        <input
+                            type="text"
+                            id="input-group-1"
+                            className="block w-full max-w-96 rounded-base  border-gray-300 border-default-medium  ps-9 pe-3 py-2 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
+                            placeholder="Search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+
                 <Button onClick={openAddModal}>Tambah Data</Button>
             </div>
 
-            <div className="bg-neutral-primary-soft block rounded-base border border-default bg-white p-6 shadow-xs">
+            <div className="bg-neutral-primary-soft block rounded-base border  bg-white p-6 shadow-xs rounded-lg">
                 <div className="relative overflow-x-auto rounded-base border border-default bg-neutral-primary-soft shadow-xs">
                     <div className="flex flex-column flex-wrap items-center justify-between space-y-4 p-4 md:flex-row md:space-y-0">
-                        <label htmlFor="input-group-1" className="sr-only">
-                            Search
-                        </label>
-
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                                <svg
-                                    className="h-4 w-4 text-body"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width={24}
-                                    height={24}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeWidth={2}
-                                        d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-                                    />
-                                </svg>
-                            </div>
-
-                            <input
-                                type="text"
-                                id="input-group-1"
-                                className="block w-full max-w-96 rounded-base border border-default-medium bg-neutral-secondary-medium ps-9 pe-3 py-2 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-                                placeholder="Search"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
+                        Data Kategori
                     </div>
 
                     <table className="w-full text-left text-sm text-body rtl:text-right">
