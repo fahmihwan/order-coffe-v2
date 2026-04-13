@@ -227,7 +227,7 @@ const MenuAddOnPage = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="rounded-2xl border border-default bg-white p-5 shadow-sm">
                     <p className="text-sm text-body">Total menu</p>
                     <p className="mt-2 text-2xl font-bold text-heading">
@@ -248,7 +248,7 @@ const MenuAddOnPage = () => {
                         {filteredData.length}
                     </p>
                 </div>
-            </div>
+            </div> */}
 
             {error && (
                 <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -256,7 +256,7 @@ const MenuAddOnPage = () => {
                 </div>
             )}
 
-            <div className="rounded-2xl border border-default bg-neutral-primary-soft p-4 shadow-sm">
+            <div className="rounded-2xl border border-default bg-neutral-primary-soft p-4 shadow-sm bg-white">
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p className="text-base font-semibold text-heading">

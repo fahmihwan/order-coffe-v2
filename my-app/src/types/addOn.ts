@@ -19,6 +19,7 @@ export interface AddOnOption {
     // add_on_id: string,
     type: AddOnType;
     add_on_group_id: string,
+    is_active: boolean;
 };
 
 
