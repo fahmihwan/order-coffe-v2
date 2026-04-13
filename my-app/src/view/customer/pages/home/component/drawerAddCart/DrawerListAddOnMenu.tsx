@@ -4,7 +4,7 @@ import { Drawer, DrawerHeader, DrawerItems } from "flowbite-react";
 import AddOnCompt from "./AddOnCompt";
 
 import type { Menu } from "../../../../../../types/menu";
-import type { AddOnOption } from "../../../../../../types/addOn";
+import type { AddOnGroup, AddOnOption } from "../../../../../../types/addOn";
 
 import { useAppDispatch, useAppSelector } from "../../../../../../redux/hooks";
 import {
@@ -36,7 +36,82 @@ const DrawerListAddOnMenu = ({
     const dispatch = useAppDispatch();
     const drawerSelectedOptions = useAppSelector((state) => state.cart.drawerSelectedOptions);
 
-    console.log(drawerSelectedOptions);
+    function validateChooseData(listAddOnGroup: AddOnGroup[], chooseData: AddOnOption[]) {
+        const groupedChoose = chooseData
+            .filter((item) => item.type === "checkbox")
+            .reduce((acc: Record<string, AddOnOption[]>, item: AddOnOption) => {
+                if (!acc[item.add_on_group_id]) {
+                    acc[item.add_on_group_id] = [];
+                }
+                acc[item.add_on_group_id].push(item);
+                return acc;
+            }, {});
+
+        for (const group of listAddOnGroup) {
+            const checkboxOptions = (group.add_on_options || []).filter(
+                (option: AddOnOption) => option.type === "checkbox"
+            );
+
+            if (checkboxOptions.length === 0) {
+                continue;
+            }
+
+            const selectedItems = groupedChoose[group.id] || [];
+            const totalSelected = selectedItems.length;
+
+            if (totalSelected < group.min_select) {
+                alert(`${group.title} minimal pilih ${group.min_select} item`);
+                return false;
+            }
+
+            if (totalSelected > group.max_select) {
+                alert(`${group.title} maksimal pilih ${group.max_select} item`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const handleSelectOption = (opt: AddOnOption) => {
+        const listAddOnGroup = menuWithAddOns?.add_on_groups;
+
+        if (!listAddOnGroup) return;
+
+        // ambil data sekarang
+        let nextSelectedOptions = [...drawerSelectedOptions];
+        // khusus checkbox, simulasi dulu hasil setelah klik
+        if (opt.type === "checkbox") {
+            const isExist = nextSelectedOptions.some(
+                (item) => item.id === opt.id
+            );
+
+            if (isExist) {
+                // kalau sudah ada, berarti uncheck
+                nextSelectedOptions = nextSelectedOptions.filter(
+                    (item) => item.id !== opt.id
+                );
+            } else {
+                // kalau belum ada, tambahkan dulu ke simulasi
+                nextSelectedOptions.push(opt);
+            }
+
+            const isValid = validateChooseData(listAddOnGroup, nextSelectedOptions);
+
+            if (!isValid) {
+                return;
+            }
+        }
+
+        dispatch(
+            onAddOptions({
+                opt,
+                type: opt.type,
+                add_on_id: opt.add_on_group_id
+            })
+        );
+    };
+
 
     const [qty, setQty] = useState(initialQty ?? 1);
 
@@ -44,7 +119,10 @@ const DrawerListAddOnMenu = ({
     const isEditMode = Boolean(editingCartKey);
 
 
+
+
     const missingRequiredAddOns = useMemo(() => {
+
         return (menuWithAddOns?.add_on_groups ?? []).filter((addOn) => {
             if (!addOn.is_required) return false;
 
@@ -84,15 +162,6 @@ const DrawerListAddOnMenu = ({
         });
     };
 
-    const handleSelectOption = (opt: AddOnOption) => {
-        dispatch(
-            onAddOptions({
-                opt,
-                type: opt.type,
-                add_on_id: opt.add_on_group_id
-            })
-        );
-    };
 
     const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
