@@ -84,8 +84,11 @@ func (h *CategoryMenuHandler) ListCategoryMenu(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// data := response.FromMenuModels(categoryMenus)
-	data := mapper.FromCategoryWithMenuModels(categoryMenus)
+	data := mapper.ToCategoryWithMenuModels(categoryMenus)
+
+	// util.Dump(map[string]any{
+	// 	"categoryMenus": categoryMenus,
+	// })
 	// Calculate pagination
 	pagination := response.Pagination{
 		CurrentPage: page,

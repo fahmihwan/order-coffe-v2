@@ -39,7 +39,7 @@ func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuRes
 	return res
 }
 
-func FromCategoryWithMenuModels(categories []*model.Category) []*response.CategoryMenuResponse {
+func ToCategoryWithMenuModels(categories []*model.Category) []*response.CategoryMenuResponse {
 	res := make([]*response.CategoryMenuResponse, 0, len(categories))
 	for _, category := range categories {
 		res = append(res, ToCategoryWithMenuModel(category))

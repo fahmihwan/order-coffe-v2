@@ -231,9 +231,9 @@ const CategoryMenuPage = () => {
                                         </td>
 
                                         <td className="px-6 py-4">
-                                            {(category.menu ?? []).length > 0 ? (
+                                            {(category.menus ?? []).length > 0 ? (
                                                 <div className="space-y-3">
-                                                    {category.menu.map((menu) => (
+                                                    {category.menus.map((menu) => (
                                                         <div
                                                             key={menu.category_menu_id}
                                                             className="flex items-center justify-between rounded-lg border border-default p-3"
