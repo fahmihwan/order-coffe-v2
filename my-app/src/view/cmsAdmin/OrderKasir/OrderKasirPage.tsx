@@ -292,11 +292,44 @@ export default function OrderKasirPage() {
     }, [drawerSelectedOptions]);
 
     return (
-        <div className="p-6 space-y-8">
-            <h1 className="text-2xl font-bold">Dashboard Kasir</h1>
+        <>
+            <div className="flex flex-col gap-6 lg:flex-row  overflow-hidden h-[calc(100dvh-80px)] ">
 
-            <div className="flex flex-col gap-6 lg:flex-row">
-                <div className="w-full lg:w-8/12 space-y-8">
+                {/* div A */}
+                <div className="w-full lg:w-8/12 space-y-8 p-5  overflow-scroll  min-h-0">
+                    <div className="">
+                        <label htmlFor="input-group-1" className="sr-only">
+                            Search
+                        </label>
+
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
+                                <svg
+                                    className="h-4 w-4 text-body"
+                                    aria-hidden="true"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width={24}
+                                    height={24}
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke="currentColor"
+                                        strokeLinecap="round"
+                                        strokeWidth={2}
+                                        d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+                                    />
+                                </svg>
+                            </div>
+
+                            <input
+                                type="text"
+                                id="input-group-1"
+                                className="block w-full  rounded-lg  border-gray-300 border-default-medium  ps-9 pe-3 py-3 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
+                                placeholder="Search"
+                            />
+                        </div>
+                    </div>
                     {masterCategories?.map((category: Category) => (
                         <section key={category.id} className="space-y-4">
                             <div>
@@ -323,7 +356,6 @@ export default function OrderKasirPage() {
                                                 <h3 className="text-lg font-semibold text-gray-900">
                                                     {menu.name}
                                                 </h3>
-                                                <p className="text-sm text-gray-500">ID Menu: {menu.id}</p>
                                             </div>
 
                                             <p className="text-base font-bold text-green-600">
@@ -346,8 +378,9 @@ export default function OrderKasirPage() {
                     ))}
                 </div>
 
-                <div className="w-full lg:w-4/12">
-                    <div className="sticky top-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                {/* div B */}
+                <div className="w-full lg:w-4/12  overflow-scroll  min-h-0">
+                    <div className="sticky top-4 h-screen border-x border-t-0 border-gray-200 bg-white p-4 shadow-sm">
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-semibold">Keranjang</h2>
@@ -690,6 +723,6 @@ export default function OrderKasirPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

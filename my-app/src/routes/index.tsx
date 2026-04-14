@@ -36,6 +36,7 @@ const routes = createBrowserRouter([
             { path: "/admin/product-setting/menu-addon", element: <MenuAddOnPage /> },
 
             { path: "/admin/order-cashier", element: <OrderKasirPage /> },
+            { path: "/admin/history", element: <>ds</> },
         ]
     },
     {

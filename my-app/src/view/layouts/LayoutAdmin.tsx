@@ -7,6 +7,7 @@ import { navMenus } from "../../config/menuDashboard";
 type MenuName = "master" | "kelola" | null;
 
 export default function LayoutAdmin() {
+    const { pathname } = useLocation()
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
     const [openMenu, setOpenMenu] = useState<MenuName>(null);
 
@@ -46,12 +47,15 @@ export default function LayoutAdmin() {
         <div className="bg-white">
             <HeaderCompt setMobileMenuOpen={setMobileMenuOpen} />
 
-            <DesktopMenuNav
-                masterRef={masterRef}
-                toggleMenu={toggleMenu}
-                openMenu={openMenu}
-                kelolaRef={kelolaRef}
-            />
+            {pathname != '/admin/order-cashier' && (
+                <DesktopMenuNav
+                    masterRef={masterRef}
+                    toggleMenu={toggleMenu}
+                    openMenu={openMenu}
+                    kelolaRef={kelolaRef}
+                />
+            )}
+
 
             {mobileMenuOpen && (
                 <MobileMenuNav
@@ -63,7 +67,7 @@ export default function LayoutAdmin() {
                 />
             )}
 
-            <div className="p-5 bg-[#f1f5f9] " >
+            <div className=" bg-[#f1f5f9] " >
 
                 <Outlet />
 
@@ -280,11 +284,25 @@ interface HeaderComptProps {
 }
 
 const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
+    const { pathname } = useLocation()
+
     return (
-        <div className="flex justify-between items-center p-3  ">
+        <div className="flex justify-between items-center p-3  shadow-lg border-b-2">
             <span className="font-semibold ">Seacoff</span>
 
-            <div className="flex">
+            <div className="flex items-center">
+                {!pathname.startsWith('/admin/order-cashier') || !pathname.startsWith('/admin/history') && (
+
+                    <div className="mr-5 ">
+                        <Link
+                            className="mr-5"
+                            to="/admin/dashboard">Dashboard</Link>
+                        <span className="">
+                            Riwayat
+                        </span>
+                    </div>
+                )}
+
                 <div className="mr-5">
                     <Dropdown
                         arrowIcon={false}
