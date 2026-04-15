@@ -18,8 +18,8 @@ export const getMasterCategory = createAsyncThunk<
     { data: Category[]; pagination: PaginationState | null; message: string }, ParamsPaginate, { rejectValue: string }
 >("category/getAll", async (params, { rejectWithValue }) => {
     try {
-        const page = params?.page ?? 1;
-        const limit = params?.limit ?? 5;
+        const page = params?.page;
+        const limit = params?.limit;
 
         const response = await apiClient.get<ApiResponse<Category[]>>("/category", {
             params: { page, limit },

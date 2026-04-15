@@ -126,13 +126,17 @@ func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 func (r *MenuRepository) FindMenuByCategoryID(ctx context.Context, categoryID string) ([]*model.Menu, error) {
 	var menus []*model.Menu
 
-	err := r.db.WithContext(ctx).
+	db := r.db.WithContext(ctx).
 		Model(&model.Menu{}).
 		Select("DISTINCT menus.*").
 		Joins("JOIN category_menus cm ON cm.menu_id = menus.id").
-		Where("cm.category_id = ?", categoryID).
-		Preload("MenuAddOnGroups").
-		Find(&menus).Error
+		Preload("MenuAddOnGroups")
+
+	if categoryID != "all" {
+		db = db.Where("cm.category_id = ?", categoryID)
+	}
+
+	err := db.Find(&menus).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to find menu by category id: %w", err)
 	}

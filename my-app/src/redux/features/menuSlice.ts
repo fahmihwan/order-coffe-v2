@@ -41,6 +41,17 @@ export const getMasterMenu = createAsyncThunk<{ data: Menu[]; pagination: Pagina
     }
 });
 
+export const getMenuByCategoryId = createAsyncThunk<{ data: Menu[]; message: string }, string, { rejectValue: string }>("menu/category", async (categoryId, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.get<ApiResponse<Menu[]>>(`/menu/${categoryId}/menus`);
+        return {
+            data: response.data.data ?? [],
+            message: response.data.message ?? "Success",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu by category"));
+    }
+});
 
 
 export const getMenuById = createAsyncThunk<Menu, string, { rejectValue: string }>("menu/getById", async (id, { rejectWithValue }) => {
@@ -262,7 +273,18 @@ export const menuSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload ?? "Failed to fetch menu";
             })
-
+            .addCase(getMenuByCategoryId.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+            })
+            .addCase(getMenuByCategoryId.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.masterMenus = action.payload.data;
+            })
+            .addCase(getMenuByCategoryId.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to fetch menu detail";
+            })
             .addCase(getMenuById.pending, (state) => {
                 state.actionLoading = true;
                 state.error = null;

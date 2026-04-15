@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { getCategoryMenu } from "../../../redux/features/categorySlice";
+import { getCategoryMenu, getMasterCategory } from "../../../redux/features/categorySlice";
 import { getMenuWithAddOnByMenuId } from "../../../redux/features/menuSlice";
 import {
     addFromDrawer,
@@ -59,6 +59,7 @@ export default function OrderKasirPage() {
         (state) => state.cart.drawerSelectedOptions
     );
 
+    console.log(masterCategories);
     const cart = useMemo(() => Object.values(cartItems || {}), [cartItems]);
 
     const [paymentMethod, setPaymentMethod] = useState("Tunai");
@@ -70,6 +71,7 @@ export default function OrderKasirPage() {
     const [addOnErrors, setAddOnErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
+        dispatch(getMasterCategory({}));
         dispatch(getCategoryMenu({}));
     }, [dispatch]);
 
@@ -330,6 +332,13 @@ export default function OrderKasirPage() {
                             />
                         </div>
                     </div>
+                    <div>
+                        <div>
+                            <button type="button" className="text-body bg-white box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Secondary</button>
+                        </div>
+
+
+                    </div>
                     {masterCategories?.map((category: Category) => (
                         <section key={category.id} className="space-y-4">
                             <div>
@@ -377,7 +386,6 @@ export default function OrderKasirPage() {
                         </section>
                     ))}
                 </div>
-
                 {/* div B */}
                 <div className="w-full lg:w-4/12  overflow-scroll  min-h-0">
                     <div className="sticky top-4 h-screen border-x border-t-0 border-gray-200 bg-white p-4 shadow-sm">
