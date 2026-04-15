@@ -19,6 +19,7 @@ type MenuRepository struct {
 type MenuRepo interface {
 	Create(ctx context.Context, menu *model.Menu) error
 	List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error)
+	FindMenuByCategoryID(ctx context.Context, categoryID string) ([]*model.Menu, error)
 	setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB
 	GetByID(ctx context.Context, id string) (*model.Menu, error)
 	Update(ctx context.Context, menu *model.Menu) error
@@ -121,6 +122,23 @@ func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 	return nil
 }
 
+
+func (r *MenuRepository) FindMenuByCategoryID(ctx context.Context, categoryID string) ([]*model.Menu, error) {
+	var menus []*model.Menu
+
+	err := r.db.WithContext(ctx).
+		Model(&model.Menu{}).
+		Select("DISTINCT menus.*").
+		Joins("JOIN category_menus cm ON cm.menu_id = menus.id").
+		Where("cm.category_id = ?", categoryID).
+		Preload("MenuAddOnGroups").
+		Find(&menus).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find menu by category id: %w", err)
+	}
+
+	return menus, nil
+}
 
 func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
 	var menu model.Menu
