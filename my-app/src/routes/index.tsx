@@ -1,13 +1,7 @@
 import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
-// layouts & guards (contoh import)
 
-// import LayoutCustomer from "../view/layout/LayoutCustomer";
-// import LayoutAdmin from "../view/layout/LayoutAdmin";
-// import ProtectedRouteUser from "./guards/ProtectedRouteUser";
-// import ProtectedRouteAdmin from "./guards/ProtectedRouteAdmin";
-// import ProtectedRouteChecker from "./guards/ProtectedRouteChecker";
 
 import LayoutCustomer from "../view/layouts/LayoutCustomer.tsx";
 import LayoutAdmin from "../view/layouts/LayoutAdmin.tsx";
@@ -20,7 +14,7 @@ import OrderKasirPage from "../view/cmsAdmin/OrderKasir/OrderKasirPage.tsx";
 const DashboardPage = lazy(() => import("../view/cmsAdmin/Dashboard/DashboardPage.tsx"));
 const MenuPage = lazy(() => import("../view/cmsAdmin/Master/Menu/MenuPage.tsx"));
 const AddOnPage = lazy(() => import("../view/cmsAdmin/Master/AddOn/AddOnPage.tsx"));
-const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoriPage.tsx"));
+const CategoryPage = lazy(() => import("../view/cmsAdmin/Master/Category/CategoryPage.tsx"));
 
 const CategoryMenuPage = lazy(() => import("../view/cmsAdmin/SettingProduct/CategoryMenu/CategoryMenuPage.tsx"));
 
@@ -42,6 +36,7 @@ const routes = createBrowserRouter([
             { path: "/admin/product-setting/menu-addon", element: <MenuAddOnPage /> },
 
             { path: "/admin/order-cashier", element: <OrderKasirPage /> },
+            { path: "/admin/history", element: <>ds</> },
         ]
     },
     {

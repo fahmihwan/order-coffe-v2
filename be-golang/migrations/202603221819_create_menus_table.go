@@ -12,8 +12,8 @@ func Migration_202603221854() *gormigrate.Migration {
 			return tx.Exec(`
 				CREATE TABLE IF NOT EXISTS menus (
 					id UUID NOT NULL PRIMARY KEY,
-					img_url TEXT NOT NULL,
-					name VARCHAR(255) NOT NULL,
+					img_url TEXT NULL,
+					name VARCHAR(100) NOT NULL,
 					description TEXT NULL,
 					price DECIMAL(10,2) NOT NULL,
 					is_active BOOLEAN NOT NULL DEFAULT true,

@@ -4,7 +4,7 @@ import { Drawer, DrawerHeader, DrawerItems } from "flowbite-react";
 import AddOnCompt from "./AddOnCompt";
 
 import type { Menu } from "../../../../../../types/menu";
-import type { AddOn, AddOnOption } from "../../../../../../types/addOn";
+import type { AddOnGroup, AddOnOption } from "../../../../../../types/addOn";
 
 import { useAppDispatch, useAppSelector } from "../../../../../../redux/hooks";
 import {
@@ -19,7 +19,7 @@ import { formatRupiah } from "../../../../../../utils/cartUtils";
 type DrawerListAddOnMenuProps = {
     open: boolean;
     menu: Menu | null;
-    addOns: AddOn[];
+    menuWithAddOns: Menu | null;
     onClose: () => void;
     editingCartKey?: string | null;
     initialQty?: number;
@@ -28,7 +28,7 @@ type DrawerListAddOnMenuProps = {
 const DrawerListAddOnMenu = ({
     open,
     menu,
-    addOns,
+    menuWithAddOns,
     onClose,
     editingCartKey = null,
     initialQty = 1,
@@ -36,21 +36,101 @@ const DrawerListAddOnMenu = ({
     const dispatch = useAppDispatch();
     const drawerSelectedOptions = useAppSelector((state) => state.cart.drawerSelectedOptions);
 
+    function validateChooseData(listAddOnGroup: AddOnGroup[], chooseData: AddOnOption[]) {
+        const groupedChoose = chooseData
+            .filter((item) => item.type === "checkbox")
+            .reduce((acc: Record<string, AddOnOption[]>, item: AddOnOption) => {
+                if (!acc[item.add_on_group_id]) {
+                    acc[item.add_on_group_id] = [];
+                }
+                acc[item.add_on_group_id].push(item);
+                return acc;
+            }, {});
+
+        for (const group of listAddOnGroup) {
+            const checkboxOptions = (group.add_on_options || []).filter(
+                (option: AddOnOption) => option.type === "checkbox"
+            );
+
+            if (checkboxOptions.length === 0) {
+                continue;
+            }
+
+            const selectedItems = groupedChoose[group.id] || [];
+            const totalSelected = selectedItems.length;
+
+            if (totalSelected < group.min_select) {
+                alert(`${group.title} minimal pilih ${group.min_select} item`);
+                return false;
+            }
+
+            if (totalSelected > group.max_select) {
+                alert(`${group.title} maksimal pilih ${group.max_select} item`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    const handleSelectOption = (opt: AddOnOption) => {
+        const listAddOnGroup = menuWithAddOns?.add_on_groups;
+
+        if (!listAddOnGroup) return;
+
+        // ambil data sekarang
+        let nextSelectedOptions = [...drawerSelectedOptions];
+        // khusus checkbox, simulasi dulu hasil setelah klik
+        if (opt.type === "checkbox") {
+            const isExist = nextSelectedOptions.some(
+                (item) => item.id === opt.id
+            );
+
+            if (isExist) {
+                // kalau sudah ada, berarti uncheck
+                nextSelectedOptions = nextSelectedOptions.filter(
+                    (item) => item.id !== opt.id
+                );
+            } else {
+                // kalau belum ada, tambahkan dulu ke simulasi
+                nextSelectedOptions.push(opt);
+            }
+
+            const isValid = validateChooseData(listAddOnGroup, nextSelectedOptions);
+
+            if (!isValid) {
+                return;
+            }
+        }
+
+        dispatch(
+            onAddOptions({
+                opt,
+                type: opt.type,
+                add_on_id: opt.add_on_group_id
+            })
+        );
+    };
+
+
     const [qty, setQty] = useState(initialQty ?? 1);
 
 
     const isEditMode = Boolean(editingCartKey);
 
 
+
+
     const missingRequiredAddOns = useMemo(() => {
-        return addOns.filter((addOn) => {
-            if (!addOn.isRequired) return false;
+
+        return (menuWithAddOns?.add_on_groups ?? []).filter((addOn) => {
+            if (!addOn.is_required) return false;
 
             return !drawerSelectedOptions.some(
-                (selectedOption) => selectedOption.add_on_id === addOn.id
+                (selectedOption) => selectedOption.add_on_group_id === addOn.id
             );
         });
-    }, [addOns, drawerSelectedOptions]);
+    }, [menuWithAddOns, drawerSelectedOptions]);
 
     const isFormValid = missingRequiredAddOns.length === 0;
 
@@ -82,15 +162,6 @@ const DrawerListAddOnMenu = ({
         });
     };
 
-    const handleSelectOption = (opt: AddOnOption) => {
-        dispatch(
-            onAddOptions({
-                opt,
-                type: opt.type,
-                add_on_id: opt.add_on_id,
-            })
-        );
-    };
 
     const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
@@ -149,9 +220,9 @@ const DrawerListAddOnMenu = ({
 
                     <div>
                         <ul className="list-none p-0 m-0">
-                            {addOns.map((addOn) => {
+                            {(menuWithAddOns?.add_on_groups ?? []).map((addOn) => {
                                 const hasSelectedOption = drawerSelectedOptions.some(
-                                    (selected) => selected.add_on_id === addOn.id
+                                    (selected) => selected.add_on_group_id === addOn.id
                                 );
 
                                 return (
@@ -165,7 +236,7 @@ const DrawerListAddOnMenu = ({
 
                                                 {hasSelectedOption ? (
                                                     <p className="text-sm text-green-600 mt-1">✓ Sudah dipilih</p>
-                                                ) : addOn.isRequired ? (
+                                                ) : addOn.is_required ? (
                                                     <span className="bg-red-100 text-red-800 text-xs font-light h-5 px-2 py-0.5 rounded-sm">
                                                         Wajib Diisi
                                                     </span>
@@ -177,7 +248,7 @@ const DrawerListAddOnMenu = ({
                                             </div>
 
                                             <ul className="list-none p-0 m-0">
-                                                {addOn.options.map((option) => {
+                                                {addOn.add_on_options.map((option) => {
                                                     const checked = drawerSelectedOptions.some(
                                                         (selected) => selected.id === option.id
                                                     );

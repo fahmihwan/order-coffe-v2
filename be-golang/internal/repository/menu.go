@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -16,12 +17,13 @@ type MenuRepository struct {
 }
 
 type MenuRepo interface {
-	// Create(ctx context.Context, book *model.Menu) error
+	Create(ctx context.Context, menu *model.Menu) error
 	List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error)
+	ListMenuWithCategories(ctx context.Context) ([]*model.Menu, error)
 	setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB
-	// GetByID(ctx context.Context, id string) (*model.Menu, error)
-	// Update(ctx context.Context, book *model.Menu) error
-	// Delete(ctx context.Context, id string) error
+	GetByID(ctx context.Context, id string) (*model.Menu, error)
+	Update(ctx context.Context, menu *model.Menu) error
+	Delete(ctx context.Context, id string) error
 }
 
 var _ MenuRepo = (*MenuRepository)(nil)
@@ -34,7 +36,7 @@ func NewMenuRepository(db *gorm.DB) *MenuRepository {
 
 type FilterMenu struct {
 	Pagination
-	ID          string     `json:"id,omitempty"`
+	ID       	*uuid.UUID `json:"id,omitempty"`
 	ImgURL      string     `json:"img_url,omitempty"`
 	Name        string     `json:"name,omitempty"`
 	Description *string    `json:"description,omitempty"`
@@ -45,14 +47,7 @@ type FilterMenu struct {
 	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
 }
 
-// func (r *MenuRepository) Create(ctx context.Context, book *model.Menu) error {
 
-// 	err := r.db.WithContext(ctx).Create(book).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to create form: %w", err)
-// 	}
-// 	return nil
-// }
 
 func (r *MenuRepository) List(ctx context.Context, filter FilterMenu) (res []*model.Menu, total int, err error) {
 
@@ -100,49 +95,93 @@ func (r *MenuRepository) List(ctx context.Context, filter FilterMenu) (res []*mo
 	return res, total, nil
 }
 
+
 func (r *MenuRepository) setFilter(db *gorm.DB, filter FilterMenu) *gorm.DB {
 	if filter.Search != "" {
 		like := "%" + filter.Search + "%"
 		db = db.Where("name ILIKE ?", like)
-		// db = db.Where("name ILIKE ? OR name ILIKE ?", like, like)
-
 	}
 
-	if filter.ID != "" {
-		db = db.Where("id = ?", filter.ID)
+	if filter.ID != nil && *filter.ID != uuid.Nil {
+		db = db.Where("id = ?", *filter.ID)
 	}
 
-	// Soft delete: hanya yang belum dihapus
 	db = db.Where("deleted_at IS NULL")
 
 	return db
 }
 
-// func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
 
-// 	var book model.Menu
 
-// 	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&book).Error
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get book by id: %w", err)
-// 	}
+func (r *MenuRepository) Create(ctx context.Context, menu *model.Menu) error {
 
-// 	return &book, nil
-// }
+	err := r.db.WithContext(ctx).Create(menu).Error
+	if err != nil {
+		return fmt.Errorf("failed to create menu: %w", err)
+	}
+	return nil
+}
 
-// func (r *MenuRepository) Update(ctx context.Context, book *model.Menu) error {
 
-// 	err := r.db.WithContext(ctx).Save(book).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to Update form: %w", err)
-// 	}
-// 	return nil
-// }
+func (r *MenuRepository) ListMenuWithCategories(ctx context.Context) ([]*model.Menu, error) {
+	var menus []*model.Menu
 
-// func (r *MenuRepository) Delete(ctx context.Context, id string) error {
-// 	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
-// 	if err != nil {
-// 		return fmt.Errorf("failed to delete form: %w", err)
-// 	}
-// 	return nil
-// }
+	db := r.db.WithContext(ctx).
+		Model(&model.Menu{}).
+		Joins("INNER JOIN category_menus cm ON cm.menu_id = menus.id").
+		Preload("CategoryMenus").
+		Preload("CategoryMenus.Category").
+		Distinct()
+	err := db.Find(&menus).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to find menu by category id: %w", err)
+	}
+
+	return menus, nil
+}
+
+func (r *MenuRepository) GetByID(ctx context.Context, id string) (*model.Menu, error) {
+	var menu model.Menu
+
+	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).
+	Preload("MenuAddOnGroups").First(&menu).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("menu not found")
+		}
+		return nil, fmt.Errorf("failed to get menu by id: %w", err)
+	}
+
+	return &menu, nil
+}
+
+
+func (r *MenuRepository) Update(ctx context.Context, menu *model.Menu) error {
+	menu.UpdatedAt = time.Now()
+	
+
+	err := r.db.WithContext(ctx).
+	Debug().
+	Model(&model.Menu{}).
+	Where("id = ? AND deleted_at IS NULL", menu.ID).
+	Select("IsActive", "ImgURL", "Name", "Description", "Price", "UpdatedAt").
+	Updates(menu).Error
+
+
+	if err != nil {
+		return fmt.Errorf("failed to update menu: %w", err)
+	}
+
+	return nil
+}
+
+
+
+func (r *MenuRepository) Delete(ctx context.Context, id string) error {
+	err := r.db.WithContext(ctx).Where("id = ?", id).Delete(&model.Menu{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete menu: %w", err)
+	}
+
+	return nil
+}

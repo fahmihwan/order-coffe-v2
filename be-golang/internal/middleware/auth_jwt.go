@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"pos-coffeshop/util"
+	"pos-coffeshop/internal/util"
 	"strings"
 )
 

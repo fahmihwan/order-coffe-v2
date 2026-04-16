@@ -1,4 +1,5 @@
 import {
+    Badge,
     Button,
     Label,
     Modal,
@@ -6,72 +7,111 @@ import {
     ModalFooter,
     ModalHeader,
     Pagination,
+    Select,
     TextInput,
 } from "flowbite-react";
-import { useEffect, useMemo, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { getMasterAddOn } from "../../../../redux/features/addOnSlice";
-import { formatRupiah } from "../../../../utils/cartUtils";
-import type { AddOn, AddOnType } from "../../../../types/addOn";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
-type AddOnForm = {
-    id: string;
-    title: string;
-    description: string;
+import type { AppDispatch, RootState } from "../../../../redux/store";
+import {
+    createAddOnOption,
+    deleteAddOnOption,
+    getMasterAddOn,
+    setMessage,
+    updateAddOnOption,
+} from "../../../../redux/features/addOnSlice";
+import type { AddOnOption, AddOnType } from "../../../../types/addOn";
+
+type AddOptionForm = {
+    name: string;
+    price: string;
+    is_active: boolean;
     type: AddOnType;
-    isRequired: boolean;
-    options: {
-        id: string;
-        name: string;
-        price: string;
-    }[];
 };
 
-const initialForm: AddOnForm = {
-    id: "",
-    title: "",
-    description: "",
+const initialForm: AddOptionForm = {
+    name: "",
+    price: "",
+    is_active: true,
     type: "radio",
-    isRequired: false,
-    options: [
-        {
-            id: "",
-            name: "",
-            price: "0",
-        },
-    ],
 };
 
 const AddOnPage = () => {
-    const dispatch = useAppDispatch();
-    const masterAddOn = useAppSelector((state) => state.addOn.masterAddOn) as AddOn[];
+    const dispatch = useDispatch<AppDispatch>();
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [openModal, setOpenModal] = useState(false);
-    const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const {
+        masterAddOns,
+        loading,
+        actionLoading,
+        pagination,
+        message,
+        error,
+    } = useSelector((state: RootState) => state.addOn);
+
     const [search, setSearch] = useState("");
-    const [localData, setLocalData] = useState<AddOn[]>([]);
-    const [form, setForm] = useState<AddOnForm>(initialForm);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const [openModal, setOpenModal] = useState(false);
+    const [selectedAddOnId, setSelectedAddOnId] = useState<number | null>(null);
+    const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [expandedRows, setExpandedRows] = useState<number[]>([]);
+    const [form, setForm] = useState<AddOptionForm>(initialForm);
+
+    const currentPaginationPage = pagination?.current_page ?? 1;
+    const totalPaginationPages = pagination?.pages ?? 1;
+    const totalPaginationItems = pagination?.total ?? masterAddOns.length;
+    // const paginationLimit = pagination?.limit ?? 5;
 
     useEffect(() => {
-        dispatch(getMasterAddOn());
-    }, [dispatch]);
+        dispatch(
+            getMasterAddOn({
+                page: currentPage,
+                // limit: paginationLimit,
+            })
+        );
+    }, [dispatch, currentPage]);
 
-    const onPageChange = (page: number) => setCurrentPage(page);
+    useEffect(() => {
+        if (message) {
+            const timer = setTimeout(() => {
+                dispatch(setMessage(""));
+            }, 3000);
 
-    const sourceData = localData.length > 0 ? localData : masterAddOn;
+            return () => clearTimeout(timer);
+        }
+    }, [message, dispatch]);
+
+    const selectedAddOn = useMemo(() => {
+        if (selectedAddOnId === null) return null;
+        return masterAddOns.find((item) => item.id === selectedAddOnId) ?? null;
+    }, [masterAddOns, selectedAddOnId]);
 
     const filteredData = useMemo(() => {
-        return sourceData.filter((item) =>
-            item.title.toLowerCase().includes(search.toLowerCase())
-        );
-    }, [sourceData, search]);
+        const keyword = search.trim().toLowerCase();
+
+        if (!keyword) return masterAddOns;
+
+        return masterAddOns.filter((item) => {
+            const matchTitle = item.title.toLowerCase().includes(keyword);
+            const matchDescription = (item.description ?? "")
+                .toLowerCase()
+                .includes(keyword);
+
+            const matchOption = (item.add_on_options ?? []).some((option) =>
+                option.name.toLowerCase().includes(keyword)
+            );
+
+            return matchTitle || matchDescription || matchOption;
+        });
+    }, [masterAddOns, search]);
 
     const resetForm = () => {
         setForm(initialForm);
-        setSelectedIndex(null);
-        setModalMode("add");
+        setSelectedAddOnId(null);
+        setSelectedOptionId(null);
+        setIsEditMode(false);
     };
 
     const closeModal = () => {
@@ -79,148 +119,145 @@ const AddOnPage = () => {
         resetForm();
     };
 
-    const openAddModal = () => {
-        resetForm();
-        setModalMode("add");
-        setOpenModal(true);
+    const toggleExpandRow = (id: number) => {
+        setExpandedRows((prev) =>
+            prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+        );
     };
 
-    const openEditModal = (item: AddOn, index: number) => {
-        setModalMode("edit");
-        setSelectedIndex(index);
-
-        const optionType: AddOnType = item.options?.[0]?.type ?? "radio";
-
+    const openAddOptionModal = (
+        addOnId: number,
+        defaultType: AddOnType = "radio"
+    ) => {
+        setIsEditMode(false);
+        setSelectedAddOnId(addOnId);
+        setSelectedOptionId(null);
         setForm({
-            id: String(item.id),
-            title: item.title,
-            description: item.description,
-            type: optionType,
-            isRequired: item.isRequired,
-            options: item.options.map((opt) => ({
-                id: String(opt.id),
-                name: opt.name,
-                price: String(opt.price),
-            })),
+            name: "",
+            price: "",
+            is_active: true,
+            type: defaultType,
         });
-
         setOpenModal(true);
     };
 
-    const handleChangeForm = (
-        key: keyof Omit<AddOnForm, "options">,
-        value: string | boolean
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
+    const openEditOptionModal = (addOnId: number, option: AddOnOption) => {
+        setIsEditMode(true);
+        setSelectedAddOnId(addOnId);
+        setSelectedOptionId(option.id);
+        setForm({
+            name: option.name,
+            price: String(option.price),
+            is_active:
+                "is_active" in option
+                    ? Boolean(
+                        (option as AddOnOption & { is_active?: boolean }).is_active
+                    )
+                    : true,
+            type: option.type,
+        });
+        setOpenModal(true);
     };
 
-    const handleOptionChange = (
-        index: number,
-        key: "id" | "name" | "price",
-        value: string
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            options: prev.options.map((opt, i) =>
-                i === index ? { ...opt, [key]: value } : opt
-            ),
-        }));
-    };
+    const handleSubmit = async () => {
+        if (!selectedAddOnId || !form.name.trim()) return;
 
-    const handleAddOption = () => {
-        setForm((prev) => ({
-            ...prev,
-            options: [
-                ...prev.options,
-                {
-                    id: "",
-                    name: "",
-                    price: "0",
-                },
-            ],
-        }));
-    };
+        if (isEditMode && selectedOptionId) {
+            const resultAction = await dispatch(
+                updateAddOnOption({
+                    id: String(selectedOptionId),
+                    payload: {
+                        name: form.name.trim(),
+                        add_on_group_id: String(selectedAddOnId),
+                        price: Number(form.price) || 0,
+                        type: form.type,
+                        is_active: form.is_active,
+                    },
+                })
+            );
 
-    const handleRemoveOption = (index: number) => {
-        setForm((prev) => ({
-            ...prev,
-            options: prev.options.filter((_, i) => i !== index),
-        }));
-    };
+            if (updateAddOnOption.fulfilled.match(resultAction)) {
+                closeModal();
+                dispatch(
+                    getMasterAddOn({
+                        page: currentPage,
+                        // limit: paginationLimit,
+                    })
+                );
+            }
 
-    const handleSubmit = () => {
-        if (!form.id || !form.title || !form.description) {
-            alert("ID, title, dan description wajib diisi.");
             return;
         }
 
-        if (form.options.length === 0) {
-            alert("Minimal harus ada 1 option.");
-            return;
-        }
-
-        const hasEmptyOption = form.options.some(
-            (opt) => !opt.id || !opt.name || opt.price === ""
+        const resultAction = await dispatch(
+            createAddOnOption({
+                name: form.name.trim(),
+                add_on_group_id: String(selectedAddOnId),
+                price: Number(form.price) || 0,
+                type: form.type,
+                is_active: form.is_active,
+            })
         );
 
-        if (hasEmptyOption) {
-            alert("Semua field option wajib diisi.");
-            return;
+        if (createAddOnOption.fulfilled.match(resultAction)) {
+            closeModal();
+            dispatch(
+                getMasterAddOn({
+                    page: currentPage,
+                    // limit: paginationLimit,
+                })
+            );
         }
-
-        const payload: AddOn = {
-            id: Number(form.id),
-            title: form.title,
-            description: form.description,
-            isRequired: form.isRequired,
-            options: form.options.map((opt) => ({
-                id: Number(opt.id),
-                name: opt.name,
-                price: Number(opt.price),
-                add_on_id: Number(form.id),
-                type: form.type,
-            })),
-        };
-
-        if (modalMode === "add") {
-            setLocalData((prev) => [...prev, payload]);
-        } else {
-            setLocalData((prev) => {
-                const base = prev.length > 0 ? prev : masterAddOn;
-                return base.map((item, index) =>
-                    index === selectedIndex ? payload : item
-                );
-            });
-        }
-
-        closeModal();
     };
 
-    const handleDelete = (index: number) => {
-        setLocalData((prev) => {
-            const base = prev.length > 0 ? prev : masterAddOn;
-            return base.filter((_, i) => i !== index);
-        });
+    const handleDeleteOption = async (optionId: number) => {
+        const resultAction = await dispatch(deleteAddOnOption(String(optionId)));
+
+        if (deleteAddOnOption.fulfilled.match(resultAction)) {
+            dispatch(
+                getMasterAddOn({
+                    page: currentPage,
+                    // limit: paginationLimit,
+                })
+            );
+        }
     };
 
     return (
         <div className="p-5">
-            <div className="mb-5 flex justify-between">
-                <h1 className="text-2xl font-bold">Master AddOn</h1>
-                <Button onClick={openAddModal}>Tambah Data</Button>
+            <div className="mb-5 flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-heading">Add On Page</h1>
             </div>
 
-            <div className="block rounded-base border border-default bg-white p-6 shadow-xs">
-                <div className="relative overflow-x-auto rounded-base border border-default bg-neutral-primary-soft shadow-xs">
-                    <div className="flex flex-column flex-wrap items-center justify-between space-y-4 p-4 md:flex-row md:space-y-0">
-                        <label htmlFor="input-group-1" className="sr-only">
-                            Search
-                        </label>
+            {message && (
+                <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {message}
+                </div>
+            )}
 
-                        <div className="relative">
+            {error && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                </div>
+            )}
+
+            <div className="rounded-base border border-default bg-white p-6 shadow-xs">
+                <div className="overflow-hidden rounded-base border border-default bg-neutral-primary-soft shadow-xs">
+                    <div className="flex flex-col gap-4 border-b border-default p-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h2 className="text-base font-semibold text-heading">
+                                Master Add On
+                            </h2>
+                            <p className="text-sm text-body">
+                                Kelola add on dan option dalam tampilan yang lebih ringkas.
+                            </p>
+                        </div>
+
+                        <div className="relative w-full md:w-80">
+                            <label htmlFor="search-addon" className="sr-only">
+                                Search
+                            </label>
+
                             <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
                                 <svg
                                     className="h-4 w-4 text-body"
@@ -241,304 +278,432 @@ const AddOnPage = () => {
                             </div>
 
                             <input
+                                id="search-addon"
                                 type="text"
-                                id="input-group-1"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="block w-full max-w-96 rounded-base border border-default-medium bg-neutral-secondary-medium ps-9 pe-3 py-2 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-                                placeholder="Search add on"
+                                className="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium py-2 pe-3 ps-9 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
+                                placeholder="Search add on / option"
                             />
                         </div>
                     </div>
 
-                    <table className="w-full text-left text-sm text-body rtl:text-right">
-                        <thead className="border-b border-t border-default-medium bg-neutral-secondary-medium text-sm text-body">
-                            <tr>
-                                <th className="px-6 py-3 font-medium">No</th>
-                                <th className="px-6 py-3 font-medium">Title</th>
-                                <th className="px-6 py-3 font-medium">Description</th>
-                                <th className="px-6 py-3 font-medium">Options</th>
-                                <th className="px-6 py-3 font-medium">Wajib di isi</th>
-                                <th className="px-6 py-3 font-medium">Action</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {filteredData.map((d, i) => (
-                                <tr
-                                    key={`${d.id}-${i}`}
-                                    className="border-b border-default bg-neutral-primary-soft hover:bg-neutral-secondary-medium"
-                                >
-                                    <td className="whitespace-nowrap px-6 py-4 text-heading">
-                                        {i + 1}
-                                    </td>
-                                    <td className="px-6 py-4">{d.title}</td>
-                                    <td className="px-6 py-4">{d.description}</td>
-
-                                    <td className="w-[500px] px-6 py-4">
-                                        {d.options?.map((opt, j) => (
-                                            <div className="mb-2 flex justify-between gap-4" key={j}>
-                                                {opt.type === "radio" ? (
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            disabled
-                                                            type="radio"
-                                                            name={`radio-${d.id}`}
-                                                            className="h-4 w-4 appearance-none rounded-full border border-default-medium bg-neutral-secondary-medium checked:border-brand focus:outline-none focus:ring-2 focus:ring-brand-subtle"
-                                                        />
-                                                        <label className="ms-2 select-none text-lg font-medium text-heading">
-                                                            {opt.name}
-                                                        </label>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center">
-                                                        <input
-                                                            disabled
-                                                            type="checkbox"
-                                                            className="h-4 w-4 rounded-xs border border-default-medium bg-neutral-secondary-medium focus:ring-2 focus:ring-brand-soft"
-                                                        />
-                                                        <label className="ms-2 select-none text-lg font-medium text-heading">
-                                                            {opt.name}
-                                                        </label>
-                                                    </div>
-                                                )}
-
-                                                <span className="text-lg">
-                                                    + {formatRupiah(opt.price)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </td>
-
-                                    <td className="px-6 py-4">{d.isRequired ? "Ya" : "Tidak"}</td>
-
-                                    <td className="px-6 py-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => openEditModal(d, i)}
-                                            className="font-medium text-fg-brand hover:underline"
-                                        >
-                                            Edit
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(i)}
-                                            className="ml-5 font-medium text-red-600 hover:underline"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-
-                            {filteredData.length === 0 && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-body rtl:text-right">
+                            <thead className="border-b border-default-medium bg-neutral-secondary-medium text-sm text-body">
                                 <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-6 py-6 text-center text-sm text-body"
-                                    >
-                                        Data add on tidak ditemukan.
-                                    </td>
+                                    <th className="px-6 py-3 font-medium">No</th>
+                                    <th className="px-6 py-3 font-medium">Title</th>
+                                    <th className="px-6 py-3 font-medium">Description</th>
+                                    <th className="px-6 py-3 font-medium">Required</th>
+                                    <th className="px-6 py-3 font-medium">Min / Max</th>
+                                    <th className="px-6 py-3 font-medium">Options</th>
+                                    <th className="px-6 py-3 font-medium">Action</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
 
-                    <div className="flex items-center overflow-x-auto p-5 sm:justify-between">
-                        <span className="mb-4 block w-full text-sm font-normal text-body md:mb-0 md:inline md:w-auto">
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-10 text-center text-sm text-body"
+                                        >
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                ) : filteredData.length > 0 ? (
+                                    filteredData.map((addOn, index) => {
+                                        const options = addOn.add_on_options ?? [];
+                                        const activeOptions = options.filter((option) => {
+                                            if (!("is_active" in option)) return true;
+                                            return Boolean(
+                                                (option as AddOnOption & {
+                                                    is_active?: boolean;
+                                                }).is_active
+                                            );
+                                        });
+                                        const isExpanded = expandedRows.includes(addOn.id);
+
+                                        return (
+                                            <Fragment key={addOn.id}>
+                                                <tr className="border-b border-default bg-white align-top hover:bg-neutral-secondary-medium/40">
+                                                    <td className="whitespace-nowrap px-6 py-4 text-heading">
+                                                        {(currentPaginationPage - 1) *
+                                                            filteredData.length +
+                                                            index +
+                                                            1}
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <div className="space-y-1">
+                                                            <p className="font-semibold text-heading">
+                                                                {addOn.title}
+                                                            </p>
+                                                            {options.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    <Badge color="info">
+                                                                        {options.length} option
+                                                                    </Badge>
+                                                                    <Badge color="success">
+                                                                        {activeOptions.length} active
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <p className="max-w-md text-sm text-body">
+                                                            {addOn.description || "-"}
+                                                        </p>
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        {addOn.is_required ? (
+                                                            <Badge color="failure">
+                                                                Required
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge color="gray">
+                                                                Optional
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="px-6 py-4 text-heading">
+                                                        {addOn.min_select} / {addOn.max_select}
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        {options.length > 0 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    toggleExpandRow(addOn.id)
+                                                                }
+                                                                className="inline-flex items-center gap-2 rounded-lg border border-default px-3 py-2 text-sm font-medium text-heading transition hover:bg-neutral-secondary-medium"
+                                                            >
+                                                                <span>
+                                                                    {isExpanded
+                                                                        ? "Sembunyikan"
+                                                                        : "Lihat"}{" "}
+                                                                    option
+                                                                </span>
+                                                                <svg
+                                                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
+                                                                        }`}
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth={2}
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        d="M19 9l-7 7-7-7"
+                                                                    />
+                                                                </svg>
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-sm text-body">
+                                                                Belum ada option
+                                                            </span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                openAddOptionModal(
+                                                                    addOn.id,
+                                                                    addOn.add_on_options?.[0]
+                                                                        ?.type ?? "radio"
+                                                                )
+                                                            }
+                                                        >
+                                                            Tambah Option
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+
+                                                {isExpanded && (
+                                                    <tr className="border-b border-default bg-neutral-primary-soft">
+                                                        <td colSpan={7} className="px-6 py-4">
+                                                            <div className="rounded-xl border border-default bg-white p-4">
+                                                                <div className="mb-4 flex items-center justify-between">
+                                                                    <div>
+                                                                        <h3 className="text-sm font-semibold text-heading">
+                                                                            Option List
+                                                                        </h3>
+                                                                        <p className="text-sm text-body">
+                                                                            {addOn.title}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <Button
+                                                                        size="xs"
+                                                                        onClick={() =>
+                                                                            openAddOptionModal(
+                                                                                addOn.id,
+                                                                                addOn
+                                                                                    .add_on_options?.[0]
+                                                                                    ?.type ?? "radio"
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Tambah Option
+                                                                    </Button>
+                                                                </div>
+
+                                                                <div className="overflow-hidden rounded-lg border border-default">
+                                                                    <table className="w-full text-left text-sm">
+                                                                        <thead className="bg-neutral-secondary-medium text-body">
+                                                                            <tr>
+                                                                                <th className="px-4 py-3 font-medium">
+                                                                                    Nama Option
+                                                                                </th>
+                                                                                <th className="px-4 py-3 font-medium">
+                                                                                    Type
+                                                                                </th>
+                                                                                <th className="px-4 py-3 font-medium">
+                                                                                    Status
+                                                                                </th>
+                                                                                <th className="px-4 py-3 font-medium">
+                                                                                    Harga
+                                                                                </th>
+                                                                                <th className="px-4 py-3 font-medium text-right">
+                                                                                    Action
+                                                                                </th>
+                                                                            </tr>
+                                                                        </thead>
+
+                                                                        <tbody>
+                                                                            {options.map((option) => {
+                                                                                const isActive =
+                                                                                    "is_active" in option
+                                                                                        ? Boolean(
+                                                                                            (
+                                                                                                option as AddOnOption & {
+                                                                                                    is_active?: boolean;
+                                                                                                }
+                                                                                            ).is_active
+                                                                                        )
+                                                                                        : true;
+
+                                                                                return (
+                                                                                    <tr
+                                                                                        key={option.id}
+                                                                                        className="border-t border-default bg-white"
+                                                                                    >
+                                                                                        <td className="px-4 py-3 font-medium text-heading">
+                                                                                            {option.name}
+                                                                                        </td>
+
+                                                                                        <td className="px-4 py-3">
+                                                                                            <Badge color="info">
+                                                                                                {option.type}
+                                                                                            </Badge>
+                                                                                        </td>
+
+                                                                                        <td className="px-4 py-3">
+                                                                                            {isActive ? (
+                                                                                                <Badge color="success">
+                                                                                                    Active
+                                                                                                </Badge>
+                                                                                            ) : (
+                                                                                                <Badge color="failure">
+                                                                                                    Inactive
+                                                                                                </Badge>
+                                                                                            )}
+                                                                                        </td>
+
+                                                                                        <td className="px-4 py-3 text-heading">
+                                                                                            Rp{" "}
+                                                                                            {option.price.toLocaleString(
+                                                                                                "id-ID"
+                                                                                            )}
+                                                                                        </td>
+
+                                                                                        <td className="px-4 py-3">
+                                                                                            <div className="flex items-center justify-end gap-2">
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    onClick={() =>
+                                                                                                        openEditOptionModal(
+                                                                                                            addOn.id,
+                                                                                                            option
+                                                                                                        )
+                                                                                                    }
+                                                                                                    className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                                                    disabled={actionLoading}
+                                                                                                >
+                                                                                                    Edit
+                                                                                                </button>
+
+                                                                                                <button
+                                                                                                    type="button"
+                                                                                                    onClick={() =>
+                                                                                                        handleDeleteOption(
+                                                                                                            option.id
+                                                                                                        )
+                                                                                                    }
+                                                                                                    className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                                                    disabled={actionLoading}
+                                                                                                >
+                                                                                                    Hapus
+                                                                                                </button>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                );
+                                                                            })}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </Fragment>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-10 text-center text-sm text-body"
+                                        >
+                                            Data add on tidak ditemukan.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+                        <span className="block text-sm font-normal text-body">
                             Showing{" "}
                             <span className="font-semibold text-heading">
                                 {filteredData.length}
                             </span>{" "}
                             of{" "}
                             <span className="font-semibold text-heading">
-                                {sourceData.length}
+                                {totalPaginationItems}
                             </span>
                         </span>
 
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={1}
-                            onPageChange={onPageChange}
-                            showIcons
-                        />
+                        {!search.trim() && totalPaginationPages > 1 && (
+                            <Pagination
+                                currentPage={currentPaginationPage}
+                                totalPages={totalPaginationPages}
+                                onPageChange={setCurrentPage}
+                                showIcons
+                            />
+                        )}
                     </div>
                 </div>
             </div>
 
-            <Modal dismissible show={openModal} size="4xl" onClose={closeModal}>
+            <Modal dismissible show={openModal} size="lg" onClose={closeModal}>
                 <ModalHeader>
-                    {modalMode === "add" ? "Tambah Add On" : "Edit Add On"}
+                    {isEditMode ? "Edit Option" : "Tambah Option"}{" "}
+                    {selectedAddOn ? `- ${selectedAddOn.title}` : ""}
                 </ModalHeader>
 
                 <ModalBody>
                     <div className="space-y-4">
                         <div>
-                            <Label htmlFor="id">ID</Label>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-name">Nama Option</Label>
+                            </div>
                             <TextInput
-                                id="id"
-                                type="number"
-                                value={form.id}
-                                onChange={(e) => handleChangeForm("id", e.target.value)}
-                                placeholder="Masukkan id"
+                                id="option-name"
+                                placeholder="Masukkan nama option"
+                                value={form.name}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        name: e.target.value,
+                                    }))
+                                }
                             />
                         </div>
-                        <div className="w-full flex">
-                            <div className="w-1/2 mr-5">
-                                <Label htmlFor="title">Title</Label>
-                                <TextInput
-                                    id="title"
-                                    type="text"
-                                    value={form.title}
-                                    onChange={(e) => handleChangeForm("title", e.target.value)}
-                                    placeholder="Masukkan title"
-                                />
+
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-price">Harga</Label>
                             </div>
-                            <div className="w-1/2">
-                                <Label htmlFor="description">Description</Label>
-                                <TextInput
-                                    id="description"
-                                    type="text"
-                                    value={form.description}
-                                    onChange={(e) =>
-                                        handleChangeForm("description", e.target.value)
-                                    }
-                                    placeholder="Masukkan description"
-                                />
-                            </div>
+                            <TextInput
+                                id="option-price"
+                                type="number"
+                                placeholder="Masukkan harga"
+                                value={form.price}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        price: e.target.value,
+                                    }))
+                                }
+                            />
                         </div>
 
-                        <div className="w-full flex items-center">
-                            <div className="w-1/2 mr-5">
-                                <Label htmlFor="type">Type <span className="text-gray-400">(Type ini akan diterapkan ke semua option)</span></Label>
-                                <select
-                                    id="type"
-                                    value={form.type}
-                                    onChange={(e) =>
-                                        handleChangeForm("type", e.target.value as AddOnType)
-                                    }
-                                    className="block w-full rounded-lg border border-gray-300 p-2.5 text-sm"
-                                >
-                                    <option value="radio">radio</option>
-                                    <option value="checkbox">checkbox</option>
-                                </select>
-
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-type">Type</Label>
                             </div>
-                            <div className="w-1/2">
-                                <div className="flex items-center ">
-                                    <input
-                                        className="mr-2"
-                                        id="isRequired"
-                                        type="checkbox"
-                                        checked={form.isRequired}
-                                        onChange={(e) =>
-                                            handleChangeForm("isRequired", e.target.checked)
-                                        }
-                                    />
-                                    <Label htmlFor="isRequired">Wajib di isi</Label>
-                                </div>
-                            </div>
-
+                            <Select
+                                id="option-type"
+                                value={form.type}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        type: e.target.value as AddOnType,
+                                    }))
+                                }
+                            >
+                                <option value="radio">radio</option>
+                                <option value="checkbox">checkbox</option>
+                            </Select>
                         </div>
 
-
-
-                        <div className="mt-4">
-                            <div className="mb-3 flex items-center justify-between">
-                                <h2 className="text-lg font-semibold">Options</h2>
-                                <Button size="sm" onClick={handleAddOption}>
-                                    Tambah Option
-                                </Button>
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="option-active">Status</Label>
                             </div>
-
-                            <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                                Semua option di bawah ini otomatis bertipe <b>{form.type}</b>.
-                            </div>
-
-                            <div className="overflow-x-auto rounded-lg border border-gray-200">
-                                <table className="w-full text-left text-sm">
-                                    <thead className="bg-gray-50 text-gray-700">
-                                        <tr>
-                                            <th className="px-4 py-3 font-medium">No</th>
-                                            <th className="px-4 py-3 font-medium">Option ID</th>
-                                            <th className="px-4 py-3 font-medium">Option Name</th>
-                                            <th className="px-4 py-3 font-medium">Price</th>
-                                            <th className="px-4 py-3 font-medium text-center">Action</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        {form.options.length > 0 ? (
-                                            form.options.map((opt, index) => (
-                                                <tr key={index} className="border-t">
-                                                    <td className="px-4 py-3">{index + 1}</td>
-
-                                                    <td className="min-w-[120px] px-4 py-3">
-                                                        <TextInput
-                                                            type="number"
-                                                            value={opt.id}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "id", e.target.value)
-                                                            }
-                                                            placeholder="ID"
-                                                        />
-                                                    </td>
-
-                                                    <td className="min-w-[220px] px-4 py-3">
-                                                        <TextInput
-                                                            type="text"
-                                                            value={opt.name}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "name", e.target.value)
-                                                            }
-                                                            placeholder="Nama option"
-                                                        />
-                                                    </td>
-
-                                                    <td className="min-w-[180px] px-4 py-3">
-                                                        <TextInput
-                                                            type="number"
-                                                            value={opt.price}
-                                                            onChange={(e) =>
-                                                                handleOptionChange(index, "price", e.target.value)
-                                                            }
-                                                            placeholder="Harga"
-                                                        />
-                                                    </td>
-
-                                                    <td className="px-4 py-3 text-center">
-                                                        <Button
-                                                            color="failure"
-                                                            size="xs"
-                                                            onClick={() => handleRemoveOption(index)}
-                                                            disabled={form.options.length === 1}
-                                                        >
-                                                            Hapus
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                                                    Belum ada option.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <Select
+                                id="option-active"
+                                value={String(form.is_active)}
+                                onChange={(e) =>
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        is_active: e.target.value === "true",
+                                    }))
+                                }
+                            >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </Select>
                         </div>
                     </div>
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button onClick={handleSubmit}>
-                        {modalMode === "add" ? "Simpan" : "Update"}
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={!form.name.trim() || actionLoading}
+                    >
+                        {actionLoading
+                            ? "Menyimpan..."
+                            : isEditMode
+                                ? "Update Option"
+                                : "Simpan Option"}
                     </Button>
 
-                    <Button color="gray" onClick={closeModal}>
+                    <Button color="gray" onClick={closeModal} disabled={actionLoading}>
                         Batal
                     </Button>
                 </ModalFooter>

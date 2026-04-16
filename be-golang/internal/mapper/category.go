@@ -1,0 +1,48 @@
+package mapper
+
+import (
+	"pos-coffeshop/internal/model"
+	"pos-coffeshop/internal/response"
+	"pos-coffeshop/internal/util"
+)
+
+
+func ToCategoryWithMenuModel(category *model.Category) *response.CategoryMenuResponse {
+	if category == nil {
+		return nil
+	}
+
+	res := &response.CategoryMenuResponse{
+		ID:          category.ID,
+		CategoryName      	: category.CategoryName,
+		Menus: make([]response.MenuCategoryMenuItemResponse, 0),
+	}
+
+
+	for _, menu := range category.CategoryMenus {
+
+		image := ""
+		if menu.Menu.ImgURL != nil {
+			image = util.BuildImageURL(*menu.Menu.ImgURL, assetHost)
+		}
+
+		res.Menus = append(res.Menus, response.MenuCategoryMenuItemResponse{
+			ID:          menu.Menu.ID,
+			CategoryMenuId: menu.ID,
+			Image:      image,
+			Name:        menu.Menu.Name,
+			Description: menu.Menu.Description,
+			Price:       menu.Menu.Price,
+			IsActive:    menu.Menu.IsActive,
+		})
+	}
+	return res
+}
+
+func ToCategoryWithMenuModels(categories []*model.Category) []*response.CategoryMenuResponse {
+	res := make([]*response.CategoryMenuResponse, 0, len(categories))
+	for _, category := range categories {
+		res = append(res, ToCategoryWithMenuModel(category))
+	}
+	return res
+}

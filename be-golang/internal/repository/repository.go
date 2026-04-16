@@ -4,7 +4,12 @@ import "gorm.io/gorm"
 
 type Repository struct {
 	Menu MenuRepo
-	// Book BookRepo
+	Category CategoryRepo
+	CategoryMenu CategoryMenuRepo
+	AddOnGroup AddOnGroupRepo
+	AddOnOption AddOnOptionRepo
+	MenuAddOnGroup MenuAddOnGroupRepo
+	// Book BookRepos
 	// User UserRepo
 }
 
@@ -20,6 +25,11 @@ type Pagination struct {
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
 		Menu: NewMenuRepository(db),
+		Category: NewCategoryRepository(db),
+		CategoryMenu: NewCategoryMenuRepository(db),
+		AddOnGroup: NewAddOnGroupRepository(db),
+		AddOnOption: NewAddOnOptionRepository(db),
+		MenuAddOnGroup: NewMenuAddOnGroupRepository(db),
 		// Book: NewBookRepository(db),
 		// User: NewUserRepository(db),
 	}

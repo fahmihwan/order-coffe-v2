@@ -2,7 +2,7 @@
 import apiClient from "./api";
 import type { Category } from "../types/category";
 import type { AxiosError } from "axios";
-import type { AddOn } from "../types/addOn";
+import type { AddOnGroup } from "../types/addOn";
 
 export const getMenu = async (): Promise<Category[]> => {
     try {
@@ -13,9 +13,9 @@ export const getMenu = async (): Promise<Category[]> => {
     }
 }
 
-export const getAddOnOptionsByMenuId = async (menuId: number): Promise<AddOn[]> => {
+export const getAddOnOptionsByMenuId = async (menuId: number): Promise<AddOnGroup[]> => {
     try {
-        const response = await apiClient.get<AddOn>('/json/listAddOn.json')
+        const response = await apiClient.get<AddOnGroup>('/json/listAddOn.json')
         return response.data?.data;
     } catch (error) {
         throw error as AxiosError;

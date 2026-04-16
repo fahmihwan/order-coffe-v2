@@ -7,6 +7,7 @@ import { navMenus } from "../../config/menuDashboard";
 type MenuName = "master" | "kelola" | null;
 
 export default function LayoutAdmin() {
+    const { pathname } = useLocation()
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
     const [openMenu, setOpenMenu] = useState<MenuName>(null);
 
@@ -46,12 +47,15 @@ export default function LayoutAdmin() {
         <div className="bg-white">
             <HeaderCompt setMobileMenuOpen={setMobileMenuOpen} />
 
-            <DesktopMenuNav
-                masterRef={masterRef}
-                toggleMenu={toggleMenu}
-                openMenu={openMenu}
-                kelolaRef={kelolaRef}
-            />
+            {pathname != '/admin/order-cashier' && (
+                <DesktopMenuNav
+                    masterRef={masterRef}
+                    toggleMenu={toggleMenu}
+                    openMenu={openMenu}
+                    kelolaRef={kelolaRef}
+                />
+            )}
+
 
             {mobileMenuOpen && (
                 <MobileMenuNav
@@ -63,7 +67,7 @@ export default function LayoutAdmin() {
                 />
             )}
 
-            <div className="p-5 bg-gray-50  " >
+            <div className=" bg-[#f1f5f9] " >
 
                 <Outlet />
 
@@ -98,7 +102,7 @@ const DesktopMenuNav = ({
     const { pathname } = useLocation()
 
     return (
-        <div className="hidden md:flex  border-2  py-2 justify-center" >
+        <div className="hidden md:flex  border  py-2 justify-center" >
             <div className="flex">
                 {navMenus.map((menu) => {
                     if (menu.type === "link") {
@@ -110,7 +114,7 @@ const DesktopMenuNav = ({
                                 key={menu.to}
                                 className={
                                     isActive
-                                        ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-blue-700 text-blue-700"
+                                        ? "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border border-gray-400 text-gray-700 bg-gray-50 "
                                         : "mr-3 py-2 px-2 flex items-center justify-center w-[150px] text-center border"}
                             >
                                 <Link to={menu.to}>{menu.label}</Link>
@@ -132,7 +136,7 @@ const DesktopMenuNav = ({
                                 onClick={() => toggleMenu(menu.key)}
                                 className={
                                     isActiveGroup
-                                        ? "w-full py-2 px-2 border border-blue-700 text-blue-700 flex items-center justify-between"
+                                        ? "w-full py-2 px-2 border border-gray-400 text-gray-700 bg-gray-50  flex items-center justify-between"
                                         : "w-full py-2 px-2 border flex items-center justify-between"
                                 }
                             >
@@ -152,7 +156,7 @@ const DesktopMenuNav = ({
                                                         to={item.to}
                                                         className={
                                                             isActiveChild
-                                                                ? "block px-4 py-2 bg-gray-100 text-blue-700 font-medium"
+                                                                ? "block px-4 py-2 bg-gray-100 text-gray-700 font-medium"
                                                                 : "block px-4 py-2 hover:bg-gray-100"
                                                         }
                                                     >
@@ -280,11 +284,25 @@ interface HeaderComptProps {
 }
 
 const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
-    return (
-        <div className="flex justify-between items-center p-3 bg-blue-700 ">
-            <span className="font-semibold text-white">Seacoff</span>
+    const { pathname } = useLocation()
 
-            <div className="flex">
+    return (
+        <div className="flex justify-between items-center p-3  shadow-lg border-b-2">
+            <span className="font-semibold ">Seacoff</span>
+
+            <div className="flex items-center">
+                {!pathname.startsWith('/admin/order-cashier') || !pathname.startsWith('/admin/history') && (
+
+                    <div className="mr-5 ">
+                        <Link
+                            className="mr-5"
+                            to="/admin/dashboard">Dashboard</Link>
+                        <span className="">
+                            Riwayat
+                        </span>
+                    </div>
+                )}
+
                 <div className="mr-5">
                     <Dropdown
                         arrowIcon={false}
@@ -308,7 +326,7 @@ const HeaderCompt = ({ setMobileMenuOpen }: HeaderComptProps) => {
                 <button
                     type="button"
                     onClick={() => setMobileMenuOpen((prev) => !prev)}
-                    className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded border bg-white"
+                    className="md:hidden flex flex-col justify-center items-center w-10 h-10 rounded border "
                 >
                     <span className="block w-5 h-0.5 bg-black mb-1"></span>
                     <span className="block w-5 h-0.5 bg-black mb-1"></span>

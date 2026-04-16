@@ -8,7 +8,6 @@ import {
     resetDrawerOptions,
     setDrawerSelectedOptions,
 } from "../../../../redux/features/cartSlice";
-import { getAddOnOptionsByMenuId } from "../../../../redux/features/menuSlice";
 
 import { formatRupiah } from "../../../../utils/cartUtils";
 
@@ -18,12 +17,15 @@ import DrawerListAddOnMenu from "../home/component/drawerAddCart/DrawerListAddOn
 
 import type { CartItem } from "../../../../types/cartItem";
 import type { Menu } from "../../../../types/menu";
+import { getMenuWithAddOnByMenuId } from "../../../../redux/features/menuSlice";
 
 export default function CartPage() {
     const dispatch = useAppDispatch();
 
+
     const cartItems = useAppSelector((state) => state.cart.items);
-    const addOnOptions = useAppSelector((state) => state.menu.addOnOptions);
+    const menu = useAppSelector((state) => state.menu);
+
     const status = useAppSelector((state) => state.menu.status);
     const error = useAppSelector((state) => state.menu.error);
 
@@ -56,7 +58,7 @@ export default function CartPage() {
         setIsAddOnDrawerOpen(true);
 
         dispatch(resetDrawerOptions());
-        dispatch(getAddOnOptionsByMenuId({ menuId: menu.id }));
+        dispatch(getMenuWithAddOnByMenuId({ menuId: menu.id }));
     };
 
     const closeAddOnDrawer = () => {
@@ -74,7 +76,7 @@ export default function CartPage() {
         setIsAddOnDrawerOpen(true);
 
         dispatch(resetDrawerOptions());
-        dispatch(getAddOnOptionsByMenuId({ menuId: item.menu.id }));
+        dispatch(getMenuWithAddOnByMenuId({ menuId: item.menu.id }));
         dispatch(setDrawerSelectedOptions(item.addons ?? []));
     };
 
@@ -178,7 +180,7 @@ export default function CartPage() {
             <DrawerListAddOnMenu
                 open={isAddOnDrawerOpen}
                 menu={selectedMenu}
-                addOns={addOnOptions}
+                menuWithAddOns={menu.menu}
                 onClose={closeAddOnDrawer}
                 editingCartKey={editingCartKey}
                 initialQty={initialDrawerQty}

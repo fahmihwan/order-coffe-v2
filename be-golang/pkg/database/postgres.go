@@ -52,7 +52,7 @@ func autoMigrate(db *gorm.DB) error {
 
 	// rollback
 	// if err := m.RollbackLast(); err != nil {
-	// 	log.Fatalf("Could not apply migrations: %v", err)
+	// 	log.Fatalf("Could not rollback migrations: %v", err)
 	// 	return err
 	// }
 
@@ -60,6 +60,19 @@ func autoMigrate(db *gorm.DB) error {
 		log.Fatalf("Could not apply migrations: %v", err)
 		return err
 	}
+
+
+
+	// rollback all
+	// for {
+	// 	err := m.RollbackLast()
+	// 	if err != nil {
+	// 		// When no more migrations to rollback, gormigrate returns error
+	// 		log.Println("Rollback finished or nothing left:", err)
+	// 		break
+	// 	}
+	// 	log.Println("Rolled back one migration")
+	// }
 
 	log.Println("Migrations applied successfully")
 	return nil

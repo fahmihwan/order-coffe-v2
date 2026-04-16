@@ -1,19 +1,20 @@
 package handler
 
 import (
-	// "best-pattern/internal/middleware"
-	// "best-pattern/internal/response"
-	// "best-pattern/internal/service"
-	// "best-pattern/internal/util"
 	"encoding/json"
+	"fmt"
+	"mime/multipart"
 	"net/http"
+	"pos-coffeshop/internal/mapper"
 	"pos-coffeshop/internal/middleware"
+	"pos-coffeshop/internal/request"
 	"pos-coffeshop/internal/response"
 	"pos-coffeshop/internal/service"
-	"pos-coffeshop/util"
+	"pos-coffeshop/internal/util"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type MenuHandler struct {
@@ -47,32 +48,15 @@ func (h *MenuHandler) Routes() http.Handler {
 
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
 	// r.Get("/", h.LisMenu)
-	// r.With(auditMiddleware("create-book", "book")).Post("/", h.CreateBook)
-	// r.With(auditMiddleware("get-book", "book")).Get("/{id}", h.GetBook)
-	// r.With(auditMiddleware("update-book", "book")).Put("/{id}", h.UpdateBook)
-	// r.With(auditMiddleware("delete-book", "book")).Delete("/{id}", h.DeleteBook)
+	r.With(auditMiddleware("create-menu", "menu")).Post("/", h.CreateMenu)
+	r.With(auditMiddleware("list-menu-with-categories", "menu")).Get("/with-categories", h.ListMenuWithCategories)	
+	r.With(auditMiddleware("get-menu", "menu")).Get("/{id}", h.GetMenuByID)
+	r.With(auditMiddleware("update-menu", "menu")).Put("/{id}", h.UpdateMenu)
+	r.With(auditMiddleware("delete-menu", "menu")).Delete("/{id}", h.DeleteMenu)
 	return r
 
 }
 
-// func (h *MenuHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
-// 	var req = new(request.BookRequest)
-// 	if err := request.ParseForm(r, req); err != nil {
-// 		middleware.HandleValidationErrors(err, w)
-// 		return
-// 	}
-
-// 	book := req.ToBook()
-// 	createBook, err := h.menuService.CreateBook(ctx, book)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	response := response.NewSuccessResponse(createBook)
-// 	w.WriteHeader(http.StatusCreated)
-// 	json.NewEncoder(w).Encode(response)
-// }
 
 func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 
@@ -106,83 +90,172 @@ func (h *MenuHandler) LisMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	datas := mapper.ToMenus(menus)
+
 	// Calculate pagination
 	pagination := response.Pagination{
 		CurrentPage: page,
 		From:        (page-1)*limit + 1,
-		To:          (page-1)*limit + len(menus),
+		To:          (page-1)*limit + len(datas),
 		Pages:       (total + limit - 1) / limit,
 		Total:       total,
 	}
 
 	// Create success response with pagination
-	successResponse := response.NewSuccessResponseWithPagination(menus, pagination)
+	successResponse := response.NewSuccessResponseWithPagination(datas, pagination)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(successResponse)
 }
 
-// func (h *MenuHandler) GetBook(w http.ResponseWriter, r *http.Request) {
-// 	ctx := r.Context()
 
-// 	id := chi.URLParam(r, "id")
+func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var req = new(request.MenuRequest)
 
-// 	book, err := h.menuService.GetBookByID(ctx, id)
-// 	if err != nil {
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
 
-// 	successResponse := response.NewSuccessResponse(book)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)
-// }
+	file, header, err := r.FormFile("image")
+	if err != nil {
+		fmt.Errorf("failed to create destination file: %w", err)
+		return
+	}
 
-// func (h *MenuHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
-// 	// Implementation for updating a book
-// 	ctx := r.Context()
+	menu := req.ToMenu()
+	createMenu, err := h.menuService.CreateMenu(ctx, menu,file, header)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating form: %v", err), http.StatusInternalServerError)
+		return
+	}
 
-// 	var req = new(request.BookRequest)
-// 	if err := request.ParseForm(r, req); err != nil {
-// 		middleware.HandleValidationErrors(err, w)
-// 		return
-// 	}
-// 	ids := chi.URLParam(r, "id")
-// 	book := req.ToBook()
-// 	id, err := strconv.ParseInt(ids, 10, 64)
-// 	if err != nil {
-// 		http.Error(w, "invalid id", http.StatusBadRequest)
-// 		return
-// 	}
+	response := response.NewSuccessResponse(createMenu)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
 
-// 	book.ID = id
+func (h *MenuHandler) ListMenuWithCategories(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	fmt.Println("masuk handler list menu with categories")
+	// categoryID := chi.URLParam(r, "category_id")
 
-// 	updatedBook, err := h.menuService.UpdateBook(ctx, book)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Error updating book: %v", err), http.StatusInternalServerError)
-// 		return
-// 	}
+	menus, err := h.menuService.ListMenuWithCategories(ctx)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	// util.Dump(map[string]any{
+	// 	"menus": menus,
+	// })
 
-// 	response := response.NewSuccessResponse(updatedBook)
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(response)
-// }
+	// util.Dump(map[string]any{
+	// 	"categoryMenus": categoryMenus,
+	// })
+	// util.DD(menus)
 
-// func (h *MenuHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
-// 	ctx := r.Context()
-// 	id := chi.URLParam(r, "id")
+	datas := mapper.ToMenuWithCategories(menus)
 
-// 	err := h.menuService.DeleteBook(ctx, id)
-// 	if err != nil {
-// 		response := response.NewErrorResponse(err.Error())
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		json.NewEncoder(w).Encode(response)
-// 		return
-// 	}
+	successResponse := response.NewSuccessResponse(datas)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
+}	
 
-// 	successResponse := response.NewSuccessResponse("Book deleted successfully")
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(successResponse)
-// }
+func (h *MenuHandler) GetMenuByID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	id := chi.URLParam(r, "id")
+
+	book, err := h.menuService.GetMenuByID(ctx, id)
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	successResponse := response.NewSuccessResponse(book)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(successResponse)
+}
+
+func (h *MenuHandler) UpdateMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ids := chi.URLParam(r, "id")
+	id, err := uuid.Parse(ids)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	var req = new(request.MenuRequest)
+	if err := request.ParseForm(r, req); err != nil {
+		middleware.HandleValidationErrors(err, w)
+		return
+	}
+
+	menu := req.ToMenu()
+	menu.ID = id
+
+	var file multipart.File
+	var header *multipart.FileHeader
+
+	file, header, err = r.FormFile("image")
+	if err != nil {
+		if err != http.ErrMissingFile {
+			http.Error(w, fmt.Sprintf("failed to read image: %v", err), http.StatusBadRequest)
+			return
+		}
+		file = nil
+		header = nil
+	}
+	if file != nil {
+		defer file.Close()
+	}
+
+	updatedMenu, err := h.menuService.UpdateMenu(ctx, menu, file, header)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error updating menu: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// fmt.Printf("cek %+v",updatedMenu)
+	// fmt.Println(updatedMenu)
+
+	resp := response.NewSuccessResponse(updatedMenu)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *MenuHandler) DeleteMenu(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ids := chi.URLParam(r, "id")
+	id, err := uuid.Parse(ids)
+	if err != nil {
+		response := response.NewErrorResponse("invalid id")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	err = h.menuService.DeleteMenu(ctx, id.String())
+	if err != nil {
+		response := response.NewErrorResponse(err.Error())
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	successResponse := response.NewSuccessResponse("Menu deleted successfully")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(successResponse)
+}

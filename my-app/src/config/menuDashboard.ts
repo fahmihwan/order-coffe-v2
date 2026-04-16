@@ -20,7 +20,7 @@ export const navMenus: MenuNavItem[] = [
     {
         type: "group",
         key: "kelola",
-        label: "Relasi / Pengaturan produk",
+        label: "Pengaturan produk",
         items: [
             { label: "Kategori - Menu", to: "/admin/product-setting/category-menu" },
             { label: "Menu - Add on", to: "/admin/product-setting/menu-addon" },
