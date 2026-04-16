@@ -417,22 +417,28 @@ export default function OrderKasirPage() {
                             filteredMenus.map((menu) => (
                                 <div
                                     key={menu.id}
-                                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                    onClick={() => handleAddToCart(menu)}
+                                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500 hover:shadow-xl "
                                 >
-                                    <img
-                                        src={menu.image}
-                                        alt={menu.name}
-                                        className="h-44 w-full object-cover"
-                                    />
+                                    <div className="relative overflow-hidden">
+                                        <img
+                                            src={menu.image}
+                                            alt={menu.name}
+                                            className="h-44 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                                        />
+
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                                            <div className="translate-y-2 rounded-full border border-purple-500 bg-white/95 px-4 py-2 text-sm font-semibold text-purple-600 shadow-md transition-all duration-300 group-hover:translate-y-0">
+                                                + Tambah
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <div className="space-y-3 p-4">
                                         <div>
-                                            <h3 className="text-lg font-semibold text-gray-900">
+                                            <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-purple-600">
                                                 {menu.name}
                                             </h3>
-                                            <p className="mt-1 text-sm text-gray-500">
-                                                {menu.description}
-                                            </p>
                                         </div>
 
                                         {!!menu.categories?.length && (
@@ -440,7 +446,7 @@ export default function OrderKasirPage() {
                                                 {menu.categories.map((category) => (
                                                     <span
                                                         key={category.id}
-                                                        className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                                                        className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-all duration-300 group-hover:bg-purple-50 group-hover:text-purple-600"
                                                     >
                                                         {category.category_name}
                                                     </span>
@@ -451,13 +457,6 @@ export default function OrderKasirPage() {
                                         <p className="text-base font-bold text-green-600">
                                             {formatRupiah(menu.price)}
                                         </p>
-
-                                        <button
-                                            onClick={() => handleAddToCart(menu)}
-                                            className="w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium hover:bg-brand-strong"
-                                        >
-                                            Tambah Pesanan
-                                        </button>
                                     </div>
                                 </div>
                             ))
