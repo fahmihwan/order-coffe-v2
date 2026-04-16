@@ -16,7 +16,7 @@ import {
 } from "../../../redux/features/cartSlice";
 import type { Menu } from "../../../types/menu";
 import type { AddOnGroup, AddOnOption } from "../../../types/addOn";
-import type { CartItem } from "../../../types/cartItem";
+import type { CartItem, GroupedAddonsCart } from "../../../types/cartItem";
 import type { Category } from "../../../types/category";
 import { formatRupiah } from "../../../utils/cartUtils";
 
@@ -62,30 +62,6 @@ export default function OrderKasirPage() {
         dispatch(getMenuWithCategories());
     }, [dispatch]);
 
-    useEffect(() => {
-        if (!selectedMenu || !menuWithAddOn) return;
-        if (String(menuWithAddOn.id) !== String(selectedMenu.id)) return;
-
-        const groups = menuWithAddOn.add_on_groups || [];
-
-        dispatch(resetDrawerOptions());
-        setQtyDrawer(1);
-
-        if (groups.length === 0) {
-            dispatch(
-                addFromDrawer({
-                    menu: selectedMenu,
-                    selectedAddons: [],
-                    qtyDrawer: 1,
-                })
-            );
-            setSelectedMenu(null);
-            return;
-        }
-
-        setIsAddOnModalOpen(true);
-    }, [menuWithAddOn, selectedMenu, dispatch]);
-
     /**
      * Ambil kategori dari menuWithCategories.categories
      * supaya tab mengikuti data kategori yang benar-benar dipakai oleh menu.
@@ -111,7 +87,7 @@ export default function OrderKasirPage() {
         });
 
         // Optional fallback: tambahkan dari masterCategories kalau memang ada
-        (masterCategories as Category[] | undefined)?.forEach((category: any) => {
+        (masterCategories as Category[] | undefined)?.forEach((category: Category) => {
             if (
                 category?.id &&
                 category?.category_name &&
@@ -156,9 +132,34 @@ export default function OrderKasirPage() {
         setSelectedCategoryId(String(categoryId));
     };
 
-    const handleAddToCart = (menu: Menu) => {
-        setSelectedMenu(menu);
-        dispatch(getMenuWithAddOnByMenuId({ menuId: menu.id }));
+    const handleAddToCart = async (menu: Menu) => {
+        try {
+            setAddOnErrors({});
+            dispatch(resetDrawerOptions());
+            setQtyDrawer(1);
+
+            const menuDetail = await dispatch(
+                getMenuWithAddOnByMenuId({ menuId: menu.id })
+            ).unwrap();
+
+            const groups = menuDetail.add_on_groups || [];
+
+            if (groups.length === 0) {
+                dispatch(
+                    addFromDrawer({
+                        menu,
+                        selectedAddons: [],
+                        qtyDrawer: 1,
+                    })
+                );
+                return;
+            }
+
+            setSelectedMenu(menu);
+            setIsAddOnModalOpen(true);
+        } catch (error) {
+            console.error("Gagal ambil menu add on:", error);
+        }
     };
 
     const handleSelectOption = (group: AddOnGroup, option: AddOnOption) => {
@@ -518,7 +519,7 @@ export default function OrderKasirPage() {
                                                 {item.addons?.length > 0 && (
                                                     <div className="mt-1 space-y-1">
                                                         {Object.values(
-                                                            item.addons.reduce((acc: any, addon: AddOnOption) => {
+                                                            item.addons.reduce((acc: GroupedAddonsCart, addon: AddOnOption) => {
                                                                 if (!acc[addon.add_on_group_id]) {
                                                                     acc[addon.add_on_group_id] = {
                                                                         groupId: addon.add_on_group_id,
@@ -528,7 +529,7 @@ export default function OrderKasirPage() {
                                                                 acc[addon.add_on_group_id].options.push(addon);
                                                                 return acc;
                                                             }, {})
-                                                        ).map((group: any) => (
+                                                        ).map((group) => (
                                                             <div
                                                                 key={group.groupId}
                                                                 className="text-xs text-gray-600"

@@ -16,3 +16,12 @@ export interface CartItem {
 export interface CartItems {
     [key: string]: CartItem;
 }
+
+
+export type GroupedAddonsCart = Record<
+    string,
+    {
+        groupId: string;
+        options: AddOnOption[];
+    }
+>;
