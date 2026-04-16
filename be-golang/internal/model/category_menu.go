@@ -13,6 +13,7 @@ type CategoryMenu struct {
 	MenuID      uuid.UUID   `gorm:"type:uuid;not null" json:"menu_id"`	
 
 	Menu     Menu     `json:"menu" gorm:"foreignKey:MenuID;references:ID"`
+	Category Category `json:"category" gorm:"foreignKey:CategoryID;references:ID`
 
 	CreatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"updated_at"`

@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { getCategoryMenu, getMasterCategory } from "../../../redux/features/categorySlice";
-import { getMenuWithAddOnByMenuId } from "../../../redux/features/menuSlice";
+import { getMasterCategory } from "../../../redux/features/categorySlice";
+import {
+    getMenuWithAddOnByMenuId,
+    getMenuWithCategories,
+} from "../../../redux/features/menuSlice";
 import {
     addFromDrawer,
     decrementMenu,
@@ -17,49 +20,31 @@ import type { CartItem } from "../../../types/cartItem";
 import type { Category } from "../../../types/category";
 import { formatRupiah } from "../../../utils/cartUtils";
 
-// type AddOnOption = {
-//     id: string;
-//     name: string;
-//     price: number;
-//     is_active: boolean;
-//     type: "radio" | "checkbox";
-//     add_on_group_id: string;
-// };
-
-// type AddOnGroup = {
-//     id: string;
-//     title: string;
-//     description: string;
-//     is_required: boolean;
-//     min_select: number;
-//     max_select: number;
-//     menu_add_on_group_id: string;
-//     add_on_options: AddOnOption[];
-// };
-
-// type MenuWithAddOn = {
-//     id: string;
-//     image: string;
-//     name: string;
-//     description: string;
-//     price: number;
-//     is_active: boolean;
-//     add_on_groups?: AddOnGroup[];
-// };
-
 const quickAmounts = [10000, 20000, 50000, 100000];
+
+type CategoryWithAll = {
+    id: string;
+    category_name: string;
+};
+
+type MenuWithCategoriesType = Menu & {
+    categories?: {
+        id: string;
+        category_name: string;
+    }[];
+};
 
 export default function OrderKasirPage() {
     const dispatch = useAppDispatch();
 
     const { masterCategories } = useAppSelector((state) => state.category);
+    const { menuWithCategories } = useAppSelector((state) => state.menu);
     const menuWithAddOn = useAppSelector((state) => state.menu.menu) as Menu | null;
     const cartItems = useAppSelector((state) => state.cart.items);
     const drawerSelectedOptions = useAppSelector(
         (state) => state.cart.drawerSelectedOptions
     );
 
-    console.log(masterCategories);
     const cart = useMemo(() => Object.values(cartItems || {}), [cartItems]);
 
     const [paymentMethod, setPaymentMethod] = useState("Tunai");
@@ -69,10 +54,12 @@ export default function OrderKasirPage() {
     const [isAddOnModalOpen, setIsAddOnModalOpen] = useState(false);
     const [qtyDrawer, setQtyDrawer] = useState(1);
     const [addOnErrors, setAddOnErrors] = useState<Record<string, string>>({});
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         dispatch(getMasterCategory({}));
-        dispatch(getCategoryMenu({}));
+        dispatch(getMenuWithCategories());
     }, [dispatch]);
 
     useEffect(() => {
@@ -82,7 +69,6 @@ export default function OrderKasirPage() {
         const groups = menuWithAddOn.add_on_groups || [];
 
         dispatch(resetDrawerOptions());
-        // setAddOnErrors({});
         setQtyDrawer(1);
 
         if (groups.length === 0) {
@@ -100,6 +86,75 @@ export default function OrderKasirPage() {
         setIsAddOnModalOpen(true);
     }, [menuWithAddOn, selectedMenu, dispatch]);
 
+    /**
+     * Ambil kategori dari menuWithCategories.categories
+     * supaya tab mengikuti data kategori yang benar-benar dipakai oleh menu.
+     */
+    const categoriesWithAll = useMemo<CategoryWithAll[]>(() => {
+        const allCategory: CategoryWithAll = {
+            id: "all",
+            category_name: "Semua",
+        };
+
+        const map = new Map<string, CategoryWithAll>();
+
+        // Prioritas 1: kategori dari menuWithCategories.categories
+        (menuWithCategories as MenuWithCategoriesType[] | undefined)?.forEach((menu) => {
+            (menu.categories || []).forEach((category) => {
+                if (!map.has(String(category.id))) {
+                    map.set(String(category.id), {
+                        id: String(category.id),
+                        category_name: category.category_name,
+                    });
+                }
+            });
+        });
+
+        // Optional fallback: tambahkan dari masterCategories kalau memang ada
+        (masterCategories as Category[] | undefined)?.forEach((category: any) => {
+            if (
+                category?.id &&
+                category?.category_name &&
+                !map.has(String(category.id))
+            ) {
+                map.set(String(category.id), {
+                    id: String(category.id),
+                    category_name: category.category_name,
+                });
+            }
+        });
+
+        return [allCategory, ...Array.from(map.values())];
+    }, [menuWithCategories, masterCategories]);
+
+    /**
+     * Filter menu berdasarkan:
+     * 1. selectedCategoryId => cocok dengan menu.categories[].id
+     * 2. search => name / description
+     */
+    const filteredMenus = useMemo(() => {
+        const menus = (menuWithCategories || []) as MenuWithCategoriesType[];
+
+        return menus.filter((menu) => {
+            const matchCategory =
+                selectedCategoryId === "all" ||
+                (menu.categories || []).some(
+                    (category) => String(category.id) === String(selectedCategoryId)
+                );
+
+            const keyword = search.trim().toLowerCase();
+            const matchSearch =
+                keyword === "" ||
+                menu.name?.toLowerCase().includes(keyword) ||
+                menu.description?.toLowerCase().includes(keyword);
+
+            return matchCategory && matchSearch;
+        });
+    }, [menuWithCategories, selectedCategoryId, search]);
+
+    const handleCategoryClick = (categoryId: string) => {
+        setSelectedCategoryId(String(categoryId));
+    };
 
     const handleAddToCart = (menu: Menu) => {
         setSelectedMenu(menu);
@@ -295,11 +350,9 @@ export default function OrderKasirPage() {
 
     return (
         <>
-            <div className="flex flex-col gap-6 lg:flex-row  overflow-hidden h-[calc(100dvh-80px)] ">
-
-                {/* div A */}
-                <div className="w-full lg:w-8/12 space-y-8 p-5  overflow-scroll  min-h-0">
-                    <div className="">
+            <div className="flex h-[calc(100dvh-80px)] flex-col gap-6 overflow-hidden lg:flex-row">
+                <div className="min-h-0 w-full space-y-8 overflow-scroll p-5 lg:w-8/12">
+                    <div>
                         <label htmlFor="input-group-1" className="sr-only">
                             Search
                         </label>
@@ -327,67 +380,95 @@ export default function OrderKasirPage() {
                             <input
                                 type="text"
                                 id="input-group-1"
-                                className="block w-full  rounded-lg  border-gray-300 border-default-medium  ps-9 pe-3 py-3 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="block w-full rounded-lg border-default-medium border-gray-300 py-3 ps-9 pe-3 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
                                 placeholder="Search"
                             />
                         </div>
                     </div>
+
                     <div>
-                        <div>
-                            <button type="button" className="text-body bg-white box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none">Secondary</button>
-                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {categoriesWithAll.map((category) => {
+                                const isActive =
+                                    String(selectedCategoryId) === String(category.id);
 
-
-                    </div>
-                    {masterCategories?.map((category: Category) => (
-                        <section key={category.id} className="space-y-4">
-                            <div>
-                                <h2 className="text-xl font-semibold">{category.category_name}</h2>
-                                <p className="text-sm text-gray-500">
-                                    Total menu: {category.menus?.length}
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                                {category.menus?.map((menu: Menu) => (
-                                    <div
-                                        key={menu.id}
-                                        className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                return (
+                                    <button
+                                        key={category.id}
+                                        type="button"
+                                        onClick={() => handleCategoryClick(String(category.id))}
+                                        className={`rounded-base border px-4 py-2.5 text-sm font-medium leading-5 shadow-xs transition ${isActive
+                                            ? "border-brand bg-purple-500 text-white focus:ring-brand/30"
+                                            : "border-default-medium bg-white text-body hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-neutral-tertiary"
+                                            }`}
                                     >
-                                        <img
-                                            src={menu.image}
-                                            alt={menu.name}
-                                            className="h-44 w-full object-cover"
-                                        />
+                                        {category.category_name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                                        <div className="p-4 space-y-3">
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-gray-900">
-                                                    {menu.name}
-                                                </h3>
-                                            </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                        {filteredMenus.length > 0 ? (
+                            filteredMenus.map((menu) => (
+                                <div
+                                    key={menu.id}
+                                    className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                                >
+                                    <img
+                                        src={menu.image}
+                                        alt={menu.name}
+                                        className="h-44 w-full object-cover"
+                                    />
 
-                                            <p className="text-base font-bold text-green-600">
-                                                {formatRupiah(menu.price)}
+                                    <div className="space-y-3 p-4">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-gray-900">
+                                                {menu.name}
+                                            </h3>
+                                            <p className="mt-1 text-sm text-gray-500">
+                                                {menu.description}
                                             </p>
-
-                                            <button
-                                                onClick={() =>
-                                                    handleAddToCart(menu as Menu)
-                                                }
-                                                className="w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium hover:bg-brand-strong"
-                                            >
-                                                Tambah Pesanan
-                                            </button>
                                         </div>
+
+                                        {!!menu.categories?.length && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {menu.categories.map((category) => (
+                                                    <span
+                                                        key={category.id}
+                                                        className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600"
+                                                    >
+                                                        {category.category_name}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <p className="text-base font-bold text-green-600">
+                                            {formatRupiah(menu.price)}
+                                        </p>
+
+                                        <button
+                                            onClick={() => handleAddToCart(menu)}
+                                            className="w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium hover:bg-brand-strong"
+                                        >
+                                            Tambah Pesanan
+                                        </button>
                                     </div>
-                                ))}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
+                                Menu tidak ditemukan
                             </div>
-                        </section>
-                    ))}
+                        )}
+                    </div>
                 </div>
-                {/* div B */}
-                <div className="w-full lg:w-4/12  overflow-scroll  min-h-0">
+
+                <div className="min-h-0 w-full overflow-scroll lg:w-4/12">
                     <div className="sticky top-4 h-screen border-x border-t-0 border-gray-200 bg-white p-4 shadow-sm">
                         <div className="mb-4 flex items-center justify-between">
                             <div>
@@ -407,7 +488,7 @@ export default function OrderKasirPage() {
                             )}
                         </div>
 
-                        <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+                        <div className="max-h-[480px] space-y-3 overflow-y-auto pr-1">
                             {cart.length === 0 ? (
                                 <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
                                     Belum ada menu di keranjang
@@ -447,13 +528,16 @@ export default function OrderKasirPage() {
                                                                 acc[addon.add_on_group_id].options.push(addon);
                                                                 return acc;
                                                             }, {})
-                                                        ).map((group) => (
+                                                        ).map((group: any) => (
                                                             <div
                                                                 key={group.groupId}
                                                                 className="text-xs text-gray-600"
                                                             >
                                                                 {group.options.map((option: AddOnOption) => (
-                                                                    <span key={option.id} className="mr-2 inline-block">
+                                                                    <span
+                                                                        key={option.id}
+                                                                        className="mr-2 inline-block"
+                                                                    >
                                                                         {option.name}
                                                                         {option.price > 0
                                                                             ? ` (+${formatRupiah(option.price)})`
@@ -508,7 +592,7 @@ export default function OrderKasirPage() {
                             )}
                         </div>
 
-                        <div className="mt-4 border-t pt-4 space-y-3">
+                        <div className="mt-4 space-y-3 border-t pt-4">
                             <div className="flex items-center justify-between text-sm text-gray-600">
                                 <span>Total Item</span>
                                 <span>{totalItems}</span>
@@ -564,7 +648,9 @@ export default function OrderKasirPage() {
 
                             <div className="flex items-center justify-between text-base font-semibold">
                                 <span>Kembalian</span>
-                                <span className={amountPaid < subtotal ? "text-red-500" : "text-green-600"}>
+                                <span
+                                    className={amountPaid < subtotal ? "text-red-500" : "text-green-600"}
+                                >
                                     {formatRupiah(change)}
                                 </span>
                             </div>
@@ -604,7 +690,7 @@ export default function OrderKasirPage() {
                             </button>
                         </div>
 
-                        <div className="max-h-[70vh] overflow-y-auto p-4 space-y-6">
+                        <div className="max-h-[70vh] space-y-6 overflow-y-auto p-4">
                             <div className="rounded-lg border border-gray-200 p-4">
                                 <div className="flex items-center gap-4">
                                     <img
@@ -614,7 +700,9 @@ export default function OrderKasirPage() {
                                     />
                                     <div>
                                         <h3 className="text-lg font-semibold">{menuWithAddOn.name}</h3>
-                                        <p className="text-sm text-gray-500">{menuWithAddOn.description}</p>
+                                        <p className="text-sm text-gray-500">
+                                            {menuWithAddOn.description}
+                                        </p>
                                         <p className="mt-1 text-sm font-semibold text-green-600">
                                             {formatRupiah(menuWithAddOn.price)}
                                         </p>
@@ -655,7 +743,7 @@ export default function OrderKasirPage() {
                                 return (
                                     <div
                                         key={group.id}
-                                        className="rounded-lg border border-gray-200 p-4 space-y-3"
+                                        className="space-y-3 rounded-lg border border-gray-200 p-4"
                                     >
                                         <div>
                                             <h4 className="font-semibold text-gray-900">
@@ -706,7 +794,9 @@ export default function OrderKasirPage() {
                                         </div>
 
                                         {addOnErrors[group.id] && (
-                                            <p className="text-sm text-red-500">{addOnErrors[group.id]}</p>
+                                            <p className="text-sm text-red-500">
+                                                {addOnErrors[group.id]}
+                                            </p>
                                         )}
                                     </div>
                                 );
@@ -717,7 +807,9 @@ export default function OrderKasirPage() {
                             <div>
                                 <p className="text-sm text-gray-500">Total per item</p>
                                 <p className="text-lg font-bold text-green-600">
-                                    {formatRupiah((menuWithAddOn.price + addOnTotalPreview) * qtyDrawer)}
+                                    {formatRupiah(
+                                        (menuWithAddOn.price + addOnTotalPreview) * qtyDrawer
+                                    )}
                                 </p>
                             </div>
 

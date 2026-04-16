@@ -49,7 +49,7 @@ func (h *MenuHandler) Routes() http.Handler {
 	r.With(auditMiddleware("list-menu", "menu")).Get("/", h.LisMenu)
 	// r.Get("/", h.LisMenu)
 	r.With(auditMiddleware("create-menu", "menu")).Post("/", h.CreateMenu)
-	r.With(auditMiddleware("get-menu-by-category", "menu")).Get("/{category_id}/menus", h.GetMenuByCategoryID)	
+	r.With(auditMiddleware("list-menu-with-categories", "menu")).Get("/with-categories", h.ListMenuWithCategories)	
 	r.With(auditMiddleware("get-menu", "menu")).Get("/{id}", h.GetMenuByID)
 	r.With(auditMiddleware("update-menu", "menu")).Put("/{id}", h.UpdateMenu)
 	r.With(auditMiddleware("delete-menu", "menu")).Delete("/{id}", h.DeleteMenu)
@@ -135,20 +135,29 @@ func (h *MenuHandler) CreateMenu(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *MenuHandler) GetMenuByCategoryID(w http.ResponseWriter, r *http.Request) {
+func (h *MenuHandler) ListMenuWithCategories(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	fmt.Println("masuk handler list menu with categories")
+	// categoryID := chi.URLParam(r, "category_id")
 
-	categoryID := chi.URLParam(r, "category_id")
-
-	menus, err := h.menuService.FindMenuByCategoryID(ctx, categoryID)
+	menus, err := h.menuService.ListMenuWithCategories(ctx)
 	if err != nil {
 		response := response.NewErrorResponse(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response)
 		return
 	}
+	// util.Dump(map[string]any{
+	// 	"menus": menus,
+	// })
 
-	datas := mapper.ToMenus(menus)
+	// util.Dump(map[string]any{
+	// 	"categoryMenus": categoryMenus,
+	// })
+	// util.DD(menus)
+
+
+	datas := mapper.ToMenuWithCategories(menus)
 
 	successResponse := response.NewSuccessResponse(datas)
 	w.Header().Set("Content-Type", "application/json")

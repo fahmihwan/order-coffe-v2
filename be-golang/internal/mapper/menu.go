@@ -100,3 +100,44 @@ func ToMenuWithAddOnModels(menus []*model.Menu) []*response.MenuWithAddOnRespons
 }
 
 
+
+func ToMenuWithCategory(menu *model.Menu) *response.MenuWithCategoryResponse {	
+	if menu == nil {
+		return nil
+	}
+
+	image := ""
+	if menu.ImgURL != nil {
+		image = util.BuildImageURL(*menu.ImgURL, assetHost)
+	}
+
+
+	res := &response.MenuWithCategoryResponse{
+		ID: menu.ID,
+		Image:      image,
+		Name:        menu.Name,
+		Description: menu.Description,
+		Price:       menu.Price,
+		IsActive:    menu.IsActive,
+		Categories: make([]response.CategoryResponse,0),
+	}
+
+	for _, categoryMenu := range menu.CategoryMenus {
+		res.Categories = append(res.Categories, response.CategoryResponse{
+			ID: categoryMenu.Category.ID,
+			CategoryName: categoryMenu.Category.CategoryName,
+		})	
+	}
+
+
+	return  res
+}
+
+
+func ToMenuWithCategories(menus []*model.Menu) []*response.MenuWithCategoryResponse {
+	res := make([]*response.MenuWithCategoryResponse, 0, len(menus))
+	for _, menu := range menus {
+		res = append(res, ToMenuWithCategory(menu))
+	}
+	return res
+}

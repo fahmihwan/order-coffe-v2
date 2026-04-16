@@ -17,7 +17,7 @@ type Menu struct {
 
 
 	MenuAddOnGroups []MenuAddOnGroup `json:"menu_add_on_groups,omitempty" gorm:"foreignKey:MenuID;references:ID"`
-
+	CategoryMenus []CategoryMenu `json:"category_menus,omitempty" gorm:"foreignKey:MenuID;references:ID"`
 	CreatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"type:timestamp;default:CURRENT_TIMESTAMP" json:"updated_at"`
 	// DeletedAt   gorm.DeletedAt `gorm:"type:timestamp" json:"deleted_at,omitempty"`

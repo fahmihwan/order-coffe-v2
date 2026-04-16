@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
 
-import type { Menu, MenuAddOnPayload, MenuPayload, MenuState, UpdateMenuPayload } from "../../types/menu";
+import type { Menu, MenuAddOnPayload, MenuPayload, MenuState, MenuWithCategory, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
 
@@ -11,6 +11,7 @@ const initialState: MenuState = {
     addOnOptions: [],
     menu: null,
     masterMenus: [],
+    menuWithCategories: [],
     selectedMenu: null,
     loading: false,
     actionLoading: false,
@@ -41,13 +42,10 @@ export const getMasterMenu = createAsyncThunk<{ data: Menu[]; pagination: Pagina
     }
 });
 
-export const getMenuByCategoryId = createAsyncThunk<{ data: Menu[]; message: string }, string, { rejectValue: string }>("menu/category", async (categoryId, { rejectWithValue }) => {
+export const getMenuWithCategories = createAsyncThunk<MenuWithCategory[], void, { rejectValue: string }>("menu/with-categories", async (_, { rejectWithValue }) => {
     try {
-        const response = await apiClient.get<ApiResponse<Menu[]>>(`/menu/${categoryId}/menus`);
-        return {
-            data: response.data.data ?? [],
-            message: response.data.message ?? "Success",
-        };
+        const response = await apiClient.get<ApiResponse<MenuWithCategory[]>>(`/menu/with-categories`);
+        return response.data.data ?? [];
     } catch (err: unknown) {
         return rejectWithValue(extractErrorMessage(err, "Failed to fetch menu by category"));
     }
@@ -273,15 +271,15 @@ export const menuSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload ?? "Failed to fetch menu";
             })
-            .addCase(getMenuByCategoryId.pending, (state) => {
+            .addCase(getMenuWithCategories.pending, (state) => {
                 state.actionLoading = true;
                 state.error = null;
             })
-            .addCase(getMenuByCategoryId.fulfilled, (state, action) => {
+            .addCase(getMenuWithCategories.fulfilled, (state, action) => {
                 state.actionLoading = false;
-                state.masterMenus = action.payload.data;
+                state.menuWithCategories = action.payload;
             })
-            .addCase(getMenuByCategoryId.rejected, (state, action) => {
+            .addCase(getMenuWithCategories.rejected, (state, action) => {
                 state.actionLoading = false;
                 state.error = action.payload ?? "Failed to fetch menu detail";
             })

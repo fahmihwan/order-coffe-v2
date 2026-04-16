@@ -12,7 +12,16 @@ export interface Menu {
     add_on_groups?: AddOnGroup[]
 }
 
-
+export interface MenuWithCategory {
+    id: string;           // uuid.UUID -> string
+    category_id: string;
+    image?: string;       // omitempty
+    name: string;
+    description?: string; // *string + omitempty
+    price: number;        // float64 -> number
+    is_active: boolean;
+    Category: Category[];
+}
 
 export interface MenuWithCategoryMenuId {
     id: string;           // uuid.UUID -> string
@@ -48,6 +57,7 @@ export interface MenuState {
     addOnOptions: AddOnGroup[];
     menu: Menu | null;
     masterMenus: Menu[];
+    menuWithCategories: MenuWithCategory[];
     selectedMenu: Menu | null;
     loading: boolean;
     actionLoading: boolean;

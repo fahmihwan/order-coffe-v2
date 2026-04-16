@@ -34,3 +34,14 @@ type MenuCategoryMenuItemResponse struct {
 	Price       float64              `json:"price"`
 	IsActive    bool                 `json:"is_active"`
 }
+
+
+type MenuWithCategoryResponse struct {
+	ID          uuid.UUID            `json:"id"`
+	Image      string              `json:"image,omitempty"`
+	Name        string               `json:"name"`
+	Description *string              `json:"description,omitempty"`
+	Price       float64              `json:"price"`
+	IsActive    bool                 `json:"is_active"`
+	Categories []CategoryResponse `json:"categories"`
+}

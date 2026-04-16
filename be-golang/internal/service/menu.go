@@ -17,7 +17,7 @@ var _ MenuServiceInteface = &MenuService{}
 type MenuServiceInteface interface {
 	ListMenu(ctx context.Context, filters map[string]string, search string, page, limit int, sortBy, orderBy string) ([]*model.Menu, int, error)
 	CreateMenu(ctx context.Context, menu *model.Menu, file multipart.File, header *multipart.FileHeader) (*model.Menu, error)
-	FindMenuByCategoryID(ctx context.Context, categoryID string) ([]*model.Menu, error)
+	ListMenuWithCategories(ctx context.Context) ([]*model.Menu, error)
 	GetMenuByID(ctx context.Context, id string) (*model.Menu, error)
 	UpdateMenu(ctx context.Context, menu *model.Menu,file multipart.File,header *multipart.FileHeader) (*model.Menu, error)
 	DeleteMenu(ctx context.Context, id string) error
@@ -79,10 +79,10 @@ func (s *MenuService) ListMenu(ctx context.Context, filters map[string]string, s
 
 }
 
-func (s *MenuService) FindMenuByCategoryID(ctx context.Context, categoryID string) ([]*model.Menu, error) {
-	menus, err := s.repo.Menu.FindMenuByCategoryID(ctx, categoryID)
+func (s *MenuService) ListMenuWithCategories(ctx context.Context) ([]*model.Menu, error) {
+	menus, err := s.repo.Menu.ListMenuWithCategories(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find menu by category ID: %w", err)
+		return nil, fmt.Errorf("failed to list menu with categories: %w", err)
 	}
 	return menus, nil
 }
