@@ -7,5 +7,6 @@ type Service struct {
 	AddOnGroup *AddOnGroupService
 	AddOnOption *AddOnOptionService
 	MenuAddOnGroup *MenuAddOnGroupService
+	Room *RoomService
 	// User *UserService
 }

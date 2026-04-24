@@ -22,7 +22,7 @@ type RoomRepo interface {
 	setFilter(db *gorm.DB, filter FilterRoom) *gorm.DB
 	GetByID(ctx context.Context, id string) (*model.Room, error)
 	Update(ctx context.Context, room *model.Room) error
-	// Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 var _ RoomRepo = (*RoomRepository)(nil)
