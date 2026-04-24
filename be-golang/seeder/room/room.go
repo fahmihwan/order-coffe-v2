@@ -22,8 +22,8 @@ func SeedRoom(db *gorm.DB) error {
 			QRCode:         stringPtr("ROOM-001-QR"),
 			RoomPosition:   "A1",
 			DetailLocation: stringPtr("Dekat kasir dan pintu masuk"),
-			CreatedAt:      &now,
-			UpdatedAt:      &now,
+			CreatedAt:      now,
+			UpdatedAt:      now,
 			DeletedAt:      gorm.DeletedAt{},
 		},
 		{
@@ -31,8 +31,8 @@ func SeedRoom(db *gorm.DB) error {
 			QRCode:         stringPtr("ROOM-002-QR"),
 			RoomPosition:   "A2",
 			DetailLocation: stringPtr("Dekat kasir dan pintu masuk"),
-			CreatedAt:      &now,
-			UpdatedAt:      &now,
+			CreatedAt:      now,
+			UpdatedAt:      now,
 			DeletedAt:      gorm.DeletedAt{},
 		},
 	}

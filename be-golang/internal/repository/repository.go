@@ -9,6 +9,7 @@ type Repository struct {
 	AddOnGroup AddOnGroupRepo
 	AddOnOption AddOnOptionRepo
 	MenuAddOnGroup MenuAddOnGroupRepo
+	Room RoomRepo
 	// Book BookRepos
 	// User UserRepo
 }
@@ -30,6 +31,7 @@ func NewRepository(db *gorm.DB) *Repository {
 		AddOnGroup: NewAddOnGroupRepository(db),
 		AddOnOption: NewAddOnOptionRepository(db),
 		MenuAddOnGroup: NewMenuAddOnGroupRepository(db),
+		Room: NewRoomRepository(db),
 		// Book: NewBookRepository(db),
 		// User: NewUserRepository(db),
 	}

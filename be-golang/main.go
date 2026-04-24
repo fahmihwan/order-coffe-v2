@@ -137,6 +137,15 @@ func provideRepositories(container *dig.Container) {
 		panic(fmt.Sprintf("Failed to provide MenuAddOnGroupRepository: %v", err))
 	}
 
+
+	err = container.Provide(func(db *gorm.DB) repository.RoomRepository {
+		return *repository.NewRoomRepository(db)
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to provide RoomRepository: %v", err))
+	}
+
 	err = container.Provide(func(db *gorm.DB) repository.Repository {
 		return repository.Repository{
 			Menu:       repository.NewMenuRepository(db),
@@ -145,6 +154,7 @@ func provideRepositories(container *dig.Container) {
 			AddOnGroup:      repository.NewAddOnGroupRepository(db),
 			AddOnOption: 	repository.NewAddOnOptionRepository(db),
 			MenuAddOnGroup: repository.NewMenuAddOnGroupRepository(db),
+			Room: repository.NewRoomRepository(db),
 		}
 	})
 }
