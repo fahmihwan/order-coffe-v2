@@ -15,5 +15,7 @@ func GetMigrations() []*gormigrate.Migration {
 		SeedAddOn(),
 		Migration_202604011135(),
 		SeedMenuAddOn(),
+		Migration_202604171630(),
+		SeedRoom(),
 	}
 }

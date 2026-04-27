@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { getMasterCategory } from "../../../redux/features/categorySlice";
 import {
@@ -19,6 +19,10 @@ import type { AddOnGroup, AddOnOption } from "../../../types/addOn";
 import type { CartItem, GroupedAddonsCart } from "../../../types/cartItem";
 import type { Category } from "../../../types/category";
 import { formatRupiah } from "../../../utils/cartUtils";
+import FilterAndSearch from "./component/FilterAndSearch";
+import ListCardMenu from "./component/ListCardMenu";
+import AddOnModal from "./component/AddOnModal";
+import toast, { Toaster } from "react-hot-toast";
 
 const quickAmounts = [10000, 20000, 50000, 100000];
 
@@ -32,6 +36,15 @@ type MenuWithCategoriesType = Menu & {
         id: string;
         category_name: string;
     }[];
+};
+
+type HeldTransaction = {
+    id: string;
+    label?: string;
+    items: CartItem[];
+    paymentMethod: string;
+    amountPaid: number;
+    createdAt: string;
 };
 
 export default function OrderKasirPage() {
@@ -57,10 +70,30 @@ export default function OrderKasirPage() {
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
     const [search, setSearch] = useState("");
 
+    const holdIdRef = useRef(0);
+    const [heldTransactions, setHeldTransactions] = useState<HeldTransaction[]>([]);
+    const [holdLabel, setHoldLabel] = useState("");
+    const [isHoldInputOpen, setIsHoldInputOpen] = useState(false);
+    const [heldAccordionOpen, setHeldAccordionOpen] = useState(false);
+    const [expandedHeldIds, setExpandedHeldIds] = useState<string[]>([]);
+
+    const toggleHeldExpand = (id: string) => {
+        setExpandedHeldIds((prev) =>
+            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+        );
+    };
+
     useEffect(() => {
         dispatch(getMasterCategory({}));
         dispatch(getMenuWithCategories());
     }, [dispatch]);
+
+    useEffect(() => {
+        if (cart.length === 0) {
+            setIsHoldInputOpen(false);
+            setHoldLabel("");
+        }
+    }, [cart.length]);
 
     /**
      * Ambil kategori dari menuWithCategories.categories
@@ -74,7 +107,6 @@ export default function OrderKasirPage() {
 
         const map = new Map<string, CategoryWithAll>();
 
-        // Prioritas 1: kategori dari menuWithCategories.categories
         (menuWithCategories as MenuWithCategoriesType[] | undefined)?.forEach((menu) => {
             (menu.categories || []).forEach((category) => {
                 if (!map.has(String(category.id))) {
@@ -86,7 +118,6 @@ export default function OrderKasirPage() {
             });
         });
 
-        // Optional fallback: tambahkan dari masterCategories kalau memang ada
         (masterCategories as Category[] | undefined)?.forEach((category: Category) => {
             if (
                 category?.id &&
@@ -288,6 +319,79 @@ export default function OrderKasirPage() {
         setPaymentMethod("Tunai");
     };
 
+    const restoreCartItems = (items: CartItem[]) => {
+        items.forEach((item) => {
+            dispatch(
+                addFromDrawer({
+                    menu: item.menu,
+                    selectedAddons: item.addons || [],
+                    qtyDrawer: item.qty,
+                })
+            );
+        });
+    };
+
+    const handleOpenHoldInput = () => {
+        if (cart.length === 0) return;
+        setIsHoldInputOpen(true);
+    };
+
+    const handleCancelHoldInput = () => {
+        setIsHoldInputOpen(false);
+        setHoldLabel("");
+    };
+
+    const handleHoldTransaction = () => {
+        if (cart.length === 0) {
+            toast.error("Minimal ada 1 menu di keranjang untuk ditahan");
+            return;
+        }
+
+        const newHeldTransaction: HeldTransaction = {
+            id: `hold-${Date.now()}-${holdIdRef.current++}`,
+            label: holdLabel.trim() || undefined,
+            items: cart.map((item) => ({
+                ...item,
+                addons: item.addons ? [...item.addons] : [],
+            })),
+            paymentMethod,
+            amountPaid,
+            createdAt: new Date().toLocaleString("id-ID"),
+        };
+
+        setHeldTransactions((prev) => [newHeldTransaction, ...prev]);
+        clearCart();
+        setHoldLabel("");
+        setIsHoldInputOpen(false);
+        toast.success("Transaksi berhasil ditahan");
+    };
+
+    const handleRestoreHeldTransaction = (heldId: string) => {
+        if (cart.length > 0) {
+            toast.error("Keranjang masih berisi menu. Kosongkan keranjang terlebih dahulu sebelum mengambil transaksi yang ditahan")
+            return;
+        }
+
+        const heldTransaction = heldTransactions.find((item) => item.id === heldId);
+
+        if (!heldTransaction) {
+            toast.error("Transaksi yang ditahan tidak ditemukan")
+            return;
+        }
+
+        restoreCartItems(heldTransaction.items);
+        setPaymentMethod(heldTransaction.paymentMethod || "Tunai");
+        setAmountPaid(heldTransaction.amountPaid || 0);
+        setExpandedHeldIds((prev) => prev.filter((id) => id !== heldId));
+
+        setHeldTransactions((prev) => prev.filter((item) => item.id !== heldId));
+    };
+
+    const handleDeleteHeldTransaction = (heldId: string) => {
+        setExpandedHeldIds((prev) => prev.filter((id) => id !== heldId));
+        setHeldTransactions((prev) => prev.filter((item) => item.id !== heldId));
+    };
+
     const totalItems = useMemo(() => {
         return cart.reduce((acc: number, item: CartItem) => acc + item.qty, 0);
     }, [cart]);
@@ -306,12 +410,12 @@ export default function OrderKasirPage() {
 
     const handlePay = () => {
         if (cart.length === 0) {
-            alert("Keranjang masih kosong");
+            toast.error("Keranjang masih kosong");
             return;
         }
 
         if (paymentMethod === "Tunai" && amountPaid < subtotal) {
-            alert("Nominal bayar kurang");
+            toast.error("Nominal bayar kurang");
             return;
         }
 
@@ -341,7 +445,7 @@ export default function OrderKasirPage() {
         };
 
         console.log("Payload pembayaran:", payload);
-        alert("Pembayaran berhasil (dummy)");
+        toast.success("Pembayaran berhasil (dummy)");
         clearCart();
     };
 
@@ -352,143 +456,237 @@ export default function OrderKasirPage() {
     return (
         <>
             <div className="flex h-[calc(100dvh-80px)] flex-col gap-6 overflow-hidden lg:flex-row">
-                <div className="min-h-0 w-full space-y-8 overflow-scroll p-5 lg:w-8/12">
-                    <div>
-                        <label htmlFor="input-group-1" className="sr-only">
-                            Search
-                        </label>
+                <Toaster position="top-right" />
+                <div className="min-h-0 w-full space-y-8 overflow-y-scroll p-5 lg:w-8/12">
+                    <FilterAndSearch
+                        search={search}
+                        setSearch={setSearch}
+                        categoriesWithAll={categoriesWithAll}
+                        selectedCategoryId={selectedCategoryId}
+                        handleCategoryClick={handleCategoryClick}
+                    />
 
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                                <svg
-                                    className="h-4 w-4 text-body"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width={24}
-                                    height={24}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeWidth={2}
-                                        d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-                                    />
-                                </svg>
-                            </div>
-
-                            <input
-                                type="text"
-                                id="input-group-1"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="block w-full rounded-lg border-default-medium border-gray-300 py-3 ps-9 pe-3 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-                                placeholder="Search"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <div className="flex flex-wrap gap-2">
-                            {categoriesWithAll.map((category) => {
-                                const isActive =
-                                    String(selectedCategoryId) === String(category.id);
-
-                                return (
-                                    <button
-                                        key={category.id}
-                                        type="button"
-                                        onClick={() => handleCategoryClick(String(category.id))}
-                                        className={`rounded-base border px-4 py-2.5 text-sm font-medium leading-5 shadow-xs transition ${isActive
-                                            ? "border-brand bg-purple-500 text-white focus:ring-brand/30"
-                                            : "border-default-medium bg-white text-body hover:bg-neutral-tertiary-medium hover:text-heading focus:ring-neutral-tertiary"
-                                            }`}
-                                    >
-                                        {category.category_name}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                        {filteredMenus.length > 0 ? (
-                            filteredMenus.map((menu) => (
-                                <div
-                                    key={menu.id}
-                                    onClick={() => handleAddToCart(menu)}
-                                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500 hover:shadow-xl "
-                                >
-                                    <div className="relative overflow-hidden">
-                                        <img
-                                            src={menu.image}
-                                            alt={menu.name}
-                                            className="h-44 w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                                        />
-
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                                            <div className="translate-y-2 rounded-full border border-purple-500 bg-white/95 px-4 py-2 text-sm font-semibold text-purple-600 shadow-md transition-all duration-300 group-hover:translate-y-0">
-                                                + Tambah
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 p-4">
-                                        <div>
-                                            <h3 className="text-lg font-semibold text-gray-900 transition-colors duration-300 group-hover:text-purple-600">
-                                                {menu.name}
-                                            </h3>
-                                        </div>
-
-                                        {!!menu.categories?.length && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {menu.categories.map((category) => (
-                                                    <span
-                                                        key={category.id}
-                                                        className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 transition-all duration-300 group-hover:bg-purple-50 group-hover:text-purple-600"
-                                                    >
-                                                        {category.category_name}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <p className="text-base font-bold text-green-600">
-                                            {formatRupiah(menu.price)}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="col-span-full rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-500">
-                                Menu tidak ditemukan
-                            </div>
-                        )}
-                    </div>
+                    <ListCardMenu filteredMenus={filteredMenus} handleAddToCart={handleAddToCart} />
                 </div>
 
                 <div className="min-h-0 w-full overflow-scroll lg:w-4/12">
-                    <div className="sticky top-4 h-screen border-x border-t-0 border-gray-200 bg-white p-4 shadow-sm">
-                        <div className="mb-4 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-semibold">Keranjang</h2>
-                                <p className="text-sm text-gray-500">
-                                    {totalItems} item dipilih
-                                </p>
-                            </div>
-
-                            {cart.length > 0 && (
+                    <div className="sticky top-4 border-x border-t-0 border-gray-200 bg-white p-4 shadow-sm">
+                        {heldTransactions.length > 0 && (
+                            <div className="bg-yellow-50">
                                 <button
-                                    onClick={clearCart}
-                                    className="text-sm font-medium text-red-500 hover:text-red-600"
+                                    type="button"
+                                    onClick={() => setHeldAccordionOpen(!heldAccordionOpen)}
+                                    className="flex w-full items-center justify-between bg-yellow-50 py-2 border-b border-orange-300"
                                 >
-                                    Kosongkan
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-gray-900">
+                                            Transaksi Ditahan
+                                            <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-400 text-xs font-medium text-white">
+                                                {heldTransactions.length}
+                                            </span>
+                                        </h3>
+                                    </div>
+                                    <svg
+                                        className={`h-5 w-5 text-gray-500 transition-transform ${heldAccordionOpen ? "rotate-180" : ""
+                                            }`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
                                 </button>
-                            )}
-                        </div>
 
-                        <div className="max-h-[480px] space-y-3 overflow-y-auto pr-1">
+                                {heldAccordionOpen && (
+                                    <div className="mt-3 space-y-2">
+                                        {heldTransactions.length === 0 ? (
+                                            <div className="rounded-lg border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500">
+                                                Belum ada transaksi yang ditahan
+                                            </div>
+                                        ) : (
+                                            heldTransactions.map((held) => {
+                                                const heldTotalItems = held.items.reduce(
+                                                    (acc, item) => acc + item.qty,
+                                                    0
+                                                );
+                                                const heldSubtotal = held.items.reduce(
+                                                    (acc, item) => acc + item.totalPrice,
+                                                    0
+                                                );
+                                                const isExpanded = expandedHeldIds.includes(held.id);
+
+                                                return (
+                                                    <div
+                                                        key={held.id}
+                                                        className="overflow-hidden border-b-[0.5px] bg-yellow-50"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => toggleHeldExpand(held.id)}
+                                                            className="flex w-full items-center justify-between p-3 text-left"
+                                                        >
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h4 className="truncate text-sm font-semibold text-gray-900">
+                                                                        {held.label?.trim()
+                                                                            ? held.label
+                                                                            : "Tanpa Label"}
+                                                                    </h4>
+                                                                    <svg
+                                                                        className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""
+                                                                            }`}
+                                                                        fill="none"
+                                                                        viewBox="0 0 24 24"
+                                                                        stroke="currentColor"
+                                                                    >
+                                                                        <path
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            strokeWidth={2}
+                                                                            d="M19 9l-7 7-7-7"
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                                <p className="text-xs text-gray-600">
+                                                                    {heldTotalItems} item •{" "}
+                                                                    {formatRupiah(heldSubtotal)}
+                                                                </p>
+                                                            </div>
+                                                        </button>
+
+                                                        {isExpanded && (
+                                                            <div className="border-t border-yellow-200 bg-yellow-50 p-3">
+                                                                <div className="mb-2 text-xs text-gray-500">
+                                                                    {held.createdAt}
+                                                                </div>
+
+                                                                <div className="mb-3 space-y-1">
+                                                                    {held.items.map((item) => (
+                                                                        <div
+                                                                            key={item.key}
+                                                                            className="flex justify-between text-xs text-gray-700"
+                                                                        >
+                                                                            <span>
+                                                                                {item.menu.name} x{item.qty}
+                                                                            </span>
+                                                                            <span className="font-medium">
+                                                                                {formatRupiah(item.totalPrice)}
+                                                                            </span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            handleRestoreHeldTransaction(held.id)
+                                                                        }
+                                                                        className="flex-1 rounded-md bg-yellow-500 px-2 py-1.5 text-xs font-semibold text-white hover:bg-yellow-600"
+                                                                    >
+                                                                        Masukkan
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            handleDeleteHeldTransaction(held.id)
+                                                                        }
+                                                                        className="rounded-md border border-red-300 bg-white px-2 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50"
+                                                                    >
+                                                                        Hapus
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {cart.length > 0 && (
+                            <div className="mb-4 mt-4">
+                                {!isHoldInputOpen ? (
+                                    <button
+                                        type="button"
+                                        onClick={handleOpenHoldInput}
+                                        className="w-full rounded-lg border border-yellow-400 border-dashed text-yellow-400 px-4 py-3 text-sm font-semibold  hover:bg-yellow-50"
+                                    >
+                                        Tahan
+                                    </button>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                value={holdLabel}
+                                                onChange={(e) => setHoldLabel(e.target.value)}
+                                                placeholder="Label (opsional)"
+                                                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-yellow-500"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                onClick={handleHoldTransaction}
+                                                className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-yellow-600"
+                                            >
+                                                Tambah
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleCancelHoldInput}
+                                                className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 hover:text-red-500"
+                                                aria-label="Tutup input tahan transaksi"
+                                                title="Batal"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    className="h-4 w-4"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="max-h-[480px] space-y-3 overflow-y-auto mt-5 border-y py-2">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-sm font-semibold">Keranjang</h2>
+                                    <p className="text-sm text-gray-500">
+                                        {totalItems} item dipilih
+                                    </p>
+                                </div>
+
+                                {cart.length > 0 && (
+                                    <button
+                                        onClick={clearCart}
+                                        className="text-sm font-medium text-red-500 hover:text-red-600"
+                                    >
+                                        Kosongkan
+                                    </button>
+                                )}
+                            </div>
                             {cart.length === 0 ? (
                                 <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
                                     Belum ada menu di keranjang
@@ -518,16 +716,19 @@ export default function OrderKasirPage() {
                                                 {item.addons?.length > 0 && (
                                                     <div className="mt-1 space-y-1">
                                                         {Object.values(
-                                                            item.addons.reduce((acc: GroupedAddonsCart, addon: AddOnOption) => {
-                                                                if (!acc[addon.add_on_group_id]) {
-                                                                    acc[addon.add_on_group_id] = {
-                                                                        groupId: addon.add_on_group_id,
-                                                                        options: [],
-                                                                    };
-                                                                }
-                                                                acc[addon.add_on_group_id].options.push(addon);
-                                                                return acc;
-                                                            }, {})
+                                                            item.addons.reduce(
+                                                                (acc: GroupedAddonsCart, addon: AddOnOption) => {
+                                                                    if (!acc[addon.add_on_group_id]) {
+                                                                        acc[addon.add_on_group_id] = {
+                                                                            groupId: addon.add_on_group_id,
+                                                                            options: [],
+                                                                        };
+                                                                    }
+                                                                    acc[addon.add_on_group_id].options.push(addon);
+                                                                    return acc;
+                                                                },
+                                                                {}
+                                                            )
                                                         ).map((group) => (
                                                             <div
                                                                 key={group.groupId}
@@ -593,16 +794,6 @@ export default function OrderKasirPage() {
                         </div>
 
                         <div className="mt-4 space-y-3 border-t pt-4">
-                            <div className="flex items-center justify-between text-sm text-gray-600">
-                                <span>Total Item</span>
-                                <span>{totalItems}</span>
-                            </div>
-
-                            <div className="flex items-center justify-between text-base font-semibold">
-                                <span>Subtotal</span>
-                                <span>{formatRupiah(subtotal)}</span>
-                            </div>
-
                             <div className="space-y-2">
                                 <label className="text-sm font-medium text-gray-700">
                                     Metode Pembayaran
@@ -655,6 +846,16 @@ export default function OrderKasirPage() {
                                 </span>
                             </div>
 
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>Total Item</span>
+                                <span>{totalItems}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between text-base font-semibold">
+                                <span>Subtotal</span>
+                                <span>{formatRupiah(subtotal)}</span>
+                            </div>
+
                             {cart.length > 0 && amountPaid > 0 && amountPaid < subtotal && (
                                 <p className="text-sm text-red-500">
                                     Nominal bayar masih kurang
@@ -673,156 +874,25 @@ export default function OrderKasirPage() {
                 </div>
             </div>
 
+            {/*  */}
             {isAddOnModalOpen && menuWithAddOn && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl">
-                        <div className="flex items-center justify-between border-b p-4">
-                            <div>
-                                <h2 className="text-xl font-bold">Pilih Add On</h2>
-                                <p className="text-sm text-gray-500">{menuWithAddOn.name}</p>
-                            </div>
-
-                            <button
-                                onClick={handleCloseAddOnModal}
-                                className="rounded-md px-3 py-1 text-sm text-gray-500 hover:bg-gray-100"
-                            >
-                                Tutup
-                            </button>
-                        </div>
-
-                        <div className="max-h-[70vh] space-y-6 overflow-y-auto p-4">
-                            <div className="rounded-lg border border-gray-200 p-4">
-                                <div className="flex items-center gap-4">
-                                    <img
-                                        src={menuWithAddOn.image}
-                                        alt={menuWithAddOn.name}
-                                        className="h-20 w-20 rounded-lg object-cover"
-                                    />
-                                    <div>
-                                        <h3 className="text-lg font-semibold">{menuWithAddOn.name}</h3>
-                                        <p className="text-sm text-gray-500">
-                                            {menuWithAddOn.description}
-                                        </p>
-                                        <p className="mt-1 text-sm font-semibold text-green-600">
-                                            {formatRupiah(menuWithAddOn.price)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="rounded-lg border border-gray-200 p-4">
-                                <label className="mb-2 block text-sm font-medium text-gray-700">
-                                    Qty
-                                </label>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setQtyDrawer((prev) => Math.max(prev - 1, 1))}
-                                        className="h-8 w-8 rounded-md border border-gray-300 text-sm font-bold hover:bg-gray-100"
-                                    >
-                                        -
-                                    </button>
-                                    <span className="min-w-[32px] text-center text-sm font-medium">
-                                        {qtyDrawer}
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setQtyDrawer((prev) => prev + 1)}
-                                        className="h-8 w-8 rounded-md border border-gray-300 text-sm font-bold hover:bg-gray-100"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                            </div>
-
-                            {(menuWithAddOn.add_on_groups || []).map((group) => {
-                                const currentSelected = drawerSelectedOptions.filter(
-                                    (item) => item.add_on_group_id === group.id
-                                );
-
-                                return (
-                                    <div
-                                        key={group.id}
-                                        className="space-y-3 rounded-lg border border-gray-200 p-4"
-                                    >
-                                        <div>
-                                            <h4 className="font-semibold text-gray-900">
-                                                {group.title}
-                                            </h4>
-                                            <p className="text-sm text-gray-500">
-                                                {group.description}
-                                            </p>
-                                            <p className="text-xs text-gray-400">
-                                                Min {group.min_select} - Max {group.max_select}
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {group.add_on_options
-                                                .filter((option) => option.is_active)
-                                                .map((option) => {
-                                                    const isChecked = currentSelected.some(
-                                                        (item) => item.id === option.id
-                                                    );
-
-                                                    return (
-                                                        <label
-                                                            key={option.id}
-                                                            className="flex cursor-pointer items-center justify-between rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50"
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <input
-                                                                    type={option.type}
-                                                                    checked={isChecked}
-                                                                    onChange={() =>
-                                                                        handleSelectOption(group, option)
-                                                                    }
-                                                                />
-                                                                <span className="text-sm text-gray-800">
-                                                                    {option.name}
-                                                                </span>
-                                                            </div>
-
-                                                            <span className="text-sm font-medium text-green-600">
-                                                                {option.price > 0
-                                                                    ? `+ ${formatRupiah(option.price)}`
-                                                                    : "Gratis"}
-                                                            </span>
-                                                        </label>
-                                                    );
-                                                })}
-                                        </div>
-
-                                        {addOnErrors[group.id] && (
-                                            <p className="text-sm text-red-500">
-                                                {addOnErrors[group.id]}
-                                            </p>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        <div className="flex items-center justify-between border-t p-4">
-                            <div>
-                                <p className="text-sm text-gray-500">Total per item</p>
-                                <p className="text-lg font-bold text-green-600">
-                                    {formatRupiah(
-                                        (menuWithAddOn.price + addOnTotalPreview) * qtyDrawer
-                                    )}
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={handleConfirmAddOn}
-                                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
-                            >
-                                Simpan ke Keranjang
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <AddOnModal
+                    menuWithAddOn={menuWithAddOn}
+                    handleCloseAddOnModal={handleCloseAddOnModal}
+                    setQtyDrawer={setQtyDrawer}
+                    drawerSelectedOptions={drawerSelectedOptions}
+                    handleSelectOption={handleSelectOption}
+                    addOnErrors={addOnErrors}
+                    addOnTotalPreview={addOnTotalPreview}
+                    qtyDrawer={qtyDrawer}
+                    handleConfirmAddOn={handleConfirmAddOn}
+                />
             )}
         </>
     );
 }
+
+
+
+
+
