@@ -1,0 +1,79 @@
+package postgres
+
+import (
+	"log"
+	"os"
+	"pos-coffeshop/internal/config"
+	"pos-coffeshop/migrations"
+	"time"
+
+	"github.com/go-gormigrate/gormigrate/v2"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+func InitConnection() {
+	cfg := config.AppConfig.DBPostgre
+	log.Println("Initialize PostgreSQL connection")
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  true,
+		},
+	)
+
+	gormConfig := &gorm.Config{
+		// TranslateError: true,
+		Logger: newLogger, // Set the desired log level
+	}
+
+	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), gormConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// // Perform auto-migration
+	err = autoMigrate(db)
+	if err != nil {
+		log.Fatalf("Failed to auto-migrate database: %v", err)
+	}
+
+	log.Printf("Connected to Postgres")
+}
+
+
+
+func autoMigrate(db *gorm.DB) error {
+	m := gormigrate.New(db, gormigrate.DefaultOptions, migrations.GetMigrations())
+
+	// rollback
+	// if err := m.RollbackLast(); err != nil {
+	// 	log.Fatalf("Could not rollback migrations: %v", err)
+	// 	return err
+	// }
+
+	if err := m.Migrate(); err != nil {
+		log.Fatalf("Could not apply migrations: %v", err)
+		return err
+	}
+
+
+
+	// rollback all
+	// for {
+	// 	err := m.RollbackLast()
+	// 	if err != nil {
+	// 		// When no more migrations to rollback, gormigrate returns error
+	// 		log.Println("Rollback finished or nothing left:", err)
+	// 		break
+	// 	}
+	// 	log.Println("Rolled back one migration")
+	// }
+
+	log.Println("Migrations applied successfully")
+	return nil
+}

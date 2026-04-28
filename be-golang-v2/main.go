@@ -6,6 +6,7 @@ import (
 	"pos-coffeshop/app/route"
 	"pos-coffeshop/internal/config"
 	"pos-coffeshop/internal/logger"
+	"pos-coffeshop/internal/postgres"
 	"time"
 )
 
@@ -17,9 +18,9 @@ func main() {
 	// // Initiatlize keycloak (goCloak) client
 	// keycloak.InitKeycloak()
 
-	// // Init MongoDB connection
-	// mongo.InitConnection()
-
+	// // Init PostgreSQL connection
+	postgres.InitConnection();
+	
 	// tp, err := opentelemetry.InitTracerProvider()
 	// if err != nil {
 	// 	log.Fatal(err)

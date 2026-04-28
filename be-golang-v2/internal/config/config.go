@@ -17,19 +17,19 @@ var AppConfig = struct {
 	Port        int    `env:"APP_PORT"`
 	Host            string `env:"APP_HOST"`
 	PDFGeneratorURL string `env:"PDF_GENERATOR_URL"`
-
-	DB	ConfigDB
-	OpenTelemetry OpenTelemetryConfig
-	Kafka         KafkaConfig
-	Keycloak      Keycloak
+	DBPostgre ConfigPostgre
+	// DB	ConfigDB
+	// OpenTelemetry OpenTelemetryConfig
+	// Kafka         KafkaConfig
+	// Keycloak      Keycloak
 	// MongoDB       MongoDB
 	// GCS           GCS
 	// Redis         Redis
 }{}
 
-type OpenTelemetryConfig struct {
-	EndpointURL string `env:"OPEN_TELEMETRY_ENDPOINT"`
-}
+// type OpenTelemetryConfig struct {
+// 	EndpointURL string `env:"OPEN_TELEMETRY_ENDPOINT"`
+// }
 
 type ConfigDB struct {
 	Name    	string `env:"DB_NAME"  envDefault:"bei"`
@@ -40,19 +40,32 @@ type ConfigDB struct {
 }
 
 
-type Keycloak struct {
-	Secret   string `env:"KEYCLOAK_CLIENT_SECRET"`
-	ClientID string `env:"KEYCLOAK_CLIENT_ID"`
-	URL      string `env:"KEYCLOAK_URL"`
-	Realm    string `env:"KEYCLOAK_REALM"`
-	TokenURL string `env:"KEYCLOAK_TOKEN_URL"`
+
+type ConfigPostgre struct  {
+	DatabaseURL string `env:"DATABASE_URL"`
+	// Storage              StorageConfig
+	// JWT struct {
+	// 	Secret    string `mapstructure:"JWT_SECRET"`
+	// 	ExpiryMin int    `mapstructure:"JWT_EXPIRY_MIN"` // menit
+	// 	Issuer    string `mapstructure:"JWT_ISSUER"`
+		
+	// } `mapstructure:",squash"`
 }
 
-type KafkaConfig struct {
-	Host      string `env:"KAFKA_HOST"`
-	Port      string `env:"KAFKA_PORT"`
-	GroupName string `env:"KAFKA_GROUP_NAME"`
-}
+
+// type Keycloak struct {
+// 	Secret   string `env:"KEYCLOAK_CLIENT_SECRET"`
+// 	ClientID string `env:"KEYCLOAK_CLIENT_ID"`
+// 	URL      string `env:"KEYCLOAK_URL"`
+// 	Realm    string `env:"KEYCLOAK_REALM"`
+// 	TokenURL string `env:"KEYCLOAK_TOKEN_URL"`
+// }
+
+// type KafkaConfig struct {
+// 	Host      string `env:"KAFKA_HOST"`
+// 	Port      string `env:"KAFKA_PORT"`
+// 	GroupName string `env:"KAFKA_GROUP_NAME"`
+// }
 
 
 
