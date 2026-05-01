@@ -107,7 +107,7 @@ func (h *CategoryMenuHandler) ListCategoryMenu(w http.ResponseWriter, r *http.Re
 func (h *CategoryMenuHandler) CreateCategoryMenu(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req = new(request.CategoryMenuRequest)
-	if err := request.ParseForm(r, req); err != nil {
+	if err := request.ParseURLEncodedForm(r, req); err != nil {
 		middleware.HandleValidationErrors(err, w)
 		return
 	}
@@ -145,7 +145,7 @@ func (h *CategoryMenuHandler) UpdateCategoryMenu(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 
 	var req = new(request.CategoryMenuRequest)
-	if err := request.ParseForm(r, req); err != nil {
+	if err := request.ParseURLEncodedForm(r, req); err != nil {
 		middleware.HandleValidationErrors(err, w)
 		return
 	}

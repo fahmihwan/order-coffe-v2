@@ -43,19 +43,15 @@ export const createCategory = createAsyncThunk<
     { rejectValue: string }
 >("category/create", async (payload, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
-        formData.append("category_name", payload.category_name);
-
         const response = await apiClient.post<ApiResponse<Category>>(
             "/category",
-            formData,
+            payload,
             {
                 headers: {
-                    "Content-Type": "multipart/form-data",
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             }
         );
-
         return response.data.data;
     } catch (err: unknown) {
         const message =
@@ -70,14 +66,12 @@ export const updateCategory = createAsyncThunk<
     { rejectValue: string }
 >("category/update", async ({ id, data }, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
-        formData.append("category_name", data.category_name);
         const response = await apiClient.put<ApiResponse<Category>>(
             `/category/${id}`,
-            formData,
+            data,
             {
                 headers: {
-                    "Content-Type": "multipart/form-data",
+                    "Content-Type": "application/x-www-form-urlencoded",
                 },
             }
         );

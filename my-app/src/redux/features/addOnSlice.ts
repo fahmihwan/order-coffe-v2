@@ -57,25 +57,21 @@ export const createAddOnOption = createAsyncThunk<
     { rejectValue: string }
 >("addonoption/create", async (payload, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
 
-        formData.append("name", payload.name);
-        formData.append("add_on_group_id", payload.add_on_group_id);
-        formData.append("price", String(payload.price));
-        formData.append("is_active", String(payload.is_active));
 
-        if (payload.type !== undefined) {
-            formData.append("type", String(payload.type));
-        }
+        // formData.append("name", payload.name);
+        // formData.append("add_on_group_id", payload.add_on_group_id);
+        // formData.append("price", String(payload.price));
+        // formData.append("is_active", String(payload.is_active));
+
+        // if (payload.type !== undefined) {
+        //     formData.append("type", String(payload.type));
+        // }
 
         const response = await apiClient.post<ApiResponse<AddOnOption>>(
             "/addon-option",
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }
+            payload,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
         );
 
         return {
@@ -94,21 +90,21 @@ export const updateAddOnOption = createAsyncThunk<
     { rejectValue: string }
 >("addonoption/update", async ({ id, payload }, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
+        // const formData = new FormData();
 
-        formData.append("name", payload.name);
-        formData.append("add_on_group_id", payload.add_on_group_id);
-        formData.append("price", String(payload.price));
-        formData.append("is_active", String(payload.is_active));
+        // formData.append("name", payload.name);
+        // formData.append("add_on_group_id", payload.add_on_group_id);
+        // formData.append("price", String(payload.price));
+        // formData.append("is_active", String(payload.is_active));
 
-        if (payload.type !== undefined) {
-            formData.append("type", payload.type);
-        }
+        // if (payload.type !== undefined) {
+        //     formData.append("type", payload.type);
+        // }
 
         const response = await apiClient.put<ApiResponse<AddOnOption>>(
             `/addon-option/${id}`,
-            formData,
-            { headers: { "Content-Type": "multipart/form-data", }, }
+            payload,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
         );
 
         return {

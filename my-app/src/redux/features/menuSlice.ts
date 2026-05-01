@@ -4,6 +4,7 @@ import apiClient from "../../api/api";
 import type { Menu, MenuAddOnPayload, MenuPayload, MenuState, MenuWithCategory, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
+import { data } from "react-router-dom";
 
 
 const initialState: MenuState = {
@@ -165,14 +166,14 @@ export const getMenuAddOn = createAsyncThunk<{ data: Menu[]; pagination: Paginat
 
 export const createMenuAddOn = createAsyncThunk<{ data: MenuAddOnPayload; message: string }, MenuAddOnPayload, { rejectValue: string }>("create/menu-addon", async (payload, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
 
-        formData.append("add_on_group_id", payload.add_on_group_id);
-        formData.append("menu_id", String(payload.menu_id));
 
-        const response = await apiClient.post<ApiResponse<MenuAddOnPayload>>("/menu-addon", formData, {
+        // formData.append("add_on_group_id", payload.add_on_group_id);
+        // formData.append("menu_id", String(payload.menu_id));
+
+        const response = await apiClient.post<ApiResponse<MenuAddOnPayload>>("/menu-addon", data, {
             headers: {
-                "Content-Type": "multipart/form-data",
+                    "Content-Type": "application/x-www-form-urlencoded",
             },
         });
 

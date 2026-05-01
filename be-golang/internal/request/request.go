@@ -1,6 +1,7 @@
 package request
 
 import (
+	"encoding/json"
 	"errors"
 	"mime/multipart"
 	"net/http"
@@ -37,8 +38,12 @@ type RequestParse interface {
 	parse(req *multipart.Form)
 }
 
+type RequestJSON interface{
+	validate() error
+}
 
 
+// PARSE MULTIPART/FORM
 func ParseForm(r *http.Request, data RequestParse) error {
 	if data == nil {
 		return errors.New("invalid request type")
@@ -49,6 +54,46 @@ func ParseForm(r *http.Request, data RequestParse) error {
 	}
 
 	data.parse(r.MultipartForm)
+
+	if err := data.validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PARSE JSON
+func ParseJSON(r *http.Request, data RequestJSON) error{
+	if data == nil {
+		return errors.New("invalid request type")
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(data); err != nil {
+		return err
+	}
+	
+	if err := data.validate(); err != nil {
+		return err
+	}
+
+	return nil;
+}
+
+// PARSE FORMURLENCODDEDFORM
+func ParseURLEncodedForm(r *http.Request, data RequestParse) error {
+	if data == nil {
+		return errors.New("invalid request type")
+	}
+
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	form := &multipart.Form{
+		Value: r.PostForm,
+	}
+
+	data.parse(form)
 
 	if err := data.validate(); err != nil {
 		return err
@@ -92,3 +137,14 @@ func ParsePagination[T RequestFilter](r *http.Request, filter T) (req Pagination
 type Filter struct{}
 
 func (*Filter) ParseFilter(query url.Values) {}
+
+
+// Handler
+//   ↓
+// ParseJSON / ParseForm / ParseURLEncodedForm
+//   ↓
+// isi struct request
+//   ↓
+// validate()
+//   ↓
+// handler lanjut ke service

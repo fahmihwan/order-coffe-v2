@@ -99,7 +99,7 @@ func (h *AddOnGroupHandler) ListAddOnGroup(w http.ResponseWriter, r *http.Reques
 func (h *AddOnGroupHandler) CreateAddOnGroup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req = new(request.AddOnGroupRequest)
-	if err := request.ParseForm(r, req); err != nil {
+	if err := request.ParseURLEncodedForm(r, req); err != nil {
 		middleware.HandleValidationErrors(err, w)
 		return
 	}
@@ -134,7 +134,7 @@ func (h *AddOnGroupHandler) UpdateAddOnGroup(w http.ResponseWriter, r *http.Requ
 	ids := chi.URLParam(r, "id")
 
 	var req = new(request.AddOnGroupRequest)
-	if err := request.ParseForm(r, req); err != nil {
+	if err := request.ParseURLEncodedForm(r, req); err != nil {
 		middleware.HandleValidationErrors(err, w)
 		return
 	}
