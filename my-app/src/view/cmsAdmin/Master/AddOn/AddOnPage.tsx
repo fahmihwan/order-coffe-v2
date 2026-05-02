@@ -9,31 +9,43 @@ import {
     Pagination,
     Select,
     TextInput,
+    Textarea,
 } from "flowbite-react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import type { AppDispatch, RootState } from "../../../../redux/store";
 import {
+    createAddOnGroup,
     createAddOnOption,
     deleteAddOnOption,
     getMasterAddOn,
     setMessage,
+    updateAddOnGroup,
     updateAddOnOption,
 } from "../../../../redux/features/addOnSlice";
-import type { AddOnOption, AddOnType } from "../../../../types/addOn";
+import type {
+    AddOnGroup,
+    AddOnGroupPayload,
+    AddOnOption,
+    AddOnOptionPayload,
+    AddOnType,
+} from "../../../../types/addOn";
 
-type AddOptionForm = {
-    name: string;
-    price: string;
-    is_active: boolean;
-    type: AddOnType;
+const initialForm: AddOnOptionPayload = {
+    name: "",
+    price: 0,
+    add_on_group_id: "",
+    is_active: true,
+    type: "radio",
 };
 
-const initialForm: AddOptionForm = {
-    name: "",
-    price: "",
-    is_active: true,
+const initialGroupForm: AddOnGroupPayload = {
+    title: "",
+    description: "",
+    is_required: false,
+    min_select: 0,
+    max_select: 1,
     type: "radio",
 };
 
@@ -53,39 +65,46 @@ const AddOnPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     const [openModal, setOpenModal] = useState(false);
-    const [selectedAddOnId, setSelectedAddOnId] = useState<number | null>(null);
-    const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
+    const [openGroupModal, setOpenGroupModal] = useState(false);
+
+    const [selectedAddOnId, setSelectedAddOnId] = useState<string | null>(null);
+    const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+
     const [isEditMode, setIsEditMode] = useState(false);
-    const [expandedRows, setExpandedRows] = useState<number[]>([]);
-    const [form, setForm] = useState<AddOptionForm>(initialForm);
+    const [isEditGroupMode, setIsEditGroupMode] = useState(false);
+
+    const [expandedRows, setExpandedRows] = useState<string[]>([]);
+
+    const [form, setForm] = useState<AddOnOptionPayload>(initialForm);
+    const [groupForm, setGroupForm] =
+        useState<AddOnGroupPayload>(initialGroupForm);
 
     const currentPaginationPage = pagination?.current_page ?? 1;
     const totalPaginationPages = pagination?.pages ?? 1;
     const totalPaginationItems = pagination?.total ?? masterAddOns.length;
-    // const paginationLimit = pagination?.limit ?? 5;
 
     useEffect(() => {
-        dispatch(
-            getMasterAddOn({
-                page: currentPage,
-                // limit: paginationLimit,
-            })
-        );
+        dispatch(getMasterAddOn({ page: currentPage }));
     }, [dispatch, currentPage]);
 
     useEffect(() => {
-        if (message) {
-            const timer = setTimeout(() => {
-                dispatch(setMessage(""));
-            }, 3000);
+        if (!message) return;
 
-            return () => clearTimeout(timer);
-        }
+        const timer = setTimeout(() => {
+            dispatch(setMessage(""));
+        }, 3000);
+
+        return () => clearTimeout(timer);
     }, [message, dispatch]);
 
-    const selectedAddOn = useMemo(() => {
-        if (selectedAddOnId === null) return null;
-        return masterAddOns.find((item) => item.id === selectedAddOnId) ?? null;
+    const selectedAddOn = useMemo<AddOnGroup | null>(() => {
+        if (!selectedAddOnId) return null;
+
+        return (
+            masterAddOns.find(
+                (item: AddOnGroup) => item.id === selectedAddOnId
+            ) ?? null
+        );
     }, [masterAddOns, selectedAddOnId]);
 
     const filteredData = useMemo(() => {
@@ -93,13 +112,13 @@ const AddOnPage = () => {
 
         if (!keyword) return masterAddOns;
 
-        return masterAddOns.filter((item) => {
+        return masterAddOns.filter((item: AddOnGroup) => {
             const matchTitle = item.title.toLowerCase().includes(keyword);
-            const matchDescription = (item.description ?? "")
+            const matchDescription = item.description
                 .toLowerCase()
                 .includes(keyword);
 
-            const matchOption = (item.add_on_options ?? []).some((option) =>
+            const matchOption = item.add_on_options.some((option) =>
                 option.name.toLowerCase().includes(keyword)
             );
 
@@ -114,112 +133,162 @@ const AddOnPage = () => {
         setIsEditMode(false);
     };
 
+    const resetGroupForm = () => {
+        setGroupForm(initialGroupForm);
+        setSelectedAddOnId(null);
+        setIsEditGroupMode(false);
+    };
+
     const closeModal = () => {
         setOpenModal(false);
         resetForm();
     };
 
-    const toggleExpandRow = (id: number) => {
+    const closeGroupModal = () => {
+        setOpenGroupModal(false);
+        resetGroupForm();
+    };
+
+    const toggleExpandRow = (id: string) => {
         setExpandedRows((prev) =>
-            prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+            prev.includes(id)
+                ? prev.filter((rowId) => rowId !== id)
+                : [...prev, id]
         );
     };
 
-    const openAddOptionModal = (
-        addOnId: number,
-        defaultType: AddOnType = "radio"
-    ) => {
+    const openCreateGroupModal = () => {
+        setIsEditGroupMode(false);
+        setSelectedAddOnId(null);
+        setGroupForm(initialGroupForm);
+        setOpenGroupModal(true);
+    };
+
+    const openEditGroupModal = (addOn: AddOnGroup) => {
+        setIsEditGroupMode(true);
+        setSelectedAddOnId(addOn.id);
+        setGroupForm({
+            title: addOn.title,
+            description: addOn.description,
+            is_required: addOn.is_required,
+            min_select: addOn.min_select,
+            max_select: addOn.max_select,
+            type: addOn.type,
+        });
+        setOpenGroupModal(true);
+    };
+
+    const openAddOptionModal = (addOn: AddOnGroup) => {
         setIsEditMode(false);
-        setSelectedAddOnId(addOnId);
+        setSelectedAddOnId(addOn.id);
         setSelectedOptionId(null);
         setForm({
             name: "",
-            price: "",
+            price: 0,
+            add_on_group_id: addOn.id,
             is_active: true,
-            type: defaultType,
+            type: addOn.type,
         });
         setOpenModal(true);
     };
 
-    const openEditOptionModal = (addOnId: number, option: AddOnOption) => {
+    const openEditOptionModal = (addOn: AddOnGroup, option: AddOnOption) => {
         setIsEditMode(true);
-        setSelectedAddOnId(addOnId);
+        setSelectedAddOnId(addOn.id);
         setSelectedOptionId(option.id);
         setForm({
             name: option.name,
-            price: String(option.price),
-            is_active:
-                "is_active" in option
-                    ? Boolean(
-                        (option as AddOnOption & { is_active?: boolean }).is_active
-                    )
-                    : true,
-            type: option.type,
+            price: option.price,
+            add_on_group_id: addOn.id,
+            is_active: option.is_active,
+            type: addOn.type,
         });
         setOpenModal(true);
     };
 
-    const handleSubmit = async () => {
-        if (!selectedAddOnId || !form.name.trim()) return;
+    const handleSubmitGroup = async () => {
+        if (!groupForm.title.trim()) return;
 
-        if (isEditMode && selectedOptionId) {
+        const payload: AddOnGroupPayload = {
+            title: groupForm.title.trim(),
+            description: groupForm.description.trim(),
+            is_required: groupForm.is_required,
+            min_select: Number(groupForm.min_select) || 0,
+            max_select: groupForm.type === "radio" ? 1 : Number(groupForm.max_select) || 0,
+            type: groupForm.type,
+        };
+
+        if (isEditGroupMode && selectedAddOnId) {
             const resultAction = await dispatch(
-                updateAddOnOption({
-                    id: String(selectedOptionId),
-                    payload: {
-                        name: form.name.trim(),
-                        add_on_group_id: String(selectedAddOnId),
-                        price: Number(form.price) || 0,
-                        type: form.type,
-                        is_active: form.is_active,
-                    },
+                updateAddOnGroup({
+                    id: selectedAddOnId,
+                    payload,
                 })
             );
 
-            if (updateAddOnOption.fulfilled.match(resultAction)) {
-                closeModal();
-                dispatch(
-                    getMasterAddOn({
-                        page: currentPage,
-                        // limit: paginationLimit,
-                    })
-                );
+            if (updateAddOnGroup.fulfilled.match(resultAction)) {
+                closeGroupModal();
+                dispatch(getMasterAddOn({ page: currentPage }));
             }
 
             return;
         }
 
-        const resultAction = await dispatch(
-            createAddOnOption({
-                name: form.name.trim(),
-                add_on_group_id: String(selectedAddOnId),
-                price: Number(form.price) || 0,
-                type: form.type,
-                is_active: form.is_active,
-            })
-        );
+        const resultAction = await dispatch(createAddOnGroup(payload));
 
-        if (createAddOnOption.fulfilled.match(resultAction)) {
-            closeModal();
-            dispatch(
-                getMasterAddOn({
-                    page: currentPage,
-                    // limit: paginationLimit,
-                })
-            );
+        if (createAddOnGroup.fulfilled.match(resultAction)) {
+            closeGroupModal();
+            setCurrentPage(1);
+            dispatch(getMasterAddOn({ page: 1 }));
         }
     };
 
-    const handleDeleteOption = async (optionId: number) => {
-        const resultAction = await dispatch(deleteAddOnOption(String(optionId)));
+    const handleSubmit = async () => {
+        if (!selectedAddOnId || !form.name.trim()) return;
 
-        if (deleteAddOnOption.fulfilled.match(resultAction)) {
-            dispatch(
-                getMasterAddOn({
-                    page: currentPage,
-                    // limit: paginationLimit,
+        const addOnGroup = masterAddOns.find(
+            (item: AddOnGroup) => item.id === selectedAddOnId
+        );
+
+        if (!addOnGroup) return;
+
+        const payload: AddOnOptionPayload = {
+            name: form.name.trim(),
+            add_on_group_id: selectedAddOnId,
+            price: Number(form.price) || 0,
+            type: addOnGroup.type,
+            is_active: form.is_active,
+        };
+
+        if (isEditMode && selectedOptionId) {
+            const resultAction = await dispatch(
+                updateAddOnOption({
+                    id: selectedOptionId,
+                    payload,
                 })
             );
+
+            if (updateAddOnOption.fulfilled.match(resultAction)) {
+                closeModal();
+                dispatch(getMasterAddOn({ page: currentPage }));
+            }
+
+            return;
+        }
+
+        const resultAction = await dispatch(createAddOnOption(payload));
+
+        if (createAddOnOption.fulfilled.match(resultAction)) {
+            closeModal();
+            dispatch(getMasterAddOn({ page: currentPage }));
+        }
+    };
+
+    const handleDeleteOption = async (optionId: string) => {
+        const resultAction = await dispatch(deleteAddOnOption(optionId));
+
+        if (deleteAddOnOption.fulfilled.match(resultAction)) {
+            dispatch(getMasterAddOn({ page: currentPage }));
         }
     };
 
@@ -227,6 +296,10 @@ const AddOnPage = () => {
         <div className="p-5">
             <div className="mb-5 flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-heading">Add On Page</h1>
+
+                <Button onClick={openCreateGroupModal}>
+                    Tambah Add On Group
+                </Button>
             </div>
 
             {message && (
@@ -258,25 +331,6 @@ const AddOnPage = () => {
                                 Search
                             </label>
 
-                            <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-                                <svg
-                                    className="h-4 w-4 text-body"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width={24}
-                                    height={24}
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeWidth={2}
-                                        d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-                                    />
-                                </svg>
-                            </div>
-
                             <input
                                 id="search-addon"
                                 type="text"
@@ -295,6 +349,7 @@ const AddOnPage = () => {
                                     <th className="px-6 py-3 font-medium">No</th>
                                     <th className="px-6 py-3 font-medium">Title</th>
                                     <th className="px-6 py-3 font-medium">Description</th>
+                                    <th className="px-6 py-3 font-medium">Type</th>
                                     <th className="px-6 py-3 font-medium">Required</th>
                                     <th className="px-6 py-3 font-medium">Min / Max</th>
                                     <th className="px-6 py-3 font-medium">Options</th>
@@ -305,24 +360,16 @@ const AddOnPage = () => {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-10 text-center text-sm text-body"
-                                        >
+                                        <td colSpan={8} className="px-6 py-10 text-center">
                                             Loading...
                                         </td>
                                     </tr>
                                 ) : filteredData.length > 0 ? (
-                                    filteredData.map((addOn, index) => {
+                                    filteredData.map((addOn: AddOnGroup, index: number) => {
                                         const options = addOn.add_on_options ?? [];
-                                        const activeOptions = options.filter((option) => {
-                                            if (!("is_active" in option)) return true;
-                                            return Boolean(
-                                                (option as AddOnOption & {
-                                                    is_active?: boolean;
-                                                }).is_active
-                                            );
-                                        });
+                                        const activeOptions = options.filter(
+                                            (option) => option.is_active
+                                        );
                                         const isExpanded = expandedRows.includes(addOn.id);
 
                                         return (
@@ -340,6 +387,7 @@ const AddOnPage = () => {
                                                             <p className="font-semibold text-heading">
                                                                 {addOn.title}
                                                             </p>
+
                                                             {options.length > 0 && (
                                                                 <div className="flex flex-wrap gap-2">
                                                                     <Badge color="info">
@@ -360,14 +408,14 @@ const AddOnPage = () => {
                                                     </td>
 
                                                     <td className="px-6 py-4">
+                                                        <Badge color="info">{addOn.type}</Badge>
+                                                    </td>
+
+                                                    <td className="px-6 py-4">
                                                         {addOn.is_required ? (
-                                                            <Badge color="failure">
-                                                                Required
-                                                            </Badge>
+                                                            <Badge color="failure">Required</Badge>
                                                         ) : (
-                                                            <Badge color="gray">
-                                                                Optional
-                                                            </Badge>
+                                                            <Badge color="gray">Optional</Badge>
                                                         )}
                                                     </td>
 
@@ -384,27 +432,10 @@ const AddOnPage = () => {
                                                                 }
                                                                 className="inline-flex items-center gap-2 rounded-lg border border-default px-3 py-2 text-sm font-medium text-heading transition hover:bg-neutral-secondary-medium"
                                                             >
-                                                                <span>
-                                                                    {isExpanded
-                                                                        ? "Sembunyikan"
-                                                                        : "Lihat"}{" "}
-                                                                    option
-                                                                </span>
-                                                                <svg
-                                                                    className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""
-                                                                        }`}
-                                                                    xmlns="http://www.w3.org/2000/svg"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth={2}
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        d="M19 9l-7 7-7-7"
-                                                                    />
-                                                                </svg>
+                                                                {isExpanded
+                                                                    ? "Sembunyikan"
+                                                                    : "Lihat"}{" "}
+                                                                option
                                                             </button>
                                                         ) : (
                                                             <span className="text-sm text-body">
@@ -414,24 +445,32 @@ const AddOnPage = () => {
                                                     </td>
 
                                                     <td className="px-6 py-4">
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                openAddOptionModal(
-                                                                    addOn.id,
-                                                                    addOn.add_on_options?.[0]
-                                                                        ?.type ?? "radio"
-                                                                )
-                                                            }
-                                                        >
-                                                            Tambah Option
-                                                        </Button>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                color="blue"
+                                                                onClick={() =>
+                                                                    openEditGroupModal(addOn)
+                                                                }
+                                                            >
+                                                                Edit Group
+                                                            </Button>
+
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() =>
+                                                                    openAddOptionModal(addOn)
+                                                                }
+                                                            >
+                                                                Tambah Option
+                                                            </Button>
+                                                        </div>
                                                     </td>
                                                 </tr>
 
                                                 {isExpanded && (
                                                     <tr className="border-b border-default bg-neutral-primary-soft">
-                                                        <td colSpan={7} className="px-6 py-4">
+                                                        <td colSpan={8} className="px-6 py-4">
                                                             <div className="rounded-xl border border-default bg-white p-4">
                                                                 <div className="mb-4 flex items-center justify-between">
                                                                     <div>
@@ -446,12 +485,7 @@ const AddOnPage = () => {
                                                                     <Button
                                                                         size="xs"
                                                                         onClick={() =>
-                                                                            openAddOptionModal(
-                                                                                addOn.id,
-                                                                                addOn
-                                                                                    .add_on_options?.[0]
-                                                                                    ?.type ?? "radio"
-                                                                            )
+                                                                            openAddOptionModal(addOn)
                                                                         }
                                                                     >
                                                                         Tambah Option
@@ -481,85 +515,72 @@ const AddOnPage = () => {
                                                                         </thead>
 
                                                                         <tbody>
-                                                                            {options.map((option) => {
-                                                                                const isActive =
-                                                                                    "is_active" in option
-                                                                                        ? Boolean(
-                                                                                            (
-                                                                                                option as AddOnOption & {
-                                                                                                    is_active?: boolean;
-                                                                                                }
-                                                                                            ).is_active
-                                                                                        )
-                                                                                        : true;
+                                                                            {options.map((option) => (
+                                                                                <tr
+                                                                                    key={option.id}
+                                                                                    className="border-t border-default bg-white"
+                                                                                >
+                                                                                    <td className="px-4 py-3 font-medium text-heading">
+                                                                                        {option.name}
+                                                                                    </td>
 
-                                                                                return (
-                                                                                    <tr
-                                                                                        key={option.id}
-                                                                                        className="border-t border-default bg-white"
-                                                                                    >
-                                                                                        <td className="px-4 py-3 font-medium text-heading">
-                                                                                            {option.name}
-                                                                                        </td>
+                                                                                    <td className="px-4 py-3">
+                                                                                        <Badge color="info">
+                                                                                            {option.type}
+                                                                                        </Badge>
+                                                                                    </td>
 
-                                                                                        <td className="px-4 py-3">
-                                                                                            <Badge color="info">
-                                                                                                {option.type}
+                                                                                    <td className="px-4 py-3">
+                                                                                        {option.is_active ? (
+                                                                                            <Badge color="success">
+                                                                                                Active
                                                                                             </Badge>
-                                                                                        </td>
+                                                                                        ) : (
+                                                                                            <Badge color="failure">
+                                                                                                Inactive
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </td>
 
-                                                                                        <td className="px-4 py-3">
-                                                                                            {isActive ? (
-                                                                                                <Badge color="success">
-                                                                                                    Active
-                                                                                                </Badge>
-                                                                                            ) : (
-                                                                                                <Badge color="failure">
-                                                                                                    Inactive
-                                                                                                </Badge>
-                                                                                            )}
-                                                                                        </td>
+                                                                                    <td className="px-4 py-3 text-heading">
+                                                                                        Rp{" "}
+                                                                                        {option.price.toLocaleString(
+                                                                                            "id-ID"
+                                                                                        )}
+                                                                                    </td>
 
-                                                                                        <td className="px-4 py-3 text-heading">
-                                                                                            Rp{" "}
-                                                                                            {option.price.toLocaleString(
-                                                                                                "id-ID"
-                                                                                            )}
-                                                                                        </td>
+                                                                                    <td className="px-4 py-3">
+                                                                                        <div className="flex items-center justify-end gap-2">
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() =>
+                                                                                                    openEditOptionModal(
+                                                                                                        addOn,
+                                                                                                        option
+                                                                                                    )
+                                                                                                }
+                                                                                                className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                                                disabled={actionLoading}
+                                                                                            >
+                                                                                                Edit
+                                                                                            </button>
 
-                                                                                        <td className="px-4 py-3">
-                                                                                            <div className="flex items-center justify-end gap-2">
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    onClick={() =>
-                                                                                                        openEditOptionModal(
-                                                                                                            addOn.id,
-                                                                                                            option
-                                                                                                        )
-                                                                                                    }
-                                                                                                    className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                                                                                    disabled={actionLoading}
-                                                                                                >
-                                                                                                    Edit
-                                                                                                </button>
-
-                                                                                                <button
-                                                                                                    type="button"
-                                                                                                    onClick={() =>
-                                                                                                        handleDeleteOption(
-                                                                                                            option.id
-                                                                                                        )
-                                                                                                    }
-                                                                                                    className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                                                                                    disabled={actionLoading}
-                                                                                                >
-                                                                                                    Hapus
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                    </tr>
-                                                                                );
-                                                                            })}
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() =>
+                                                                                                    handleDeleteOption(
+                                                                                                        option.id
+                                                                                                    )
+                                                                                                }
+                                                                                                className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                                                                                disabled={actionLoading}
+                                                                                            >
+                                                                                                Hapus
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))}
                                                                         </tbody>
                                                                     </table>
                                                                 </div>
@@ -572,10 +593,7 @@ const AddOnPage = () => {
                                     })
                                 ) : (
                                     <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-10 text-center text-sm text-body"
-                                        >
+                                        <td colSpan={8} className="px-6 py-10 text-center">
                                             Data add on tidak ditemukan.
                                         </td>
                                     </tr>
@@ -607,6 +625,168 @@ const AddOnPage = () => {
                     </div>
                 </div>
             </div>
+
+            <Modal
+                dismissible
+                show={openGroupModal}
+                size="lg"
+                onClose={closeGroupModal}
+            >
+                <ModalHeader>
+                    {isEditGroupMode ? "Edit Add On Group" : "Tambah Add On Group"}
+                </ModalHeader>
+
+                <ModalBody>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="group-title">Title</Label>
+                            </div>
+                            <TextInput
+                                id="group-title"
+                                placeholder="Masukkan title add on group"
+                                value={groupForm.title}
+                                onChange={(e) =>
+                                    setGroupForm((prev) => ({
+                                        ...prev,
+                                        title: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="group-description">
+                                    Description
+                                </Label>
+                            </div>
+                            <Textarea
+                                id="group-description"
+                                placeholder="Masukkan description"
+                                rows={4}
+                                value={groupForm.description}
+                                onChange={(e) =>
+                                    setGroupForm((prev) => ({
+                                        ...prev,
+                                        description: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="group-type">Type</Label>
+                            </div>
+                            <Select
+                                id="group-type"
+                                value={groupForm.type}
+                                onChange={(e) =>
+                                    setGroupForm((prev) => ({
+                                        ...prev,
+                                        type: e.target.value as AddOnType,
+                                        max_select:
+                                            e.target.value === "radio"
+                                                ? 1
+                                                : prev.max_select,
+                                    }))
+                                }
+                            >
+                                <option value="radio">radio</option>
+                                <option value="checkbox">checkbox</option>
+                            </Select>
+                        </div>
+
+                        <div>
+                            <div className="mb-2 block">
+                                <Label htmlFor="group-required">Required</Label>
+                            </div>
+                            <Select
+                                id="group-required"
+                                value={String(groupForm.is_required)}
+                                onChange={(e) =>
+                                    setGroupForm((prev) => ({
+                                        ...prev,
+                                        is_required: e.target.value === "true",
+                                    }))
+                                }
+                            >
+                                <option value="false">Optional</option>
+                                <option value="true">Required</option>
+                            </Select>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="group-min-select">
+                                        Min Select
+                                    </Label>
+                                </div>
+                                <TextInput
+                                    id="group-min-select"
+                                    type="number"
+                                    min={0}
+                                    placeholder="0"
+                                    value={groupForm.min_select}
+                                    onChange={(e) =>
+                                        setGroupForm((prev) => ({
+                                            ...prev,
+                                            min_select:
+                                                Number(e.target.value) || 0,
+                                        }))
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <div className="mb-2 block">
+                                    <Label htmlFor="group-max-select">
+                                        Max Select
+                                    </Label>
+                                </div>
+                                <TextInput
+                                    id="group-max-select"
+                                    type="number"
+                                    min={0}
+                                    placeholder="1"
+                                    value={groupForm.max_select}
+                                    disabled={groupForm.type === "radio"}
+                                    onChange={(e) =>
+                                        setGroupForm((prev) => ({
+                                            ...prev,
+                                            max_select:
+                                                Number(e.target.value) || 0,
+                                        }))
+                                    }
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </ModalBody>
+
+                <ModalFooter>
+                    <Button
+                        onClick={handleSubmitGroup}
+                        disabled={!groupForm.title.trim() || actionLoading}
+                    >
+                        {actionLoading
+                            ? "Menyimpan..."
+                            : isEditGroupMode
+                              ? "Update Add On Group"
+                              : "Simpan Add On Group"}
+                    </Button>
+
+                    <Button
+                        color="gray"
+                        onClick={closeGroupModal}
+                        disabled={actionLoading}
+                    >
+                        Batal
+                    </Button>
+                </ModalFooter>
+            </Modal>
 
             <Modal dismissible show={openModal} size="lg" onClose={closeModal}>
                 <ModalHeader>
@@ -645,7 +825,8 @@ const AddOnPage = () => {
                                 onChange={(e) =>
                                     setForm((prev) => ({
                                         ...prev,
-                                        price: e.target.value,
+                                        price:
+                                            Number(e.target.value) || 0,
                                     }))
                                 }
                             />
@@ -655,16 +836,7 @@ const AddOnPage = () => {
                             <div className="mb-2 block">
                                 <Label htmlFor="option-type">Type</Label>
                             </div>
-                            <Select
-                                id="option-type"
-                                value={form.type}
-                                onChange={(e) =>
-                                    setForm((prev) => ({
-                                        ...prev,
-                                        type: e.target.value as AddOnType,
-                                    }))
-                                }
-                            >
+                            <Select id="option-type" value={form.type} disabled>
                                 <option value="radio">radio</option>
                                 <option value="checkbox">checkbox</option>
                             </Select>
@@ -680,7 +852,8 @@ const AddOnPage = () => {
                                 onChange={(e) =>
                                     setForm((prev) => ({
                                         ...prev,
-                                        is_active: e.target.value === "true",
+                                        is_active:
+                                            e.target.value === "true",
                                     }))
                                 }
                             >
@@ -699,11 +872,15 @@ const AddOnPage = () => {
                         {actionLoading
                             ? "Menyimpan..."
                             : isEditMode
-                                ? "Update Option"
-                                : "Simpan Option"}
+                              ? "Update Option"
+                              : "Simpan Option"}
                     </Button>
 
-                    <Button color="gray" onClick={closeModal} disabled={actionLoading}>
+                    <Button
+                        color="gray"
+                        onClick={closeModal}
+                        disabled={actionLoading}
+                    >
                         Batal
                     </Button>
                 </ModalFooter>

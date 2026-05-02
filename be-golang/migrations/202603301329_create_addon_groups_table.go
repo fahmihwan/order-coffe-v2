@@ -17,6 +17,7 @@ func Migration_202603301329() *gormigrate.Migration {
 				is_required BOOLEAN NOT NULL DEFAULT FALSE,
 				min_select INT NOT NULL DEFAULT 0,
 				max_select INT NOT NULL DEFAULT 1,
+				type VARCHAR(20) NOT NULL,
 				created_at TIMESTAMP NULL DEFAULT NULL,
 				updated_at TIMESTAMP NULL DEFAULT NULL,
 				deleted_at TIMESTAMPTZ NULL

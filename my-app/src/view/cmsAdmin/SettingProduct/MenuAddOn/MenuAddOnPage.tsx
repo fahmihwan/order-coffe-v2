@@ -19,12 +19,13 @@ import {
 import { getMasterAddOn } from "../../../../redux/features/addOnSlice";
 import type { Menu } from "../../../../types/menu";
 import type { AddOnGroup, AddOnOption } from "../../../../types/addOn";
+import { formatRupiah } from "../../../../utils/cartUtils";
 
 const ITEMS_PER_PAGE = 6;
 
-const formatMenuPrice = (price: number) => {
-    return `Rp ${price.toLocaleString("id-ID")}`;
-};
+// const formatMenuPrice = (price: number) => {
+//     return `Rp ${price.toLocaleString("id-ID")}`;
+// };
 
 const getMenuStats = (menu: Menu) => {
     const totalGroups = menu.add_on_groups?.length ?? 0;
@@ -321,7 +322,7 @@ const MenuAddOnPage = () => {
                                                 </div>
 
                                                 <p className="mt-3 text-lg font-bold text-heading">
-                                                    {formatMenuPrice(menu.price)}
+                                                    {formatRupiah(menu.price)}
                                                 </p>
                                             </div>
                                         </div>

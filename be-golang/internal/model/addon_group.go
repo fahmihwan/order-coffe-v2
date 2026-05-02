@@ -14,9 +14,9 @@ type AddOnGroup struct {
 	IsRequired  bool           `gorm:"column:is_required;not null;default:false" json:"is_required"`
 	MinSelect   int            `gorm:"column:min_select;not null;default:0" json:"min_select"`
 	MaxSelect   int            `gorm:"column:max_select;not null;default:1" json:"max_select"`
-
+	Type         string         `gorm:"column:type;type:varchar(20);not null" json:"type"`
 	AddOnOptions []AddOnOption `json:"add_on_options,omitempty" gorm:"foreignKey:AddOnGroupID;references:ID"`
-
+	
 
 	CreatedAt   time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`

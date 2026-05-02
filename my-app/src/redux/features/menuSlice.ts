@@ -4,7 +4,6 @@ import apiClient from "../../api/api";
 import type { Menu, MenuAddOnPayload, MenuPayload, MenuState, MenuWithCategory, UpdateMenuPayload } from "../../types/menu";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
-import { data } from "react-router-dom";
 
 
 const initialState: MenuState = {

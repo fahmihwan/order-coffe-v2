@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../../api/api";
-import type { AddOnGroup, AddOnOption, AddOnOptionPayload, UpdateAddonOptionPayload } from "../../types/addOn";
+import type { AddOnGroup, AddOnGroupPayload, AddOnOption, AddOnOptionPayload, UpdateAddonGroupPayload, UpdateAddonOptionPayload } from "../../types/addOn";
 import type { ApiResponse, PaginationState, ParamsPaginate } from "../../types/type";
 import { extractErrorMessage } from "../../utils/errorUtils";
 
@@ -51,6 +51,49 @@ export const getMasterAddOn = createAsyncThunk<
             return rejectWithValue(extractErrorMessage(err, "Failed to fetch add-ons"));
         }
     });
+
+
+export const createAddOnGroup = createAsyncThunk<
+    { data: AddOnGroup; message: string },
+    AddOnGroupPayload,
+    { rejectValue: string }
+>("addongroup/create", async (payload, { rejectWithValue }) => {
+    try {
+        const response = await apiClient.post<ApiResponse<AddOnGroup>>(
+            "/addon-group",
+            payload,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
+        );
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Add On Group created successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to create Add On Group"));
+    }
+});
+
+export const updateAddOnGroup = createAsyncThunk<
+    { data: AddOnGroup; message: string },
+    UpdateAddonGroupPayload,
+    { rejectValue: string }
+>("addongroup/update", async ({id, payload}, { rejectWithValue }) => {
+    console.log(payload);
+    try {
+        const response = await apiClient.put<ApiResponse<AddOnGroup>>(`/addon-group/${id}`,payload,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
+        );
+
+        return {
+            data: response.data.data,
+            message: response.data.message ?? "Add On Group created successfully",
+        };
+    } catch (err: unknown) {
+        return rejectWithValue(extractErrorMessage(err, "Failed to create Add On Group"));
+    }
+});
+
 export const createAddOnOption = createAsyncThunk<
     { data: AddOnOption; message: string },
     AddOnOptionPayload,
@@ -161,6 +204,33 @@ export const addOnSlice = createSlice({
             .addCase(getMasterAddOn.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload ?? "Failed to fetch menu";
+            })
+            .addCase(createAddOnGroup.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(createAddOnGroup.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+            })
+            .addCase(createAddOnGroup.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to create menu";
+            })
+            .addCase(updateAddOnGroup.pending, (state) => {
+                state.actionLoading = true;
+                state.error = null;
+                state.message = "";
+            })
+            .addCase(updateAddOnGroup.fulfilled, (state, action) => {
+                state.actionLoading = false;
+                state.message = action.payload.message;
+
+            })
+            .addCase(updateAddOnGroup.rejected, (state, action) => {
+                state.actionLoading = false;
+                state.error = action.payload ?? "Failed to update menu";
             })
             .addCase(createAddOnOption.pending, (state) => {
                 state.actionLoading = true;

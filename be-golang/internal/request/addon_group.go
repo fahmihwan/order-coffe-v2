@@ -13,6 +13,7 @@ type AddOnGroupRequest struct {
 	IsRequired   bool                 `json:"is_required"`
 	MinSelect    int                  `json:"min_select" validate:"gte=0"`
 	MaxSelect    int                  `json:"max_select" validate:"gte=0"`
+	Type         string               `json:"type"`
 }
 
 func (r *AddOnGroupRequest) parse(req *multipart.Form) {
@@ -29,7 +30,7 @@ func (r *AddOnGroupRequest) parse(req *multipart.Form) {
 	r.IsRequired = getBoolFrom(values["is_required"])
 	r.MinSelect = getIntFrom(values["min_select"])
 	r.MaxSelect = getIntFrom(values["max_select"])
-
+	r.Type = getStringFrom(values["type"])
 }
 
 func (r *AddOnGroupRequest) validate() error {
@@ -44,6 +45,7 @@ func (r *AddOnGroupRequest) ToAddOnGroup() *model.AddOnGroup {
 		IsRequired:  r.IsRequired,
 		MinSelect:   r.MinSelect,
 		MaxSelect:   r.MaxSelect,
+		Type: 		 r.Type,	
 	}
 
 	return addOnGroup

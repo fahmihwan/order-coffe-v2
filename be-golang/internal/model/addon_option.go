@@ -13,7 +13,7 @@ type AddOnOption struct {
 	Name         string         `gorm:"column:name;type:varchar(100);not null" json:"name"`
 	Price        float64        `gorm:"column:price;type:decimal(12,2);not null;default:0" json:"price"`
 	IsActive     bool           `gorm:"column:is_active;not null;default:true" json:"is_active"`
-	Type         string         `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Type         string         `gorm:"column:type;type:varchar(20);not null" json:"type"`
 	// AddOnGroup   AddOnGroup     `gorm:"foreignKey:AddOnGroupID;references:ID"`
 	
 

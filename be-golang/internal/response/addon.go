@@ -10,6 +10,7 @@ type AddOnGroupResponse struct {
 	MinSelect    int                   `json:"min_select"`
 	MaxSelect    int                   `json:"max_select"`
 	MenuAddOnGroupId uuid.UUID         `json:"menu_add_on_group_id,omitempty"`
+	Type         string                `json:"type"`
 	AddOnOptions []AddOnOptionResponse `json:"add_on_options"`
 }
 
