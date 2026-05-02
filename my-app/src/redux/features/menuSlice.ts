@@ -164,28 +164,26 @@ export const getMenuAddOn = createAsyncThunk<{ data: Menu[]; pagination: Paginat
     }
 });
 
-export const createMenuAddOn = createAsyncThunk<{ data: MenuAddOnPayload; message: string }, MenuAddOnPayload, { rejectValue: string }>("create/menu-addon", async (payload, { rejectWithValue }) => {
+export const createMenuAddOn = createAsyncThunk<{ data: MenuAddOnPayload; message: string },MenuAddOnPayload,{ rejectValue: string }>("create/menu-addon",async (payload, { rejectWithValue }) => {
+
     try {
+      const response = await apiClient.post<ApiResponse<MenuAddOnPayload>>(
+        "/menu-addon",
+        payload,
+        { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
+      );
 
-
-        // formData.append("add_on_group_id", payload.add_on_group_id);
-        // formData.append("menu_id", String(payload.menu_id));
-
-        const response = await apiClient.post<ApiResponse<MenuAddOnPayload>>("/menu-addon", data, {
-            headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-            },
-        });
-
-        return {
-            data: response.data.data,
-            message: response.data.message ?? "Menu Addon created successfully",
-        };
+      return {
+        data: response.data.data,
+        message: response.data.message ?? "Menu Addon created successfully",
+      };
     } catch (err: unknown) {
-        return rejectWithValue(extractErrorMessage(err, "Failed to create menu Addon "));
+      return rejectWithValue(
+        extractErrorMessage(err, "Failed to create menu Addon")
+      );
     }
-});
-
+  }
+);
 
 export const deleteMenuAddOn = createAsyncThunk<{ id: string; message: string }, string, { rejectValue: string }>("delete/menu-addon", async (id, { rejectWithValue }) => {
     try {

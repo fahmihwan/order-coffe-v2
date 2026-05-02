@@ -130,14 +130,10 @@ export const createCategoryMenu = createAsyncThunk<
     { rejectValue: string }
 >("category-menu/create", async (payload, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
-        formData.append("category_id", payload.category_id);
-        formData.append("menu_id", payload.menu_id);
-
         const response = await apiClient.post<ApiResponse<Category>>(
             "/category-menu",
-            formData,
-            { headers: { "Content-Type": "multipart/form-data", } }
+            payload,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
         );
 
         return response.data.data;
@@ -175,19 +171,10 @@ export const updateCategoryMeny = createAsyncThunk<
     { rejectValue: string }
 >("category-menu/update", async ({ id, data }, { rejectWithValue }) => {
     try {
-        const formData = new FormData();
-
-        formData.append("menu_id", data.category_id);
-        formData.append("category_id", data.menu_id);
-
         const response = await apiClient.put<ApiResponse<Category>>(
             `/category-menu/${id}`,
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            }
+            data,
+            { headers: {"Content-Type": "application/x-www-form-urlencoded",},}
         );
 
         return response.data.data;

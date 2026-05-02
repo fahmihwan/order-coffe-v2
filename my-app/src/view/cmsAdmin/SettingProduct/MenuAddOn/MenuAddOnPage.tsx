@@ -136,7 +136,7 @@ const MenuAddOnPage = () => {
             alert("Menu dan Add On Group wajib dipilih.");
             return;
         }
-
+    
         try {
             setSubmitLoading(true);
 
@@ -357,7 +357,7 @@ const MenuAddOnPage = () => {
                                             <div className="space-y-3">
                                                 {displayedGroups.map((group: AddOnGroup) => (
                                                     <div
-                                                        key={group.id}
+                                                        key={`${menu.id}-${group.menu_add_on_group_id ?? group.id}`}
                                                         className="rounded-xl border border-default bg-neutral-primary-soft p-4"
                                                     >
                                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
